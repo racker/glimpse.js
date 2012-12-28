@@ -4,9 +4,10 @@ define([
   'core/component/axis',
   'core/component/legend',
   'core/component/bar',
-  'core/component/line'
+  'core/component/line',
+  'core/component/scatter'
 ],
-function (d3, chart, axis, legend, bar, line) {
+function (d3, chart, axis, legend, bar, line, scatter) {
   'use strict';
 
   var core = {
@@ -26,6 +27,8 @@ function (d3, chart, axis, legend, bar, line) {
           return axis.new();
         case 'legend':
           return legend.new();
+        case 'scatter':
+          return scatter.new();
       }
     }
 
