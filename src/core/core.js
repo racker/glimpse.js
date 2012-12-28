@@ -1,10 +1,12 @@
 define([
   'd3',
-  'obj/obj',
   'core/chart',
-  'core/layer/layer_factory'
+  'core/component/axis',
+  'core/component/legend',
+  'core/component/bar',
+  'core/component/line'
 ],
-function (d3, obj, chart, layerFactory) {
+function (d3, chart, axis, legend, bar, line) {
   'use strict';
 
   var core = {
@@ -13,7 +15,19 @@ function (d3, obj, chart, layerFactory) {
 
     chart: chart,
 
-    layer: layerFactory
+    component: function (type) {
+      // TODO: lazy load these
+      switch (type) {
+        case 'bar':
+          return bar.new();
+        case 'line':
+          return line.new();
+        case 'axis':
+          return axis.new();
+        case 'legend':
+          return legend.new();
+      }
+    }
 
   };
 
