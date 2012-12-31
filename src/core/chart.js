@@ -4,16 +4,17 @@ define([
   'core/panel',
   'util/array',
   'core/component/legend',
-  'core/component/axis'
+  'core/component/axis',
+  'events/observable'
 ],
-function (d3, obj, panel, array, legend, axis) {
+function (d3, obj, panel, array, legend, axis, observable) {
   'use strict';
 
   // private variables
   var chartProto,
-    panel_ = panel.new(),
-    dataset = null,
-    components = [];
+    panel_,
+    dataset,
+    components;
 
   chartProto = obj.extend({
 
@@ -28,11 +29,19 @@ function (d3, obj, panel, array, legend, axis) {
         'yScale': null,
         'legend': legend.new(),
         'xAxis': axis.new(),
-        'yAxis': axis.new()
+        'yAxis': axis.new(),
+        'axesVisible': 'always'
       });
+      panel_ = panel.new();
+      components = [];
+      dataset = null;
       this.component(this.legend);
       this.component(this.xAxis);
       this.component(this.yAxis);
+      this.registerEvents(['mouseover', 'click']);
+      this.on('mouseover', function () {
+        console.log(this.title);
+      }.bind(this));
       return this;
     },
 
@@ -88,6 +97,8 @@ function (d3, obj, panel, array, legend, axis) {
     },
 
     render: function (selector) {
+      var axesOpacity;
+
       if (!selector) {
         if (!this.selection) {
           return;
@@ -106,21 +117,41 @@ function (d3, obj, panel, array, legend, axis) {
         'marginTop': Math.floor(panel_.marginTop / 2)
       });
       // TODO: make axes optional
+      axesOpacity = this.axesVisible === 'always' ? 1 : 0;
       this.xAxis
         .config({
           'id': 'xAxis',
           'type': 'x',
-          'orient': 'bottom'
+          'orient': 'bottom',
+          'opacity': axesOpacity
         });
       this.yAxis
         .config({
           'id': 'yAxis',
           'type': 'y',
-          'orient': 'left'
+          'orient': 'left',
+          'opacity': axesOpacity
         });
       this.updateScales();
       panel_.render(this.selection);
       panel_.renderComponents(components);
+
+      // show/hide axes on mouseover
+      if (this.axesVisible === 'hover') {
+        panel_.selection.on('mouseover', function () {
+          this.xAxis.config('opacity', 1)
+            .update();
+          this.yAxis.config('opacity', 1)
+            .update();
+        }.bind(this));
+        panel_.selection.on('mouseout', function () {
+          this.xAxis.config('opacity', 0)
+            .update();
+          this.yAxis.config('opacity', 0)
+            .update();
+        }.bind(this));
+      }
+
       return this;
     },
 
@@ -142,7 +173,7 @@ function (d3, obj, panel, array, legend, axis) {
       }
       return this;
     }
-  });
+  }, observable);
 
   return chartProto;
 });

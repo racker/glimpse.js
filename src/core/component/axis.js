@@ -18,7 +18,8 @@ function (d3, component) {
         'isFramed': true,
         'xScale': null,
         'yScale': null,
-        'type': null
+        'type': null,
+        'opacity': 1
       });
       return this;
     },
@@ -33,18 +34,31 @@ function (d3, component) {
       return this;
     },
 
+    // update all attributes in-place base on user-config
+    update: function () {
+      this.selection
+        .attr({
+          'class': 'axis ' + this.type + '-axis ' + this.id,
+          'stroke': this.color,
+          'stroke-width': 1,
+          'opacity': this.opacity
+        });
+      this.selection.selectAll('text')
+        .attr({
+          'fill': this.color
+        });
+      return this;
+    },
+
     render: function (selection) {
 
       if (selection) {
         this.selection = selection.append('g')
           .attr({
-            'class': 'axis ' + this.type + '-axis ' + this.id,
-            'stroke': this.color,
             'fill': 'none',
             'shape-rendering': 'crispEdges',
-            'stroke-width': 1,
             'font-family': 'sans-serif',
-            'font-size': '11'
+            'font-size': '11',
           });
       }
 
@@ -72,10 +86,9 @@ function (d3, component) {
       this.selection.selectAll('text')
         .attr({
           'stroke': 'none',
-          'fill': this.color
         });
 
-
+      this.update();
       return this;
     }
 

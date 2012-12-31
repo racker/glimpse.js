@@ -10,7 +10,8 @@ define(['glimpse'], function (glimpse) {
     .config({
       'title': 'simple line chart',
       'width': 800,
-      'height': 400
+      'height': 400,
+      'axesVisible': 'hover'
     })
     .data({
       'series1': data[0].data,

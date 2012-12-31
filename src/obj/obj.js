@@ -42,8 +42,8 @@ function () {
 
       // convenience pass-thru to extend the base proto object
       extend: {
-        value: function (props) {
-          return BaseProto.extend(props);
+        value: function () {
+          return BaseProto.extend.apply(BaseProto, arguments);
         }
       }
 
@@ -82,10 +82,12 @@ function () {
       // optionally apply properties to the new object inline
       extend: propertyDefaults({
         value: function (props) {
-          var propsObject, newObj;
+          var propsObject, newObj, args;
+          args = convertArgs(arguments);
           newObj = Object.create(this);
-          if (props) {
-            ObjectHelper.propCopy(newObj, props);
+          if (args.length) {
+            args.unshift(newObj);
+            ObjectHelper.propCopy.apply(undefined, args);
           }
           return Object.freeze(newObj);
         }

@@ -14,7 +14,6 @@ function (d3, Obj) {
   'use strict';
 
   var PanelProto,
-    selection,
     componentsSelection,
     framedComponentsSelection;
 
@@ -34,20 +33,20 @@ function (d3, Obj) {
     },
 
     render: function (el) {
-      selection = el.append('svg')
+      this.selection = el.append('svg')
         .attr({
           'width': this.width,
           'height': this.height,
           'font-family': 'sans-serif',
           'font-size': '12'
         });
-      framedComponentsSelection = selection.append('g')
+      framedComponentsSelection = this.selection.append('g')
         .attr({
           'class': 'components frame',
           'transform':
             'translate(' + this.marginLeft + ',' + this.marginTop + ')'
         });
-      componentsSelection = selection.append('g')
+      componentsSelection = this.selection.append('g')
         .attr({
           'class': 'components'
         });
