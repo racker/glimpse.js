@@ -1,75 +1,102 @@
+/**
+ * @fileOverview
+ *
+ * A legend component to display series info.
+ */
+
 define([
   'd3',
-  'core/component/component'
+  'util/obj',
+  'mixins/configurable'
 ],
-function (d3, component) {
+function (d3, obj, configurable) {
   'use strict';
 
-  var legendProto,
-    keys = [];
+  return function (defaults) {
 
-  legendProto = component.extend({
-
-    init: function () {
-      component.init.apply(this, arguments);
-      this.config({
+    /**
+     * Private variables
+     */
+    var defaults_= {
         'isFramed': false,
         'marginLeft': 0,
         'marginTop': 0,
         'radius': 5,
         'spacing': 20,
         'textColor': '#000'
-      });
-      return this;
-    },
+      },
+      config_ = obj.empty(),
+      keys_ = [];
 
-    // doesn't use data
-    data: function () {
-      return undefined;
-    },
+    /**
+     * Private functions
+     */
 
-    render: function (selection) {
-      var previousX;
 
-      if (selection) {
-        this.selection = selection.append('g')
-          .attr({
-            'class': 'component legend id-' + this.id
-          });
-      }
+    /**
+     * The main function.
+     */
+    function legend(defaults) {
+      defaults_ = defaults || defaults_;
+      obj.extend(config_, defaults_);
+      return legend;
+    }
 
-      previousX = this.marginLeft;
-      keys.forEach(function (key) {
+    /**
+     * Public methods on the main function.
+     */
+    legend.addKey = function (text, color) {
+      keys_.push({ text: text, color: color });
+      return legend;
+    };
+
+    legend.update = function () {
+      return legend;
+    };
+
+    legend.render = function (selection) {
+      var mySelection, previousX;
+
+      mySelection = selection.append('g')
+        .attr({
+          'class': 'component legend id-' + config_.id
+        });
+
+      previousX = config_.marginLeft;
+      keys_.forEach(function (key) {
         var group, text, circle;
-        group = this.selection.append('g')
+        group = mySelection.append('g')
           .attr({
             'transform': 'translate(' + previousX + ')'
           });
         text = group.append('text')
           .text(key.text)
           .attr({
-            'x': this.radius * 2,
-            'y': this.marginTop,
+            'x': config_.radius * 4,
+            'y': config_.marginTop,
             'stroke': 'none',
-            'fill': this.textColor,
+            'fill': config_.textColor,
             'text-anchor': 'start'
           });
         circle = group.append('circle')
           .attr({
             'stroke': 'none',
             'fill': key.color,
-            'r': this.radius,
-            'cy': Math.max(this.marginTop - this.radius, 0)
+            'r': config_.radius,
+            'cx': config_.radius * 2,
+            'cy': Math.max(config_.marginTop - config_.radius, 0)
           });
-        previousX += text[0][0].scrollWidth + this.spacing;
-      }, this);
-    },
+        previousX += text[0][0].scrollWidth + config_.spacing;
+      });
+    };
 
-    addKey: function (text, color) {
-      keys.push({ text: text, color: color });
-    }
+    /**
+     * Mixin other public functions.
+     */
+    obj.extend(legend,
+      configurable(legend, config_, ['width', 'height']));
 
-  });
+    return legend(defaults);
+  };
 
-  return legendProto;
 });

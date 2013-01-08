@@ -1,18 +1,23 @@
+/**
+ * @fileOverview
+ *
+ * An X or Y axis.
+ */
+
 define([
   'd3',
-  'core/component/component'
+  'util/obj',
+  'mixins/configurable'
 ],
-function (d3, component) {
+function (d3, obj, configurable) {
   'use strict';
 
-  var axis;
+  return function (defaults) {
 
-  axis = component.extend({
-
-    init: function () {
-      component.init.apply(this, arguments);
-      this.d3axis = d3.svg.axis();
-      this.config({
+    var config_ = obj.empty(),
+      selection_,
+      d3axis_,
+      defaults_ = {
         'color': '#666',
         'selection': null,
         'isFramed': true,
@@ -20,79 +25,89 @@ function (d3, component) {
         'yScale': null,
         'type': null,
         'opacity': 1
-      });
-      return this;
-    },
+      };
 
-    // doesn't use data
-    data: function () {
-      return undefined;
-    },
+    function axis(defaults) {
+      defaults_ = defaults || defaults_;
+      obj.extend(config_, defaults_);
+      d3axis_ = d3.svg.axis();
+      return axis;
+    }
 
-    scale: function (scale) {
-      this.d3axis.scale(scale);
-      return this;
-    },
+    axis.update = function () {
+      d3axis_.scale(config_.xScale);
 
-    // update all attributes in-place base on user-config
-    update: function () {
-      this.selection
+      selection_
         .attr({
-          'class': 'axis ' + this.type + '-axis ' + this.id,
-          'stroke': this.color,
+          'class': 'axis ' + config_.type + '-axis ' + config_.id,
+          'stroke': config_.color,
           'stroke-width': 1,
-          'opacity': this.opacity
+          'opacity': config_.opacity
         });
-      this.selection.selectAll('text')
+      selection_.selectAll('text')
         .attr({
-          'fill': this.color
+          'fill': config_.color
         });
-      return this;
-    },
 
-    render: function (selection) {
-
-      if (selection) {
-        this.selection = selection.append('g')
-          .attr({
-            'fill': 'none',
-            'shape-rendering': 'crispEdges',
-            'font-family': 'sans-serif',
-            'font-size': '11',
-          });
+      if (config_.type === 'x') {
+        selection_.attr('transform', 'translate(0,' + (config_.height) + ')');
       }
 
-      this.d3axis
-        .orient(this.orient);
+      return axis;
+    };
 
-      if (this.type === 'x') {
-        this.d3axis
-          .scale(this.xScale)
+    axis.render = function (selection) {
+
+      selection_ = selection.append('g')
+        .attr({
+          'fill': 'none',
+          'shape-rendering': 'crispEdges',
+          'font-family': 'sans-serif',
+          'font-size': '11'
+        });
+
+      d3axis_
+        .orient(config_.orient)
+        .tickSize(0);
+
+      if (config_.type === 'x') {
+        d3axis_
+          .scale(config_.xScale)
           .ticks(d3.time.minutes, 15);
-        this.selection.attr('transform', 'translate(0,' + (this.height) + ')');
-      } else if (this.type === 'y') {
-        this.d3axis.scale(this.yScale);
+        selection_.attr('transform', 'translate(0,' + (config_.height) + ')');
+      } else if (config_.type === 'y') {
+        d3axis_.scale(config_.yScale);
       }
 
       // render the axis
-      this.selection.call(this.d3axis);
+      selection_.call(d3axis_);
 
       // remove boldness from default axis path
-      this.selection.selectAll('path')
+      selection_.selectAll('path')
         .attr({
           'fill': 'none'
         });
       // update fonts
-      this.selection.selectAll('text')
+      selection_.selectAll('text')
         .attr({
-          'stroke': 'none',
+          'stroke': 'none'
         });
 
-      this.update();
-      return this;
-    }
+      // remove axis line
+      selection_.selectAll('.domain')
+        .attr({
+          'stroke': 'none'
+        });
 
-  });
+      axis.update();
 
-  return axis;
+      return axis;
+    };
+
+    obj.extend(axis,
+      configurable(axis, config_, []));
+
+    return axis(defaults);
+  };
+
 });

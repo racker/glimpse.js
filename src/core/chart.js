@@ -1,179 +1,245 @@
+/**
+ * @fileOverview
+ *
+ * A cartesian time-series chart.
+ */
 define([
   'd3',
-  'obj/obj',
-  'core/panel',
+  'util/obj',
   'util/array',
   'core/component/legend',
   'core/component/axis',
-  'events/observable'
+  'mixins/configurable',
+  'mixins/observable'
 ],
-function (d3, obj, panel, array, legend, axis, observable) {
+function (d3, obj, array, legend, axis, configurable, observable) {
   'use strict';
 
-  // private variables
-  var chartProto,
-    panel_,
-    dataset,
-    components;
+  return function (defaults) {
 
-  chartProto = obj.extend({
+    /**
+     * Private variables
+     */
+    var config_ = obj.empty(),
+      xScale_,
+      yScale_,
+      xAxis_,
+      yAxis_,
+      legend_,
+      data_,
+      components_,
+      defaults_ = {
+        height: 300,
+        width: 500,
+        marginTop: 30,
+        marginRight: 0,
+        marginBottom: 50,
+        marginLeft: 0
+      };
 
-    init: function () {
-      this.config({
-        'selection': null,
-        'width': 600,
-        'height': 400,
-        'renderer': 'svg',
-        'title': '',
-        'xScale': null,
-        'yScale': null,
-        'legend': legend.new(),
-        'xAxis': axis.new(),
-        'yAxis': axis.new(),
-        'axesVisible': 'always'
-      });
-      panel_ = panel.new();
-      components = [];
-      dataset = null;
-      this.component(this.legend);
-      this.component(this.xAxis);
-      this.component(this.yAxis);
-      this.registerEvents(['mouseover', 'click']);
-      this.on('mouseover', function () {
-        console.log(this.title);
-      }.bind(this));
-      return this;
-    },
+    /**
+     * Private functions
+     */
 
-    // must be called whenever:
-    // 1. data is changed
-    // 2. components are added/removed
-    // 3. height/width change
-    updateScales: function () {
+    function getFrameHeight() {
+      return config_.height - config_.marginTop - config_.marginBottom;
+    }
+
+    function getFrameWidth() {
+      return config_.width - config_.marginLeft - config_.marginRight;
+    }
+
+    function updateScales() {
       var xExtents = [],
           yExtents = [];
 
-      components.forEach(function (component) {
-        if (component.data()) {
-          xExtents = xExtents.concat(d3.extent(component.data(), component.x));
-          yExtents = yExtents.concat(d3.extent(component.data(), component.y));
+      components_.forEach(function (component) {
+        if (component.data) {
+          xExtents = xExtents.concat(
+            d3.extent(component.data(), component.config('x')));
+          yExtents = yExtents.concat(
+            d3.extent(component.data(), component.config('y')));
         }
       });
-
-      if (!this.xScale) {
-        this.xScale = d3.time.scale()
-          .nice();
-      }
-      this.xScale
-        .rangeRound([0, panel_.frameWidth()])
+      xScale_.rangeRound([0, getFrameWidth()])
         .domain(d3.extent(xExtents));
-
-      if (!this.yScale) {
-        this.yScale = d3.scale.linear()
-          .nice();
-      }
-      this.yScale
-        .rangeRound([0, panel_.frameHeight()])
+      yScale_.rangeRound([0, getFrameHeight()])
         .domain(d3.extent(yExtents));
-    },
+    }
 
-    data: function (data) {
-      if (data) {
-        dataset = data;
-        if (components.length) {
-          this.updateScales();
-        }
-        return this;
+    function renderSvg(selection) {
+      return selection.append('svg')
+        .attr({
+          'width': config_.width,
+          'height': config_.height,
+          'font-family': config_.fontFamily,
+          'font-size': config_.fontSize
+        });
+    }
+
+    function renderDefs(selection) {
+      return selection.append('defs');
+    }
+
+    function renderFramedComponentGroup(selection) {
+      selection.append('g')
+        .attr({
+          'class': 'components framed',
+          'transform':
+            'translate(' + config_.marginLeft + ',' + config_.marginTop + ')'
+        });
+    }
+
+    function renderComponentGroup(selection) {
+      selection.append('g')
+        .attr({
+          'class': 'components unframed'
+        });
+    }
+
+    function renderPanel(selection) {
+      var svg = renderSvg(selection);
+      renderDefs(svg);
+      renderComponentGroup(svg);
+      renderFramedComponentGroup(svg);
+    }
+
+    function renderComponents(selection) {
+      var framedGroup, unframedGroup;
+      if (!components_) {
+        return;
       }
-      return dataset;
-    },
-
-    update: function () {
-      // this.xScale.update();
-      // this.yScale.update();
-      // this.xAxis.update();
-      // this.yAxis.update();
-      return this;
-    },
-
-    render: function (selector) {
-      var axesOpacity;
-
-      if (!selector) {
-        if (!this.selection) {
-          return;
+      framedGroup = selection.select('.components.framed');
+      unframedGroup = selection.select('.components.unframed');
+      components_.forEach(function (component) {
+        var renderTarget, componentConfig;
+        if (component.config('isFramed')) {
+          renderTarget = framedGroup;
+          componentConfig = {
+            'height': getFrameHeight(),
+            'width': getFrameWidth()
+          };
+        } else {
+          renderTarget = unframedGroup;
+          componentConfig = {
+            'height': config_.height,
+            'width': config_.width
+          };
         }
-      } else {
-        this.selection = d3.select(selector);
-      }
-      panel_.config({
-        'width': this.width,
-        'height': this.height
+        component.config(componentConfig).render(renderTarget);
       });
-      // TODO: make legend optional
-      this.legend.config({
-        'id': 'legend',
-        'marginLeft': panel_.marginLeft,
-        'marginTop': Math.floor(panel_.marginTop / 2)
-      });
-      // TODO: make axes optional
-      axesOpacity = this.axesVisible === 'always' ? 1 : 0;
-      this.xAxis
+    }
+
+    /**
+     * The main function that gets returned.
+     */
+    function chart(defaults) {
+      defaults_ = defaults || defaults_;
+      obj.extend(config_, defaults_);
+      chart.registerEvents(['mouseover', 'click']);
+
+      xScale_ = d3.time.scale()
+        .nice();
+      yScale_ = d3.scale.linear()
+        .nice();
+      xAxis_ = axis();
+      yAxis_ = axis();
+      legend_ = legend();
+      components_ = [];
+      chart.component(legend_);
+      chart.component(xAxis_);
+      chart.component(yAxis_);
+      return chart;
+    }
+
+    /**
+     * Public methods on the main function object.
+     */
+
+    chart.update = function () {
+
+      updateScales();
+
+      xAxis_
         .config({
           'id': 'xAxis',
           'type': 'x',
-          'orient': 'bottom',
-          'opacity': axesOpacity
+          'orient': 'bottom'
+          //'opacity': axesOpacity
         });
-      this.yAxis
+      //xAxis_.update();
+
+      yAxis_
         .config({
           'id': 'yAxis',
           'type': 'y',
-          'orient': 'left',
-          'opacity': axesOpacity
+          'orient': 'right'
+          //'opacity': axesOpacity
         });
-      this.updateScales();
-      panel_.render(this.selection);
-      panel_.renderComponents(components);
+      //yAxis_.update();
 
-      // show/hide axes on mouseover
-      if (this.axesVisible === 'hover') {
-        panel_.selection.on('mouseover', function () {
-          this.xAxis.config('opacity', 1)
-            .update();
-          this.yAxis.config('opacity', 1)
-            .update();
-        }.bind(this));
-        panel_.selection.on('mouseout', function () {
-          this.xAxis.config('opacity', 0)
-            .update();
-          this.yAxis.config('opacity', 0)
-            .update();
-        }.bind(this));
+      // TODO: make legend optional
+      legend_.config({
+        'id': 'legend',
+        'marginLeft': config_.marginLeft,
+        'marginTop': Math.floor(config_.marginTop / 2) || 0
+      });
+      legend_.update();
+
+      return chart;
+    };
+
+    chart.render = function (selector) {
+      var selection = d3.select(selector);
+      chart.update();
+      renderPanel(selection);
+      renderComponents(selection);
+      return chart;
+    };
+
+    chart.data = function (data) {
+      if (data) {
+        data_ = data;
+        if (components_.length) {
+          updateScales();
+        }
+        return chart;
       }
+      return data_;
+    };
 
-      return this;
-    },
-
-    component: function (component) {
+    chart.component = function (component) {
       if (typeof component === 'string') {
-        return array.find(components, function (c) {
+        return array.find(components_, function (c) {
           return c.id === component;
         });
       }
-      component.data(dataset);
-      components.push(component);
-      this.updateScales();
-      component.xScale = this.xScale;
-      component.yScale = this.yScale;
-
-      if (component.dataId) {
-        this.legend.addKey(
-            component.label || component.dataId, component.color);
+      if (component.data) {
+        component.data(data_);
       }
-      return this;
-    }
-  }, observable);
+      components_.unshift(component);
+      updateScales();
+      component.config({
+        xScale: xScale_,
+        yScale:  yScale_
+      });
+      if (component.config('dataId')) {
+        legend_.addKey(
+          component.config('label') || component.config('dataId'),
+          component.config('color'));
+      }
+      return chart;
+    };
 
-  return chartProto;
+    /**
+     * Mixin other public functions.
+     */
+
+    obj.extend(chart,
+      configurable(chart, config_, ['width', 'height', 'legend']),
+      observable(chart));
+
+    return chart(defaults);
+  };
+
 });

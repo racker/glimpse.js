@@ -4,9 +4,7 @@ define(['glimpse'], function (glimpse) {
   var chart,
       data = datasets;
 
-  chart = glimpse.chart.new();
-
-  chart
+  chart = glimpse.chart()
     .config({
       'title': 'simple line chart',
       'width': 800,
@@ -18,7 +16,7 @@ define(['glimpse'], function (glimpse) {
       'series2': data[1].data
     })
     .component(
-      glimpse.component('line')
+      glimpse.component.lineChart()
         .config({
           'id': 'avg1',
           'label': 'avgerage one',
@@ -29,7 +27,7 @@ define(['glimpse'], function (glimpse) {
         })
     )
     .component(
-      glimpse.component('line')
+      glimpse.component.lineChart()
         .config({
           'id': 'avg2',
           'label': 'avgerage two',
@@ -39,7 +37,7 @@ define(['glimpse'], function (glimpse) {
           'y': function (d) { return d.average; }
         })
     )
-  .render('#container');
+    .render('#container');
 
   // make global for easy console access
   window.chart = chart;

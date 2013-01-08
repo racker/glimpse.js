@@ -4,9 +4,7 @@ define(['glimpse'], function (glimpse) {
   var chart,
       data = datasets;
 
-  chart = glimpse.chart.new();
-
-  chart
+  chart = glimpse.chart()
     .config({
       'title': 'simple bar graph',
       'width': 800,
@@ -17,7 +15,7 @@ define(['glimpse'], function (glimpse) {
       'series2': data[1].data
     })
     .component(
-      glimpse.component('bar')
+      glimpse.component.barChart()
         .config({
           'id': 'avg1',
           'label': 'avgerage 1',
@@ -28,7 +26,7 @@ define(['glimpse'], function (glimpse) {
         })
     )
     .component(
-      glimpse.component('line')
+      glimpse.component.lineChart()
         .config({
           'id': 'avg2',
           'label': 'average 2',
