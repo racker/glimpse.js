@@ -65,17 +65,12 @@
                         'series2': data[1],
                         'series3': data[2]
                       })
-                      .component(line1
+                      .component(
                           glimpse.component.line()
                             .dataId('series1')
                             .config({'cssClass': 'line-ord'})
                             .component(glimpse.component.legend()
                                         .text('ord'))
-                      )
-                      .component(line2
-                        glimpse.component.line()
-                          .dataId('series2')
-                          .config({'cssClass': 'line-dfw'})
                       );
       graph.render('#chart');
     });
