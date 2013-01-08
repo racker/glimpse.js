@@ -1,6 +1,3 @@
-// TODO: Use prototypes.
-function graph() {}
-
 gl.render = function(graph) {
   var config = graph.config,
       instance = graph.instance,
@@ -75,9 +72,9 @@ gl.redraw = function(graph) {
   gl.drawAxis(graph);
   instance.layers = [];
   var i, layerSettings;
-  for (i = 0; i < config.layers.length; i++) {
-    layerSettings = config.layers[i];
-    instance.layers.push(gl[layerSettings.renderer](graph, layerSettings));
+  for (i = 0; i < config.components.length; i++) {
+    layerSettings = config.components[i];
+    instance.layers.push(component[layerSettings.renderer](graph, layerSettings));
   }
 };
 
@@ -92,17 +89,6 @@ gl.redraw = function(graph) {
  * @param {Object} config Optional config.
  */
 gl.graph = function(config) {
-  config = gl_applyDefaults('graph', config);
-  // This could be an event emitting store.
-  var dataSources = [];
-  // instance properties are instance specific and values that are calculated. They don't get cloned.
-  var instance = {
-    'width': config.width - config.padding.left - config.padding.right,
-    'height': config.height - config.padding.top  - config.padding.bottom,
-    isRendered: false
-  };
-  instance.colorScale = config.colorScale();
-
   function graph(selector) {
     var ele = d3.select(selector).node(), data, extent;
     instance.ele = ele;
@@ -135,11 +121,22 @@ gl.graph = function(config) {
     instance.isRendered = true;
     return graph;
   };
+  graph.type = 'graph';
+  gl_applyDefaults(graph, config);
+
+  var dataSources = [];
+  // instance properties are instance specific and values that are calculated. They don't get cloned.
+  var instance = {
+    'width': config.width - config.padding.left - config.padding.right,
+    'height': config.height - config.padding.top  - config.padding.bottom,
+    isRendered: false
+  };
+  instance.colorScale = config.colorScale();
+  graph.type = 'graph';
   graph.render = graph; //alias
-  graph.config = config;
 
   graph.layer = function(layer) {
-    config.layers.push(layer);
+    config.components.push(layer);
     return graph;
   };
 
@@ -160,19 +157,6 @@ gl.graph = function(config) {
 
   graph.getColor = function() {
     return instance.colorScale(gl_randomString());
-  };
-  /**
-   * Sets the width on the graph.
-   *
-   *    graph.width(800);
-   *
-   * @method width
-   * @param {Number} value The width of the graph.
-   */
-  graph.width = function(value) {
-    if (!arguments.length) return config.width;
-    config.width = value;
-    return graph;
   };
 
   graph.remove = function(id) {

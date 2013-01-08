@@ -53,11 +53,3 @@ function gl_objTypeOf(value) {
   }
   return s;
 };
-
-function gl_objCopyKeys(config, defaults) {
-  for (k in defaults) {
-    // Todo: Deep object check.
-    if (!config[k]) config[k] = defaults[k];
-  }
-  return config;
-};

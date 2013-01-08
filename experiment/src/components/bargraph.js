@@ -1,4 +1,4 @@
-gl.barGraph = function(graph, settings) {
+component.barGraph = function(graph, settings) {
   var instance = graph.instance, config = graph.config,
       dataSources = graph.dataSources,
       data = gl_arrGetById(dataSources, settings.dataSourceId).data,

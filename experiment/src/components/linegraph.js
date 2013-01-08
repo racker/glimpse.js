@@ -1,6 +1,6 @@
 //TODO: Data Renderer interface. Takes settings and data.
 //Line graph can take area = true setting.
-gl.lineGraph = function(graph, settings) {
+component.lineGraph = function(graph, settings) {
   var instance = graph.instance, config = graph.config,
       dataSources = graph.dataSources,
       data = gl_arrGetById(dataSources, settings.dataSourceId).data;

@@ -20,11 +20,13 @@
         break;
         // add top-left, top-right etc
       }
-      d3.select(this).attr({
-        x: x,
-        y: y
-      });
+      if (this.tagName === 'g') {
+        d3.select(this).attr('transform', 'translate(' + [x,y] +')');
+      } else {
+        d3.select(this).attr({ x: x, y: y });
+      }
     });
+    return this;
   };
 
   d3.selection.prototype.position = position;

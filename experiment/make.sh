@@ -22,17 +22,17 @@ rm glimpse.js
 addString "(function() {"
 add src/core/*.js
 add src/d3/*.js
-add src/components/core.js \
-    src/components/defaults.js \
-    src/components/legend.js \
-    src/components/loader.js \
-    src/components/linegraph.js \
-    src/components/bargraph.js \
-    src/components/graph.js
+add src/components/*.js
 addString "})();"
 
 # add built libraries for dashboard
-#cp glimpse.js d3.js docs-template/resources
+cp glimpse.js d3.js docs-template/resources
 
 # generate documentation
-#jsduck src --template=docs-template --welcome=dashboard.html --images=docs-template/resources/images --title=Glimpse --categories=categories.json --output docs
+jsduck src --template=docs-template --welcome=dashboard.html --images=docs-template/resources/images --title=Glimpse --categories=categories.json --output docs
+
+# src length
+echo "Source size:" `cat \`find src -type f -follow -print\` | wc -l` "lines."
+echo "Uncompressed Size:" `du -sh glimpse.js|cut -f1`
+uglifyjs glimpse.js -c -m -o > glimpse.min.js
+echo "Compressed Size:" `du -sh glimpse.min.js|cut -f1`
