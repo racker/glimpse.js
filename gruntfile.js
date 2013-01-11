@@ -137,7 +137,8 @@ module.exports = function(grunt) {
         browser: true,
         globals: {
           define: true,
-          require: true
+          require: true,
+          d3: true
         }
       },
       uses_defaults: ['src/**/*.js'],

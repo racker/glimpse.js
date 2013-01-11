@@ -2,6 +2,12 @@
   "name": "glimpse.js",
   "version": "0.0.1",
   "description": "Graphing library built on top of d3",
+  "author": "Rackspace US, Inc.",
+  "contributors": [
+    "Ed Rooth <ed.rooth@rackspace.com>",
+    "Johann Verghese <johann.verghese@rackspace.com>",
+    "Amruta Chitnis <amruta.chitnis@rackspace.com>"
+  ],
   "main": "bin/glimpse.js",
   "bin": {
     "glimpse": "glimpse.js"
@@ -30,6 +36,10 @@
     "visualization",
     "rackspace"
   ],
-  "author": "Rackspace - Ed Rooth",
-  "license": "?"
+  "licenses": [
+      {
+        "type": "Apache",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
+    ]
 }
