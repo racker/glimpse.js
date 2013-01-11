@@ -6,7 +6,7 @@ function (core) {
 
   describe('core/core', function () {
     it('should have a version', function () {
-      expect(core.version).to.exist;
+      expect(core.version).toBeDefined();
     });
   });
 

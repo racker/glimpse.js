@@ -9,15 +9,15 @@
   "directories": {
     "doc": "docs"
   },
-  "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-contrib-clean": "~0.4.0a",
     "grunt-contrib-jshint": "~0.1.0",
     "grunt-contrib-requirejs": "~0.3.4",
-    "grunt-exec": "~0.3.0",
     "uglify-js2": ">=2.1.11",
-    "grunt-contrib-watch": "~0.1.4"
+    "grunt-contrib-watch": "~0.1.4",
+    "grunt-exec": "git://github.com/jharding/grunt-exec.git#dev",
+    "testacular": ">=0.5.2"
   },
   "scripts": {
     "test": "grunt test"

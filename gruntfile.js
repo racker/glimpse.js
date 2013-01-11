@@ -89,26 +89,19 @@ module.exports = function(grunt) {
     },
 
     /**
-     * Generate unit test dependencies for the test runner.
-     */
-    depsGenerator: {
-      src: 'test/unit/**/*.spec.js',
-      out: 'test/deps.js'
-    },
-
-    /**
      * Run the unit tests from the command line.
      */
     exec: {
-      mochaPhantomHtml: {
-        command: 'mocha-phantomjs -R spec test/testrunner.html',
+      testWatch: {
+        command: 'testacular start',
         stdout: true
       },
-      mochaPhantomJson: {
-        command: 'mocha-phantomjs -R json test/testrunner.html > test/coverage.json',
+      test: {
+        command: 'testacular run',
         stdout: true
       }
     },
+
 
     // TODO: replace sources with refs to jshint config
     watch: {
@@ -169,11 +162,10 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('test-deps', 'depsGenerator');
+  grunt.registerTask('testwatch', 'exec:testWatch');
+  grunt.registerTask('test', 'exec:test');
   grunt.registerTask('compile-static', ['clean', 'requirejs:staticBuild']);
   grunt.registerTask('compile', ['clean', 'requirejs:amdBuild']);
-  grunt.registerTask('test', ['test-deps', 'exec:mochaPhantomHtml']);
-  grunt.registerTask('test-json', ['test-deps', 'exec:mochaPhantomJson']);
   grunt.registerTask('release', ['jshint', 'test', 'compile']);
   grunt.registerTask('default', ['jshint', 'compile']);
 };

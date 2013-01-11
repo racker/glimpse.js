@@ -1,17 +1,13 @@
-require([
-  'require',
-  'mocha',
-  'chai',
-  'testDeps'
-],
-function (require, mocha, chai, testDeps) {
-  'use strict';
+var tests = Object.keys(window.__testacular__.files).filter(function (file) {
+    return /\.spec\.js$/.test(file);
+});
 
-  window.expect = chai.expect;
-  mocha.ui('bdd');
-  mocha.reporter('html');
-  require(testDeps, function () {
-    // Check for global mochaPhantomJS for mocha-phantomJS npm module usage.
-    (window.mochaPhantomJS || mocha).run();
-  });
+require({
+  baseUrl: '/base/src',
+  paths: {
+    require: '../lib/require',
+    text: '../lib/text',
+    d3:   '../lib/d3'
+  }}, tests, function() {
+  window.__testacular__.start();
 });
