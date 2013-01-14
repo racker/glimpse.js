@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Glimpse.js",
+    "groups": [
+      {
+        "name": "Graph",
+        "classes": [
+          "gl.graph",
+          "global"
+        ]
+      }
+    ]
+  }
+]
