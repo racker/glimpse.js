@@ -7,7 +7,7 @@ function (obj, array) {
 
   return function (context, configObj, propNames) {
 
-    var mixin = obj.empty();
+    var mixin = {};
 
     // generate all the individual property config functions
     propNames.forEach(function (propName) {
