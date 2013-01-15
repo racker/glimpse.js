@@ -8,6 +8,10 @@ require({
     require: '../lib/require',
     text: '../lib/text',
     d3:   '../lib/d3'
-  }}, tests, function() {
+  },
+  shim: {
+    'd3': { exports: 'd3' }
+  }
+}, tests, function() {
   window.__testacular__.start();
 });
