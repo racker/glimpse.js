@@ -13,15 +13,18 @@ files = [
   REQUIRE,
   REQUIRE_ADAPTER,
 
-  //requirejs shim
+  // requirejs shim
   'lib/d3.js',
 
   // requirejs paths
   // src and test modules
-  {pattern: 'src/**/*.js', included: false},
-  {pattern: 'src/*.js', included: false},
-  {pattern: 'test/unit/*.js', included: false},
-  {pattern: 'test/unit/**/*.js', included: false},
+  { pattern: 'src/**/*.js', included: false },
+  { pattern: 'src/*.js', included: false },
+  { pattern: 'test/unit/*.spec.js', included: false },
+  { pattern: 'test/unit/**/*.spec.js', included: false },
+
+  // custom jasmine matchers
+  'test/matchers.js',
 
   // main test module
   'test/testrunner.js'
