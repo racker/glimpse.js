@@ -26,14 +26,12 @@ files = [
   // custom jasmine matchers
   'test/matchers.js',
 
+  // fixtures
+  'test/fixtures.js',
+
   // main test module
   'test/testrunner.js'
 ];
-
-//
-  //,
-  //,
-
 
 // list of files to exclude
 exclude = [];
