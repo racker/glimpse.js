@@ -36,10 +36,20 @@ files = [
 // list of files to exclude
 exclude = [];
 
+preprocessors = {
+  '**/src/*.js': 'coverage',
+  '**/src/**/*.js': 'coverage'
+};
+
+coverageReporter = {
+  type : 'html',
+  dir : 'test/coverage/'
+}
+
 
 // test results reporter to use
 // possible values: 'dots', 'progress', 'junit'
-reporters = ['progress'];
+reporters = ['progress', 'coverage'];
 
 
 // web server port

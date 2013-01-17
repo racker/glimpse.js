@@ -33,6 +33,7 @@ Interactive time-series graphs can be created in as little as 2-3 lines of code.
 
 - Write unit tests in `/test/unit/`
 - Run tests from the command line: `grunt test`
+- Look at coverage report generated in `/test/coverage` to ensure you maintain 100% test-coverage.
 - Optionally run `testacular start` to auto-run tests when any file changes
 - See [Testacular](http://vojtajina.github.com/testacular/) and [Jasmine](http://pivotal.github.com/jasmine/) for more details.
 
