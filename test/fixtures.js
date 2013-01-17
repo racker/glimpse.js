@@ -4,7 +4,7 @@
 
   jasmine.htmlFixture = function() {
     var fixture = d3.select('#html-fixture');
-    if (fixture) {
+    if (!fixture.empty()) {
       return fixture;
     }
     return body.append('div').attr('id', 'html-fixture');
@@ -12,7 +12,7 @@
 
   jasmine.svgFixture = function () {
     var fixture = d3.select('#svg-fixture');
-    if (fixture) {
+    if (!fixture.empty()) {
       return fixture;
     }
     return body.append('svg').attr('id', 'svg-fixture');

@@ -146,16 +146,16 @@ module.exports = function(grunt) {
         options: {
           expr: true,
           globals: {
+            jasmine: true,
             describe: true,
             it: true,
-            ait: true,
             expect: true,
             spyOn: true,
             beforeEach: true,
             afterEach: true,
-            setFixtures: true,
             define: true,
-            require: true
+            require: true,
+            d3: true
           }
         },
         files: {
