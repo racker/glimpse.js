@@ -43,6 +43,16 @@ beforeEach(function() {
         return this.actual.getAttribute(attrName) === attrValue.toString();
       }
       return this.actual.hasAttribute(attrName);
+    },
+
+    toBeDefinedAndNotNull: function () {
+      var actual = this.actual;
+
+      this.message = function () {
+        return 'Expected ' + actual + ' to be defined and not null';
+      }
+
+      return actual != null;
     }
 
   });

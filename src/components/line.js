@@ -1,3 +1,7 @@
+/**
+ * @fileOverview
+ * Reusuable line component.
+ */
 define([
   'core/object',
   'core/array',
@@ -9,19 +13,34 @@ function (obj, array, config) {
   return function () {
 
     var config_ = {},
-      defaults_ = {
-        isFramed: true,
-        strokeWidth: 1,
-        color: 'steelBlue',
-        showInLegend: true
-      },
+      defaults_,
+      x_,
+      y_,
       lineGenerator_,
       data_,
       root_;
 
+    x_ = function(d) {
+      return config_.xScale(d.x);
+    };
+
+    y_ = function(d) {
+      return config_.yScale(d.y);
+    };
+
+    defaults_ = {
+      isFramed: true,
+      strokeWidth: 1,
+      color: 'steelBlue',
+      showInLegend: true,
+      lineGenerator: d3.svg.line(),
+      x: x_,
+      y: y_,
+      interpolate: 'linear'
+    };
+
     function line() {
       obj.extend(config_, defaults_);
-      lineGenerator_ = d3.svg.line();
       return line;
     }
 
@@ -40,14 +59,20 @@ function (obj, array, config) {
     line.update = function () {
       var dataConfig = line.data();
 
+      // Configure the lineGenerator function
+      config_.lineGenerator
+        .x(config_.x)
+        .y(config_.y)
+        .interpolate(config_.interpolate);
+
       root_.select('.line')
         .datum(dataConfig.data)
         .attr({
           'stroke-width': config_.strokeWidth,
-          'stroke': dataConfig.color,
+          'stroke': config_.color,
           'fill': 'none',
           'opacity': 1,
-          'd': lineGenerator_
+          'd': config_.lineGenerator
         });
 
       return line;
@@ -56,31 +81,29 @@ function (obj, array, config) {
     line.render = function (selection) {
       var dataConfig = line.data();
 
-       root_ = selection.append('g')
+      root_ = selection.append('g')
         .attr({
           'class': 'component line-chart'
         });
 
-      // draw the line
-      lineGenerator_ = d3.svg.line()
-        .x(function(d) {
-          return config_.xScale(dataConfig.x(d));
-        })
-        .y(function(d) {
-          return config_.yScale(dataConfig.y(d));
-        })
-        .interpolate(config_.interpolate);
-
       root_.append('path')
         .attr('class', 'line');
-
       line.update();
 
       return line;
     };
 
-    obj.extend(line, config(line, config_, ['xScale', 'yScale']));
-    return line();
-  };
+    obj.extend(line, config(line, config_,
+      [
+        'xScale',
+        'yScale',
+        'lineGenerator',
+        'x',
+        'y'
+      ]
+    ));
 
+    return line();
+
+  };
 });
