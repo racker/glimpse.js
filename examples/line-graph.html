@@ -18,24 +18,6 @@
         'use strict';
 
         var latencyData = [{
-            title: 'ord',
-            data: [
-            {"x":1317279600000,"y":106.19392367079854},
-            {"x":1317695968421.0527,"y":56.03559841401875},
-            {"x":1318112336842.1052,"y":126.56398699618876},
-            {"x":1318528705263.158,"y":147.48531440272927},
-            {"x":1318945073684.2104,"y":134.64964700397104},
-            {"x":1319361442105.2632,"y":114.76828635204583},
-            {"x":1319777810526.3157,"y":77.50583724118769},
-            {"x":1320194178947.3684,"y":74.262569937855},
-            {"x":1320610547368.4211,"y":124.86097845248878},
-            {"x":1321026915789.4736,"y":88.70440365280956},
-            {"x":1321443284210.5264,"y":126.80981094017625},
-            {"x":1321859652631.5789,"y":115.363494399935},
-            {"x":1322276021052.6316,"y":100.65460556652397}]
-          },
-          {
-            title: 'dfw',
             data: [
             {"x":1317279600000,"y":106.19392367079854},
             {"x":1317695968421.0527,"y":56.03559841401875},
@@ -54,30 +36,68 @@
 
           var lineGraph = glimpse.graph()
             .config({
-              width: 400
+              width: 700,
+              height: 250
             })
-            .height(300)
             .data([
               { id: 'latencyDfw',
-                color: 'black',
-                title: 'DFW',
+                title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
                 x: function (d, i) { return d.x; },
                 y: function (d, i) { return d.y; }
               },
               { id: 'latencyOrd',
-                color: 'steelBlue',
-                title: 'ORD',
-                data: latencyData[1].data,
+                title: 'Time to Connect (ORD)',
+                data: latencyData[0].data,
                 x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y; }
+                y: function (d, i) { return d.y + 10; }
+              },
+              { id: 'latencyLon',
+                title: 'Time to Connect (LON)',
+                data: latencyData[0].data,
+                x: function (d, i) { return d.x; },
+                y: function (d, i) { return d.y + Math.random()*10; }
               }
             ])
-            .component({ type: 'line', dataId: 'latencyDfw' })
-            .component({ type: 'line', dataId: 'latencyOrd' })
-            .component({ type: 'legend' })
+            .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
+            .component({ type: 'line', dataId: 'latencyOrd', color: '#206ec2' })
+            .component({ type: 'line', dataId: 'latencyLon', color: '#c40022' })
             .render('#container');
 
+
+          var lineGraph2 = glimpse.graph()
+            .config({
+              width: 350,
+              height: 100
+            })
+            .data([
+              { id: 'latencyDfw',
+                title: 'Time to Connect (DFW)',
+                data: latencyData[0].data,
+                x: function (d, i) { return d.x; },
+                y: function (d, i) { return d.y; }
+              },
+              { id: 'latencyOrd',
+                title: 'Time to Connect (ORD)',
+                data: latencyData[0].data,
+                x: function (d, i) { return d.x; },
+                y: function (d, i) { return d.y + 10; }
+              },
+              { id: 'latencyLon',
+                title: 'Time to Connect (LON)',
+                data: latencyData[0].data,
+                x: function (d, i) { return d.x; },
+                y: function (d, i) { return d.y + Math.random()*10; }
+              }
+            ])
+            .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
+            .component({ type: 'line', dataId: 'latencyOrd', color: '#206ec2' })
+            .component({ type: 'line', dataId: 'latencyLon', color: '#c40022' })
+            .render('#container');
+
+
+            // for debugging
+            window.graph = lineGraph;
         });
     </script>
   </body>

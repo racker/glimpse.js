@@ -20,6 +20,11 @@ function (obj, config, array, components) {
      */
     var config_ = {},
       defaults_ = {
+        height: 700,
+        width: 250,
+        viewBoxHeight: 250,
+        viewBoxWidth: 700,
+        preserveAspectRatio: 'none',
         marginTop: 10,
         marginRight: 0,
         marginBottom: 30,
@@ -40,11 +45,11 @@ function (obj, config, array, components) {
      */
 
     function getFrameHeight() {
-      return config_.height - config_.marginTop - config_.marginBottom;
+      return config_.viewBoxHeight - config_.marginTop - config_.marginBottom;
     }
 
     function getFrameWidth() {
-      return config_.width - config_.marginLeft - config_.marginRight;
+      return config_.viewBoxWidth - config_.marginLeft - config_.marginRight;
     }
 
     function renderSvg(selection) {
@@ -52,8 +57,12 @@ function (obj, config, array, components) {
         .attr({
           'width': config_.width,
           'height': config_.height,
-          'font-family': config_.fontFamily,
-          'font-size': config_.fontSize
+          'viewBox': [
+            0,
+            0,
+            config_.viewBoxWidth,
+            config_.viewBoxHeight].toString(),
+          'preserveAspectRatio': config_.preserveAspectRatio
         });
     }
 
@@ -102,8 +111,8 @@ function (obj, config, array, components) {
         } else {
           renderTarget = unframedGroup;
           componentConfig = {
-            'height': config_.height,
-            'width': config_.width
+            'height': config_.viewBoxHeight,
+            'width': config_.viewBoxWidth
           };
         }
         component.config(componentConfig).render(renderTarget);
@@ -132,7 +141,10 @@ function (obj, config, array, components) {
       var legendConfig = [];
       components_.forEach(function (c) {
         if (c.config('showInLegend')) {
-          legendConfig.push({color: c.config('color'), title: 'foo' });
+          legendConfig.push({
+            color: c.config('color'),
+            label: c.data().title || ''
+          });
         }
       });
       legend_.config({keys: legendConfig})
@@ -206,9 +218,15 @@ function (obj, config, array, components) {
 
     graph.component = function (componentConfig) {
       var component;
+      // No args. Return all components.
+      if (!componentConfig) {
+        // TODO: clone this?
+        return components_;
+      }
+      // Single string indicates id of component to return.
       if (typeof componentConfig === 'string') {
         return array.find(components_, function (c) {
-          return c.id === component;
+          return c.id() === componentConfig;
         });
       }
       component = components[componentConfig.type]();
@@ -230,7 +248,7 @@ function (obj, config, array, components) {
       var selection = d3.select(selector);
       renderPanel(selection);
       update();
-      renderComponents(selection);
+      renderComponents(svg_);
       return graph;
     };
 

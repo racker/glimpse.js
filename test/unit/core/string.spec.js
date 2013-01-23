@@ -8,8 +8,8 @@ function (string) {
 
     describe('random()', function () {
 
-      it('generates 12 character strings', function () {
-        expect(string.random().length).toBe(12);
+      it('generates at least 8 character strings', function () {
+        expect(string.random().length > 8).toBe(true);
       });
 
       it('generates different strings', function () {
