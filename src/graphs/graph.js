@@ -265,11 +265,15 @@ function (obj, config, array, components) {
           yExtents = [];
 
       components_.forEach(function (component) {
+        var componentData;
         if (component.data) {
-          xExtents = xExtents.concat(
-            d3.extent(component.data().data, component.data().x));
-          yExtents = yExtents.concat(
-            d3.extent(component.data().data, component.data().y));
+          componentData = component.data();
+          if (componentData && componentData.data) {
+            xExtents = xExtents.concat(
+              d3.extent(componentData.data, componentData.x));
+            yExtents = yExtents.concat(
+              d3.extent(componentData.data, componentData.y));
+          }
         }
       });
       config_.xScale.rangeRound([0, getFrameWidth_()])
