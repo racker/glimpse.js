@@ -1,3 +1,7 @@
+/**
+ * @fileOverview
+ * Axis component.
+ */
 define([
   'core/object',
   'core/config',
@@ -10,10 +14,15 @@ function (obj, config, string) {
 
     var config_ = {},
       defaults_ = {
+        type: 'x',
         id: string.random(),
         isFramed: true,
         color: '#333',
-        opacity: 0.8
+        opacity: 0.8,
+        fontFamily: 'sans-serif',
+        fontSize: 10,
+        textBgColor: '#fff',
+        textBgSize: 3
       },
       root_,
       d3axis_;
@@ -25,31 +34,13 @@ function (obj, config, string) {
     }
 
     axis.update = function () {
-      d3axis_.scale(config_.scale)
-        .orient(config_.orient);
-    };
-
-    axis.render = function (selection) {
-      // TODO: need to move some of this stuff to update()
-
-      root_ = selection.append('g')
-        .attr({
-          'id': config_.id,
-          'fill': 'none',
-          'shape-rendering': 'crispEdges',
-          'font-family': 'sans-serif',
-          'font-size': '11',
-          'class': 'axis ' + config_.type + '-axis ' + config_.id,
-          'stroke': config_.color,
-          'stroke-width': 1,
-          'opacity': config_.opacity
-        });
-
       if (config_.type === 'x') {
         root_.attr('transform', 'translate(0,' + (config_.height) + ')');
       }
 
-      axis.update();
+      root_.selectAll('g').remove();
+      d3axis_.scale(config_.scale)
+        .orient(config_.orient);
       root_.call(d3axis_);
 
       // remove boldness from default axis path
@@ -64,16 +55,44 @@ function (obj, config, string) {
           'fill': config_.color
         });
 
+      // apply text background for greater readability.
+      root_.selectAll('.gl-axis text').each(function () {
+        var textBg = this.cloneNode(true);
+        d3.select(textBg).attr({
+          stroke: config_.textBgColor,
+          'stroke-width': config_.textBgSize
+        });
+        this.parentNode.insertBefore(textBg, this);
+      });
+
       // remove axis line
       root_.selectAll('.domain')
         .attr({
           'stroke': 'none'
         });
+    };
+
+    axis.render = function (selection) {
+
+      root_ = selection.append('g')
+        .attr({
+          'id': config_.id,
+          'fill': 'none',
+          'shape-rendering': 'crispEdges',
+          'font-family': config_.fontFamily,
+          'font-size': config_.fontSize,
+          'class': string.classes('axis', config_.type + '-axis '),
+          'stroke': config_.color,
+          'stroke-width': 1,
+          'opacity': config_.opacity
+        });
+
+      axis.update();
 
       return axis;
     };
 
-    obj.extend(axis, config(axis, config_, ['id']));
+    obj.extend(axis, config(axis, config_, []));
     return axis();
   };
 

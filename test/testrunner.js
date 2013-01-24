@@ -1,5 +1,6 @@
 var tests = Object.keys(window.__testacular__.files).filter(function (file) {
-    return /\.spec\.js$/.test(file);
+  'use strict';
+  return (/\.spec\.js$/).test(file);
 });
 
 require({
@@ -13,5 +14,6 @@ require({
     'd3': { exports: 'd3' }
   }
 }, tests, function() {
+  'use strict';
   window.__testacular__.start();
 });

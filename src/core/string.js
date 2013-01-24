@@ -17,6 +17,14 @@ function () {
       return Math.floor(Math.random() * x).toString(36) +
         Math.abs(Math.floor(Math.random() * x) ^ (new Date()).getTime())
         .toString(36);
+    },
+
+    /**
+     * Convenience function to create multiple class strings.
+     */
+    classes: function () {
+      var r = Array.prototype.join.call(arguments, ' gl-');
+      return r ? 'gl-' + r : '';
     }
 
   };

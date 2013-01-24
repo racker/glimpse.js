@@ -159,7 +159,7 @@ module.exports = function(grunt) {
           }
         },
         files: {
-          src: ['Gruntfile.js', 'test/unit/**/*.js']
+          src: ['Gruntfile.js', 'test/*.js', 'test/unit/**/*.js']
         }
       }
     }
