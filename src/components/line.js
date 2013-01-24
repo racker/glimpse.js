@@ -21,12 +21,20 @@ function (array, config, obj, string) {
       data_,
       root_;
 
+    /**
+     * Default X data accessor function.
+     * TODO: move to common location.
+     */
     x_ = function(d) {
-      return config_.xScale(d.x);
+      return d.x;
     };
 
+    /**
+     * Default Y data accessor function.
+     * TODO: move to common location.
+     */
     y_ = function(d) {
-      return config_.yScale(d.y);
+      return d.y;
     };
 
     defaults_ = {
@@ -36,8 +44,6 @@ function (array, config, obj, string) {
       color: 'steelBlue',
       showInLegend: true,
       lineGenerator: d3.svg.line(),
-      x: x_,
-      y: y_,
       interpolate: 'linear'
     };
 
@@ -59,12 +65,18 @@ function (array, config, obj, string) {
     };
 
     line.update = function () {
-      var dataConfig = line.data();
+      var dataConfig = line.data(),
+          x = dataConfig.x || x_,
+          y = dataConfig.y || y_;
 
       // Configure the lineGenerator function
       config_.lineGenerator
-        .x(config_.x)
-        .y(config_.y)
+        .x(function(d, i) {
+          return config_.xScale(x(d, i));
+        })
+        .y(function(d, i) {
+          return config_.yScale(y(d, i));
+        })
         .interpolate(config_.interpolate);
 
       root_.select('.gl-line')
@@ -100,9 +112,7 @@ function (array, config, obj, string) {
         'id',
         'xScale',
         'yScale',
-        'lineGenerator',
-        'x',
-        'y'
+        'lineGenerator'
       ]
     ));
 
