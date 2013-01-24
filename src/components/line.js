@@ -3,11 +3,12 @@
  * Reusuable line component.
  */
 define([
-  'core/object',
   'core/array',
-  'core/config'
+  'core/config',
+  'core/object',
+  'core/string'
 ],
-function (obj, array, config) {
+function (array, config, obj, string) {
   'use strict';
 
   return function () {
@@ -29,6 +30,7 @@ function (obj, array, config) {
     };
 
     defaults_ = {
+      id: string.random(),
       isFramed: true,
       strokeWidth: 1,
       color: 'steelBlue',
@@ -65,7 +67,7 @@ function (obj, array, config) {
         .y(config_.y)
         .interpolate(config_.interpolate);
 
-      root_.select('.line')
+      root_.select('.gl-line')
         .datum(dataConfig.data)
         .attr({
           'stroke-width': config_.strokeWidth,
@@ -80,14 +82,14 @@ function (obj, array, config) {
 
     line.render = function (selection) {
       var dataConfig = line.data();
-
       root_ = selection.append('g')
         .attr({
-          'class': 'component line-chart'
+          'id': config_.id,
+          'class': 'gl-component gl-line'
         });
 
       root_.append('path')
-        .attr('class', 'line');
+        .attr('class', 'gl-line');
       line.update();
 
       return line;
@@ -95,6 +97,7 @@ function (obj, array, config) {
 
     obj.extend(line, config(line, config_,
       [
+        'id',
         'xScale',
         'yScale',
         'lineGenerator',

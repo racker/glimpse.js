@@ -18,20 +18,8 @@ function (obj, config, array, components) {
     /**
      * Private variables.
      */
-    var config_ = {},
-      defaults_ = {
-        height: 700,
-        width: 250,
-        viewBoxHeight: 250,
-        viewBoxWidth: 700,
-        preserveAspectRatio: 'none',
-        marginTop: 10,
-        marginRight: 0,
-        marginBottom: 30,
-        marginLeft: 0,
-        xScale: null,
-        yScale: null
-      },
+    var config_,
+      defaults_,
       data_,
       components_,
       xAxis_,
@@ -43,16 +31,188 @@ function (obj, config, array, components) {
     /**
      * Private functions
      */
+    var addComponent_,
+      addAxes_,
+      addLegend_,
+      defaultXaccessor_,
+      defaultYaccessor_,
+      getFrameHeight_,
+      getFrameWidth_,
+      renderComponents_,
+      renderComponentGroup_,
+      renderDefs_,
+      renderFramedComponentGroup_,
+      renderPanel_,
+      renderSvg_,
+      update_,
+      updateScales_,
+      updateLegend_;
 
-    function getFrameHeight() {
+    config_ = {};
+
+    defaults_ = {
+      height: 700,
+      width: 250,
+      viewBoxHeight: 250,
+      viewBoxWidth: 700,
+      preserveAspectRatio: 'none',
+      marginTop: 10,
+      marginRight: 0,
+      marginBottom: 30,
+      marginLeft: 0,
+      xScale: d3.time.scale(),
+      yScale: d3.scale.linear(),
+      showLegend: true
+    };
+
+    /**
+     * @private
+     * adds component to the components array
+     * sets scales and data on the components
+     * @param {component} component [description]
+     */
+    addComponent_ = function (component) {
+      if (component.data) {
+        component.data(data_);
+      }
+      if (component.xScale) {
+        component.xScale(config_.xScale);
+      }
+      if (component.yScale) {
+        component.yScale(config_.yScale);
+      }
+      components_.push(component);
+    };
+
+    /**
+     * @private
+     * Adds axes to the components array
+     */
+    addAxes_ = function () {
+      addComponent_(xAxis_);
+      addComponent_(yAxis_);
+    };
+
+    /**
+     * @private
+     * Adds legend to the components array
+     */
+    addLegend_ = function () {
+      if (config_.showLegend) {
+        addComponent_(legend_);
+      }
+    };
+
+    /**
+     * @private
+     * Default x accessor for data
+     * @param  {Object} d
+     * @return {Object}
+     */
+    defaultXaccessor_ = function (d) {
+      return d.x;
+    };
+
+    /**
+     * @private
+     * Default x accessor for data
+     * @param  {Object} d
+     * @return {Object}
+     */
+    defaultYaccessor_ = function (d) {
+      return d.y;
+    };
+
+    /**
+     * @private
+     * Calculates the frame height
+     * @return {number}
+     */
+    getFrameHeight_ = function () {
       return config_.viewBoxHeight - config_.marginTop - config_.marginBottom;
-    }
+    };
 
-    function getFrameWidth() {
+    /**
+     * @private
+     * Calculates the frame width
+     * @return {number}
+     */
+    getFrameWidth_ = function () {
       return config_.viewBoxWidth - config_.marginLeft - config_.marginRight;
-    }
+    };
 
-    function renderSvg(selection) {
+    /**
+     * @private
+     * Sets the target selection and calls render on each component
+     * @param  {d3.selection} selection
+     */
+    renderComponents_ = function (selection) {
+      var framedGroup, unframedGroup;
+      if (!components_) {
+        return;
+      }
+      framedGroup = selection.select('.gl-components.gl-framed');
+      unframedGroup = selection.select('.gl-components.gl-unframed');
+      components_.forEach(function (component) {
+        var renderTarget, componentConfig;
+        if (component.config('isFramed')) {
+          renderTarget = framedGroup;
+          componentConfig = {
+            'height': getFrameHeight_(),
+            'width': getFrameWidth_()
+          };
+        } else {
+          renderTarget = unframedGroup;
+          componentConfig = {
+            'height': config_.viewBoxHeight,
+            'width': config_.viewBoxWidth
+          };
+        }
+        component.config(componentConfig).render(renderTarget);
+      });
+    };
+
+    /**
+     * @private
+     * Appends defs
+     * @param  {d3.selection} selection
+     */
+    renderDefs_ = function (selection) {
+      return selection.append('defs');
+    };
+
+    /**
+     * @private
+     * Appends g node to the selection
+     * @param  {d3.selection} selection
+     */
+    renderComponentGroup_ = function (selection) {
+      selection.append('g')
+        .attr({
+          'class': 'gl-components gl-unframed'
+        });
+    };
+
+    /**
+     * @private
+     * Appends g node to the selection
+     * @param  {d3.selection} selection
+     */
+    renderFramedComponentGroup_ = function (selection) {
+      selection.append('g')
+        .attr({
+          'class': 'gl-components gl-framed',
+          'transform':
+            'translate(' + config_.marginLeft + ',' + config_.marginTop + ')'
+        });
+    };
+
+    /**
+     * @private
+     * Appends svg node to the selection
+     * @param  {d3.selection} selection
+     */
+    renderSvg_ = function (selection) {
       return selection.append('svg')
         .attr({
           'width': config_.width,
@@ -64,80 +224,25 @@ function (obj, config, array, components) {
             config_.viewBoxHeight].toString(),
           'preserveAspectRatio': config_.preserveAspectRatio
         });
-    }
+    };
 
-    function renderDefs(selection) {
-      return selection.append('defs');
-    }
+    /**
+     * @private
+     * Sets up the panel(svg)
+     * @param  {d3.selection} selection
+     */
+    renderPanel_ = function (selection) {
+      svg_ = renderSvg_(selection);
+      renderDefs_(svg_);
+      renderComponentGroup_(svg_);
+      renderFramedComponentGroup_(svg_);
+    };
 
-    function renderFramedComponentGroup(selection) {
-      selection.append('g')
-        .attr({
-          'class': 'components framed',
-          'transform':
-            'translate(' + config_.marginLeft + ',' + config_.marginTop + ')'
-        });
-    }
-
-    function renderComponentGroup(selection) {
-      selection.append('g')
-        .attr({
-          'class': 'components unframed'
-        });
-    }
-
-    function renderPanel(selection) {
-      svg_ = renderSvg(selection);
-      renderDefs(svg_);
-      renderComponentGroup(svg_);
-      renderFramedComponentGroup(svg_);
-    }
-
-    function renderComponents(selection) {
-      var framedGroup, unframedGroup;
-      if (!components_) {
-        return;
-      }
-      framedGroup = selection.select('.components.framed');
-      unframedGroup = selection.select('.components.unframed');
-      components_.forEach(function (component) {
-        var renderTarget, componentConfig;
-        if (component.config('isFramed')) {
-          renderTarget = framedGroup;
-          componentConfig = {
-            'height': getFrameHeight(),
-            'width': getFrameWidth()
-          };
-        } else {
-          renderTarget = unframedGroup;
-          componentConfig = {
-            'height': config_.viewBoxHeight,
-            'width': config_.viewBoxWidth
-          };
-        }
-        component.config(componentConfig).render(renderTarget);
-      });
-    }
-
-    function updateScales() {
-      var xExtents = [],
-          yExtents = [];
-
-      components_.forEach(function (component) {
-        if (component.data) {
-          xExtents = xExtents.concat(
-            d3.extent(component.data().data, component.data().x));
-          yExtents = yExtents.concat(
-            d3.extent(component.data().data, component.data().y));
-        }
-      });
-      config_.xScale.rangeRound([0, getFrameWidth()])
-        .domain(d3.extent(xExtents));
-      config_.yScale.rangeRound([getFrameHeight(), 0])
-        .domain([0, d3.max(yExtents)]);
-    }
-
-    function updateLegend() {
+    /**
+     * @private
+     * Formats the keys for the legend and calls update on it
+     */
+    updateLegend_ = function () {
       var legendConfig = [];
       components_.forEach(function (c) {
         if (c.config('showInLegend')) {
@@ -149,41 +254,47 @@ function (obj, config, array, components) {
       });
       legend_.config({keys: legendConfig})
         .update();
-    }
+    };
 
-    function defaultXaccessor (d) {
-      return d.x;
-    }
+    /**
+     * @private
+     * Updates the domain on the scales
+     */
+    updateScales_ = function () {
+      var xExtents = [],
+          yExtents = [];
 
-    function defaultYaccessor (d) {
-      return d.y;
-    }
+      components_.forEach(function (component) {
+        if (component.data) {
+          xExtents = xExtents.concat(
+            d3.extent(component.data().data, component.data().x));
+          yExtents = yExtents.concat(
+            d3.extent(component.data().data, component.data().y));
+        }
+      });
+      config_.xScale.rangeRound([0, getFrameWidth_()])
+        .domain(d3.extent(xExtents));
+      config_.yScale.rangeRound([getFrameHeight_(), 0])
+        .domain([0, d3.max(yExtents)]);
+    };
 
-    function update() {
-      updateScales();
-      updateLegend();
-    }
+    /**
+     * @private
+     * Updates scales and legend
+     */
+    update_ = function () {
+      updateScales_();
+      updateLegend_();
+    };
 
-    function addComponent(component) {
-      if (component.data) {
-        component.data(data_);
-      }
-      if (component.xScale) {
-        component.xScale(config_.xScale);
-      }
-      if (component.yScale) {
-        component.yScale(config_.yScale);
-      }
-      components_.push(component);
-    }
-
+    /**
+     * Main function, sets defaults, scales and axes
+     * @return {graphs.graph}
+     */
     function graph() {
       obj.extend(config_, defaults_);
       components_ = [];
       data_ = [];
-      config_.xScale = d3.time.scale();
-      config_.yScale = d3.scale.linear();
-      legend_ = components.legend();
       xAxis_ = components.axis().config({
         type: 'x',
         orient: 'bottom',
@@ -194,14 +305,15 @@ function (obj, config, array, components) {
         orient: 'right',
         scale: config_.yScale
       });
-      addComponent(legend_);
-      addComponent(xAxis_);
-      addComponent(yAxis_);
-
+      legend_ = components.legend();
       return graph;
     }
 
-    // TODO: maybe add common data thing as
+    /**
+     * Gets/Sets the data
+     * @param  {Object|Array} data
+     * @return {graphs.graph|Object}
+     */
     graph.data = function (data) {
       if (data) {
         // TODO: loop thru each data config and apply default X/Y
@@ -216,6 +328,12 @@ function (obj, config, array, components) {
       return data_;
     };
 
+    /**
+     * Creates and adds a component to the graph based on the type
+     * or returns the component based on the id
+     * @param  {string|Object} componentConfig
+     * @return {component|graphs.graph}
+     */
     graph.component = function (componentConfig) {
       var component;
       // No args. Return all components.
@@ -231,28 +349,86 @@ function (obj, config, array, components) {
       }
       component = components[componentConfig.type]();
       component.config(componentConfig);
-      addComponent(component);
+      addComponent_(component);
       return graph;
     };
 
+    /**
+     * Updates the graph with new/updated data/config
+     * @return {graphs.graph}
+     */
     graph.update = function () {
-      update();
+      update_();
       components_.forEach(function (component) {
         component.update();
       });
       return graph;
     };
 
-    // NOTE: render() should only be called once
+    /**
+     * Initial panel setup and rendering of the components
+     * Note: should be called only once.
+     * @param  {d3.selection|Node|string} selector
+     * @return {graphs.graph}
+     */
     graph.render = function (selector) {
       var selection = d3.select(selector);
-      renderPanel(selection);
-      update();
-      renderComponents(svg_);
+      addLegend_();
+      addAxes_();
+      renderPanel_(selection);
+      update_();
+      renderComponents_(svg_);
       return graph;
     };
 
-    obj.extend(graph, config(graph, config_, ['width', 'height']));
+    /**
+     * Returns components of the graph
+     * @return {Array}
+     */
+    graph.getComponents = function () {
+      return components_;
+    };
+
+    /**
+     * X-Axis
+     * @param  {Object|} config
+     * @return {components.axis|graphs.graph}
+     */
+    graph.xAxis = function (config) {
+      if (config) {
+        xAxis_.config(config);
+        return graph;
+      }
+      return xAxis_;
+    };
+
+     /**
+     * Y-Axis
+     * @param  {Object} config
+     * @return {graphs.graph|components.axis}
+     */
+    graph.yAxis = function (config) {
+      if (config) {
+        yAxis_.config(config);
+        return graph;
+      }
+      return yAxis_;
+    };
+
+    /**
+     * Legend
+     * @param  {Object} config
+     * @return {graphs.graph|component.legend}
+     */
+    graph.legend = function (config) {
+      if (config) {
+        legend_.config(config);
+        return graph;
+      }
+      return legend_;
+    };
+
+    obj.extend(graph, config(graph, config_, ['id', 'width', 'height']));
     return graph();
   };
 

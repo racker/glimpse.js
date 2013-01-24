@@ -25,6 +25,7 @@ function () {
     convertArgs: function (args, from) {
       return Array.prototype.slice.call(args, from || 0);
     }
+
   };
 
 });

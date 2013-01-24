@@ -8,7 +8,7 @@ function (d3, object, components) {
 
   describe('components.line', function () {
 
-    var lineComponent, data, defaults, x, y;
+    var testLine, data, defaults, x, y;
 
     data = [{
       id:'fakeData',
@@ -20,26 +20,27 @@ function (d3, object, components) {
     }];
 
     function setData() {
-      lineComponent.config({'dataId': 'fakeData'});
-      lineComponent.data(data);
+      testLine.config({'dataId': 'fakeData'});
+      testLine.data(data);
     }
 
     function setScales() {
-      lineComponent.xScale(d3.time.scale());
-      lineComponent.yScale(d3.scale.linear());
+      testLine.xScale(d3.time.scale());
+      testLine.yScale(d3.scale.linear());
     }
 
     beforeEach(function (){
       spyOn(object, 'extend').andCallThrough();
-      lineComponent = components.line();
+      testLine = components.line();
     });
 
     afterEach(function (){
-      lineComponent = null;
+      testLine = null;
     });
 
-    it('line component has required set of properties', function () {
-      expect(lineComponent).toHaveProperties(
+    it('has required set of properties', function () {
+      expect(testLine).toHaveProperties(
+        'id',
         'xScale',
         'yScale',
         'data',
@@ -49,7 +50,7 @@ function (d3, object, components) {
       );
     });
 
-    describe('checks all defaults are being set', function () {
+    describe('config()', function () {
       var config, defaults;
 
       defaults = {
@@ -62,27 +63,27 @@ function (d3, object, components) {
       };
 
       beforeEach(function (){
-        config = lineComponent.config();
+        config = testLine.config();
       });
 
-      it('config has default isFramed', function () {
+      it('has default isFramed', function () {
         expect(config.isFramed).toBe(defaults.isFramed);
       });
 
-      it('config has default strokeWidth', function () {
+      it('has default strokeWidth', function () {
         expect(config.strokeWidth).toBe(defaults.strokeWidth);
       });
 
-      it('config has default showInLegend', function () {
+      it('has default showInLegend', function () {
         expect(config.showInLegend).toBe(defaults.showInLegend);
       });
 
-      it('config has default lineGenerator', function () {
+      it('has default lineGenerator', function () {
         expect(config.lineGenerator.toString())
         .toBe(defaults.lineGenerator.toString());
       });
 
-      it('config has default interpolate', function () {
+      it('has default interpolate', function () {
         expect(config.interpolate).toBe(defaults.interpolate);
       });
 
@@ -92,7 +93,7 @@ function (d3, object, components) {
 
       it('sets/gets the data on the line', function () {
         setData();
-        expect(lineComponent.data()).toBe(data[0]);
+        expect(testLine.data()).toBe(data[0]);
       });
 
     });
@@ -101,8 +102,8 @@ function (d3, object, components) {
 
       it('sets/gets the xScale', function () {
         var xScale = d3.time.scale();
-        lineComponent.xScale(xScale);
-        expect(lineComponent.xScale()).toBe(xScale);
+        testLine.xScale(xScale);
+        expect(testLine.xScale()).toBe(xScale);
       });
 
     });
@@ -111,8 +112,8 @@ function (d3, object, components) {
 
       it('sets/gets the yScale', function () {
         var yScale = d3.scale.linear();
-        lineComponent.yScale(yScale);
-        expect(lineComponent.yScale()).toBe(yScale);
+        testLine.yScale(yScale);
+        expect(testLine.yScale()).toBe(yScale);
       });
 
     });
@@ -124,37 +125,37 @@ function (d3, object, components) {
         selection = jasmine.svgFixture();
         setData();
         setScales();
-        lineComponent.render(selection);
-        lineComponent.update();
+        testLine.render(selection);
+        testLine.update();
         path = selection.select('path').node();
       });
 
       it('configures the lineGenerator', function () {
-        expect(lineComponent.lineGenerator()).toBeDefinedAndNotNull();
+        expect(testLine.lineGenerator()).toBeDefinedAndNotNull();
       });
 
       it('configures x on lineGenerator', function () {
-        expect(lineComponent.lineGenerator().x).toBeDefinedAndNotNull();
+        expect(testLine.lineGenerator().x).toBeDefinedAndNotNull();
       });
 
       it('configures y on lineGenerator', function () {
-        expect(lineComponent.lineGenerator().y).toBeDefinedAndNotNull();
+        expect(testLine.lineGenerator().y).toBeDefinedAndNotNull();
       });
 
-      it('line has attribute fill', function () {
+      it('adds attribute fill', function () {
         expect(path).toHaveAttr('fill', 'none');
       });
 
-      it('line has attribute stroke with configured color value',
+      it('adds attribute stroke with configured color value',
         function () {
-          expect(path).toHaveAttr('stroke', lineComponent.config('color'));
+          expect(path).toHaveAttr('stroke', testLine.config('color'));
         }
       );
 
-      it('line attribute stroke-width with configured stroke-width value',
+      it('adds attribute stroke-width with configured stroke-width value',
         function () {
           expect(path).toHaveAttr(
-            'stroke-width', lineComponent.config('strokeWidth')
+            'stroke-width', testLine.config('strokeWidth')
           );
         }
       );
@@ -168,8 +169,8 @@ function (d3, object, components) {
       beforeEach(function () {
         selection = jasmine.svgFixture();
         setData();
-        spyOn(lineComponent, 'update');
-        lineComponent.render(selection);
+        spyOn(testLine, 'update');
+        testLine.render(selection);
       });
 
       it('appends svg:group element to the selection', function () {
@@ -185,12 +186,12 @@ function (d3, object, components) {
 
       it('sets a class on svg:path to the root element', function () {
           var path = selection.select('path').node();
-          expect(path).toHaveClasses('line');
+          expect(path).toHaveClasses('gl-line');
         }
       );
 
       it('calls the update function', function () {
-        expect(lineComponent.update).toHaveBeenCalled();
+        expect(testLine.update).toHaveBeenCalled();
       });
 
     });

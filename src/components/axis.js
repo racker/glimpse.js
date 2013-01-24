@@ -1,14 +1,16 @@
 define([
   'core/object',
-  'core/config'
+  'core/config',
+  'core/string'
 ],
-function (obj, config) {
+function (obj, config, string) {
   'use strict';
 
   return function () {
 
     var config_ = {},
       defaults_ = {
+        id: string.random(),
         isFramed: true,
         color: '#333',
         opacity: 0.8
@@ -32,6 +34,7 @@ function (obj, config) {
 
       root_ = selection.append('g')
         .attr({
+          'id': config_.id,
           'fill': 'none',
           'shape-rendering': 'crispEdges',
           'font-family': 'sans-serif',
@@ -70,7 +73,7 @@ function (obj, config) {
       return axis;
     };
 
-    obj.extend(axis, config(axis, config_, []));
+    obj.extend(axis, config(axis, config_, ['id']));
     return axis();
   };
 
