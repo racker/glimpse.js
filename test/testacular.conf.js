@@ -3,7 +3,7 @@
 
 
 // base path, that will be used to resolve files and exclude
-basePath = '';
+basePath = '../';
 
 
 // list of files / patterns to load in the browser
@@ -36,10 +36,11 @@ files = [
 // list of files to exclude
 exclude = [];
 
-preprocessors = {
-  '**/src/*.js': 'coverage',
-  '**/src/**/*.js': 'coverage'
-};
+//TODO: Remove after adding coverage command.
+//preprocessors = {
+  //'**/src/*.js': 'coverage',
+  //'**/src/**/*.js': 'coverage'
+//};
 
 coverageReporter = {
   type : 'html',

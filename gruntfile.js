@@ -95,11 +95,11 @@ module.exports = function(grunt) {
      */
     exec: {
       testWatch: {
-        command: 'testacular start',
+        command: 'testacular start test/testacular.conf.js',
         stdout: true
       },
       test: {
-        command: 'testacular run',
+        command: 'testacular start test/testacular.conf.js --singleRun=true',
         stdout: true
       }
     },
