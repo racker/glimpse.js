@@ -21,13 +21,11 @@ module.exports = function(grunt) {
      * Cleans out the "build" directory.
      */
     clean: {
-      build: ['build/']
+      build: ['build/*']
     },
 
     /**
-     * Compilation configuration.
-     * In v0.4 consider replacing with:
-     *    https://github.com/gruntjs/grunt-contrib-requirejs
+     * RequireJS compilation configuration.
      */
     requirejs: {
       /**
@@ -50,15 +48,7 @@ module.exports = function(grunt) {
           skipModuleInsertion: false,
           optimizeAllPluginResources: true,
           findNestedDependencies: true,
-          paths: {
-            'd3': '../lib/d3'
-          },
-          // Shim modules that don't natively support AMD.
-          shim: {
-            'd3': {
-              exports: 'd3'
-            }
-          }
+          mainConfigFile: 'requirejs.conf.js'
         }
       },
       /**
@@ -77,15 +67,7 @@ module.exports = function(grunt) {
           optimizeAllPluginResources: true,
           findNestedDependencies: true,
           optimize: 'uglify2',
-          paths: {
-            'd3': '../lib/d3'
-          },
-          // Shim modules that don't natively support AMD.
-          shim: {
-            'd3': {
-              exports: 'd3'
-            }
-          }
+          mainConfigFile: 'requirejs.conf.js'
         }
       }
     },
@@ -104,7 +86,6 @@ module.exports = function(grunt) {
       }
     },
 
-
     // TODO: replace sources with refs to jshint config
     watch: {
       src: {
@@ -112,7 +93,7 @@ module.exports = function(grunt) {
         tasks: ['jshint']
       },
       test: {
-        files: ['Gruntfile.js', 'test/unit/**/*.js'],
+        files: ['gruntfile.js', 'test/unit/**/*.js'],
         tasks: ['jshint']
       }
     },
@@ -120,56 +101,30 @@ module.exports = function(grunt) {
     jshint: {
       // Defaults
       options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        strict: true,
-        es5: true,
-        trailing: true,
-        maxlen: 80,
-        browser: true,
-        globals: {
-          define: true,
-          require: true,
-          d3: true
-        }
+        jshintrc: '.jshintrc'
       },
-      uses_defaults: ['src/**/*.js'],
-      with_overrides: {
+      glimpse: ['src/**/*.js'],
+      // gruntfile.js
+      grunt: {
+        options: { node: true },
+        files: { src: ['gruntfile.js'] }
+      },
+      // Unit test related.
+      tests: {
         options: {
-          expr: true,
-          globals: {
-            jasmine: true,
-            describe: true,
-            it: true,
-            expect: true,
-            spyOn: true,
-            beforeEach: true,
-            afterEach: true,
-            define: true,
-            require: true,
-            d3: true
-          }
+          jshintrc: 'test/.jshintrc'
         },
         files: {
-          src: ['Gruntfile.js', 'test/*.js', 'test/unit/**/*.js']
+          src: ['test/*.js', 'test/unit/**/*.js', '!test/testacular.conf.js']
         }
       }
     }
   });
 
-  grunt.registerTask('testwatch', 'exec:testWatch');
   grunt.registerTask('test', 'exec:test');
-  grunt.registerTask('compile-static',
-    ['clean:build', 'requirejs:staticBuild']);
-  grunt.registerTask('compile', ['clean:build', 'requirejs:amdBuild']);
+  grunt.registerTask('compile-static',['clean:build', 'requirejs:staticBuild']);
+  grunt.registerTask('compile-amd', ['clean:build', 'requirejs:amdBuild']);
+  grunt.registerTask('compile', 'compile-static');
   grunt.registerTask('release', ['jshint', 'test', 'compile']);
-  grunt.registerTask('default', ['jshint', 'compile']);
+  grunt.registerTask('default', ['jshint', 'test']);
 };

@@ -4,7 +4,7 @@ beforeEach(function() {
 
   function isObject(val) {
     var type = typeof val;
-    return type === 'object' && val !== null || type === 'function';
+    return (type === 'object' && val !== null) || type === 'function';
   }
 
   function toHaveAttr (attrName, attrValue) {
@@ -92,7 +92,7 @@ beforeEach(function() {
         return 'Expected ' + actual + ' to be defined and not null';
       };
 
-      return actual != null;
+      return actual !== null;
     }
 
   });

@@ -1,5 +1,6 @@
 (function() {
   'use strict';
+
   var body;
   body = d3.select(document.body);
 
