@@ -51,8 +51,8 @@ function (obj, config, array, components) {
     config_ = {};
 
     defaults_ = {
-      height: 700,
-      width: 250,
+      width: 700,
+      height: 250,
       viewBoxHeight: 250,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
