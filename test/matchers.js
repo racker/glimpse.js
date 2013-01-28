@@ -58,8 +58,11 @@ beforeEach(function() {
     toHaveClasses: function() {
       var actual = this.actual,
         len = arguments.length,
-        classes = Array.prototype.slice.call(actual.classList),
+        classes,
         i;
+
+      classes = Array.prototype.slice.call(
+        (actual.getAttribute('class') || '').split(' '));
       for (i = 0; i < len; i += 1) {
         if (classes.indexOf(arguments[i]) === -1) {
           return false;
