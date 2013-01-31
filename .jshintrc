@@ -14,7 +14,12 @@
   "trailing": true,
   "maxlen": 80,
   "browser": true,
-  "globals": {
+  "nonew": true,
+  "quotmark": "single",
+  "unused": true,
+  "maxdepth": 3,
+  "maxcomplexity": 5,
+    "globals": {
     "define": true,
     "require": true,
     "d3": true

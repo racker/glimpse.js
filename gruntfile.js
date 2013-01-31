@@ -106,10 +106,10 @@ module.exports = function(grunt) {
         jshintrc: '.jshintrc'
       },
       glimpse: ['src/**/*.js'],
-      // gruntfile.js
+      // build scripts
       grunt: {
         options: { node: true },
-        files: { src: ['gruntfile.js'] }
+        files: { src: ['gruntfile.js', 'grunt/tasks/*.js'] }
       },
       // Unit test related.
       tests: {

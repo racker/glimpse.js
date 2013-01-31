@@ -24,7 +24,6 @@ function (obj, config, array, components) {
       components_,
       xAxis_,
       yAxis_,
-      panel_,
       legend_,
       svg_;
 

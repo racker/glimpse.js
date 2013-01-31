@@ -18,7 +18,6 @@ function(obj, config, string, util) {
 
     var defaults_,
       config_,
-      data_,
       root_,
       enter_,
       update_,

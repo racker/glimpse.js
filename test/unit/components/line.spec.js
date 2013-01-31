@@ -8,14 +8,14 @@ function (d3, object, components) {
 
   describe('components.line', function () {
 
-    var testLine, data, defaults, x, y;
+    var testLine, data;
 
     data = [{
       id:'fakeData',
       data: [
-        {"x":13,"y":106},
-        {"x":15,"y":56},
-        {"x":17,"y":100}
+        {'x':13,'y':106},
+        {'x':15,'y':56},
+        {'x':17,'y':100}
       ]
     }];
 
@@ -164,7 +164,7 @@ function (d3, object, components) {
     });
 
     describe('update()', function () {
-      var selection, path, lineGenerator;
+      var selection, path;
 
       beforeEach(function (){
         selection = jasmine.svgFixture();

@@ -17,7 +17,6 @@ function (array, config, obj, string) {
       defaults_,
       x_,
       y_,
-      lineGenerator_,
       data_,
       root_;
 
@@ -93,7 +92,6 @@ function (array, config, obj, string) {
     };
 
     line.render = function (selection) {
-      var dataConfig = line.data();
       root_ = selection.append('g')
         .attr({
           'id': config_.id,

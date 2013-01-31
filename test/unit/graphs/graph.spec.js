@@ -1,8 +1,7 @@
 define([
-  'graphs/graph',
-  'components/component'
+  'graphs/graph'
 ],
-function (graph, components) {
+function (graph) {
   'use strict';
 
   describe('graphs.graph', function () {
@@ -26,9 +25,9 @@ function (graph, components) {
     fakeData = [{
       id:'fakeData',
       data: [
-        {"x":13, "y":106},
-        {"x":15, "y":56},
-        {"x":17, "y":100}
+        {'x':13, 'y':106},
+        {'x':15, 'y':56},
+        {'x':17, 'y':100}
       ]
     }];
 
@@ -40,8 +39,8 @@ function (graph, components) {
             color: 'black',
             title: 'DFW',
             data: fakeData[0].data,
-            x: function (d, i) { return d.x; },
-            y: function (d, i) { return d.y; }
+            x: function (d) { return d.x; },
+            y: function (d) { return d.y; }
           }
         ])
         .component({ id: 'testComponent', type: 'line', dataId: 'fakeData' })
@@ -143,9 +142,9 @@ function (graph, components) {
         testGraph.data({
           id:'moreFakeData',
           data: [
-            {"x":13, "y":106},
-            {"x":15, "y":56},
-            {"x":17, "y":100}
+            {'x':13, 'y':106},
+            {'x':15, 'y':56},
+            {'x':17, 'y':100}
           ]
         });
         expect(testGraph.data().length).toBe(2);
