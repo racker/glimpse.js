@@ -28,6 +28,7 @@ Interactive time-series graphs can be created in as little as 2-3 lines of code.
 - Install [grunt](http://gruntjs.com) `npm install -g grunt-cli`
 - Install [Testacular](http://vojtajina.github.com/testacular/) `npm install -g testacular@0.5.7`
 - Install other build dependencies `npm install`
+- Setup the pre-commit hook by running `ln -s ../../pre-commit.js .git/hooks/pre-commit` from the repo root.
 
 **Writing Unit Tests**
 
