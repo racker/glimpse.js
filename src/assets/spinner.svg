@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg id="gl-asset-spinner" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <line id="gl-asset-spinner-line" opacity="1" fill="none" stroke-linecap="round" stroke-width="1.4" x1="2.9" y1="2.9" x2="5" y2="5" stroke="#333"/>
+  </defs>
+  <g transform="translate(10,10)">
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(30)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.1s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(60)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.2s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(90)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.3s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(120)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.4s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(150)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.5s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(180)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.6s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(210)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.7s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(240)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.8s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(270)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.9s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(300)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="1s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(330)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="1.1s"></animate>
+    </use>
+    <use xlink:href="#gl-asset-spinner-line" transform="rotate(360)">
+      <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="1.2s"></animate>
+    </use>
+  </g>
+</svg>

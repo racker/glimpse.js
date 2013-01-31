@@ -8,9 +8,10 @@ define([
   'core/object',
   'core/config',
   'core/array',
+  'core/asset-loader',
   'components/component'
 ],
-function (obj, config, array, components) {
+function (obj, config, array, assetLoader, components) {
   'use strict';
 
   return function () {
@@ -313,6 +314,24 @@ function (obj, config, array, components) {
     }
 
     /**
+     * Toggles the loading asset on/off.
+     * @param {boolean} isVisible
+     * @returns {graphs.graph}
+     */
+    graph.toggleLoading = function(isVisible) {
+      if (isVisible) {
+        svg_.append('use')
+          .attr({
+            'class': 'gl-asset-spinner',
+            'xlink:href': '#gl-asset-spinner'
+          });
+      } else {
+        svg_.selectAll('.gl-asset-spinner').remove();
+      }
+      return graph;
+    };
+
+    /**
      * Gets/Sets the data
      * @param  {Object|Array} data
      * @return {graphs.graph|Object}
@@ -376,6 +395,7 @@ function (obj, config, array, components) {
      */
     graph.render = function (selector) {
       var selection = d3.select(selector);
+      assetLoader.loadAll();
       addLegend_();
       addAxes_();
       renderPanel_(selection);

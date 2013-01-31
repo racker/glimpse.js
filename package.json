@@ -23,7 +23,8 @@
     "uglify-js2": ">=2.1.11",
     "grunt-contrib-watch": "~0.1.4",
     "grunt-exec": ">=0.3.0",
-    "testacular": ">=0.5.2"
+    "testacular": ">=0.5.2",
+    "sax": "~0.5.1"
   },
   "scripts": {
     "test": "grunt test"

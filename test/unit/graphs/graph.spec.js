@@ -1,7 +1,8 @@
 define([
-  'graphs/graph'
+  'graphs/graph',
+  'core/asset-loader'
 ],
-function (graph) {
+function (graph, assetLoader) {
   'use strict';
 
   describe('graphs.graph', function () {
@@ -56,6 +57,7 @@ function (graph) {
       legend = testGraph.legend();
       xScale = testGraph.config().xScale;
       yScale = testGraph.config().yScale;
+      spyOn(assetLoader, 'loadAll');
       spyOn(testComponent, 'render');
       spyOn(xAxis, 'render');
       spyOn(yAxis, 'render');
@@ -236,6 +238,10 @@ function (graph) {
         panel = selection.select('svg');
       });
 
+      it('loads assets via the asset loader', function() {
+        expect(assetLoader.loadAll).toHaveBeenCalledOnce();
+      });
+
       it('adds legend', function () {
          expect(testGraph.legend()).toBeDefinedAndNotNull();
       });
@@ -293,6 +299,29 @@ function (graph) {
 
       //TODO: tests for the layout of components.
       //dependency layout manager.
+
+    });
+
+    describe('toggleLoading()', function() {
+      var selection;
+
+      beforeEach(function() {
+        testGraph = graph();
+        selection = jasmine.htmlFixture();
+        testGraph.render(selection.node());
+      });
+
+      it('toggles the loader on', function() {
+        testGraph.toggleLoading(true);
+        expect(selection.selectAll('.gl-asset-spinner'))
+          .not.toBeEmptySelection();
+      });
+
+      it('toggles the loader off', function() {
+        testGraph.toggleLoading(true);
+        testGraph.toggleLoading(false);
+        expect(selection.selectAll('.gl-asset-spinner').empty()).toBe(true);
+      });
 
     });
 

@@ -11,7 +11,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-exec');
-  grunt.loadTasks('grunt/tasks');
+  grunt.loadTasks('grunt/tasks/');
 
   // Project configuration.
   grunt.initConfig({
@@ -21,7 +21,8 @@ module.exports = function(grunt) {
      * Cleans out the "build" directory.
      */
     clean: {
-      build: ['build/*']
+      build: ['build/*'],
+      assets: ['src/assets/assets.js']
     },
 
     /**
@@ -100,13 +101,25 @@ module.exports = function(grunt) {
       }
     },
 
+    "compile-svg": {
+      assets: {
+        src: ['src/assets/*.svg'],
+        dest: 'src/assets/assets.js',
+        options: {
+          ignoreTags: [],
+          ignoreAttrs: ['svg:version', 'svg:xmlns', 'svg:xmlns:xlink'],
+          id: 'gl-assets'
+        }
+      }
+    },
+
     jshint: {
       // Defaults
       options: {
         jshintrc: '.jshintrc'
       },
-      glimpse: ['src/**/*.js'],
-      // build scripts
+      glimpse: ['src/**/*.js', '!src/assets/assets.js'],
+      // gruntfile.js
       grunt: {
         options: { node: true },
         files: { src: ['gruntfile.js', 'grunt/tasks/*.js'] }
@@ -123,11 +136,18 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('testwatch', 'exec:testWatch');
   grunt.registerTask('test', 'exec:test');
-  grunt.registerTask('compile-static',['clean:build', 'requirejs:staticBuild']);
-  grunt.registerTask('compile-amd', ['clean:build', 'requirejs:amdBuild']);
+  grunt.registerTask('testwatch', 'exec:testWatch');
+  grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
+  grunt.registerTask('compile-static', [
+    'assets',
+    'clean:build',
+    'requirejs:staticBuild']);
+  grunt.registerTask('compile-amd', [
+    'assets',
+    'clean:build',
+    'requirejs:amdBuild']);
   grunt.registerTask('compile', 'compile-static');
-  grunt.registerTask('release', ['jshint', 'test', 'compile']);
-  grunt.registerTask('default', ['jshint', 'test']);
+  grunt.registerTask('release', ['jshint', 'assets', 'test', 'compile']);
+  grunt.registerTask('default', ['jshint', 'assets', 'test']);
 };
