@@ -37,7 +37,7 @@ function (axisComponent) {
 
         expect(node).toHaveAttr({
           'shape-rendering': 'crispEdges',
-          'font-family': 'sans-serif',
+          'font-family': 'arial',
           'font-size': '10',
           'fill': 'none',
           'stroke-width': 1,
@@ -56,7 +56,7 @@ function (axisComponent) {
         axis.render(container);
         expect(node).toHaveAttr({
           'shape-rendering': 'crispEdges',
-          'font-family': 'sans-serif',
+          'font-family': 'arial',
           'font-size': 10,
           'stroke-width': 1,
           'fill': 'none',
