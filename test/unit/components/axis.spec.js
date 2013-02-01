@@ -66,6 +66,40 @@ function (axisComponent) {
         expect(getComponentNode()).toHaveClasses('gl-axis', 'gl-x-axis');
       });
 
+      it('sets tickSize to 0 by default', function () {
+        var tick;
+
+        axis.config({
+          type: 'x',
+          scale: d3.time.scale(),
+          orient: 'bottom'
+        });
+        axis.render(container);
+        tick = container.selectAll('line').node();
+        expect(tick).toHaveAttr({
+          'x2': 0,
+          'y2': 0
+        });
+      });
+
+      it('sets tickSize to configured value', function () {
+        var tick;
+
+        axis.config({
+          type: 'x',
+          scale: d3.time.scale(),
+          orient: 'bottom',
+          tickSize: 5
+        });
+        axis.render(container);
+        tick = container.selectAll('line').node();
+        expect(tick).toHaveAttr({
+          'x2': 0,
+          'y2': 5
+        });
+      });
+
+
       it('renders y axis', function () {
         axis.config({
           type: 'y',
