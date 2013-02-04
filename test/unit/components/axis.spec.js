@@ -67,24 +67,16 @@ function (axisComponent) {
       });
 
       it('sets tickSize to 0 by default', function () {
-        var tick;
-
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
           orient: 'bottom'
         });
         axis.render(container);
-        tick = container.selectAll('line').node();
-        expect(tick).toHaveAttr({
-          'x2': 0,
-          'y2': 0
-        });
+        expect(axis.d3axis().tickSize()).toBe(0);
       });
 
       it('sets tickSize to configured value', function () {
-        var tick;
-
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
@@ -92,11 +84,7 @@ function (axisComponent) {
           tickSize: 5
         });
         axis.render(container);
-        tick = container.selectAll('line').node();
-        expect(tick).toHaveAttr({
-          'x2': 0,
-          'y2': 5
-        });
+       expect(axis.d3axis().tickSize()).toBe(5);
       });
 
 

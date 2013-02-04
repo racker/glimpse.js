@@ -111,6 +111,19 @@ function (obj, config, string) {
       return axis;
     };
 
+    /**
+     * Gets or sets the d3axis function
+     * @param  {d3.svg.axis} d3Axis
+     * @return {component.axis}
+     */
+    axis.d3axis = function (d3Axis) {
+      if (d3Axis) {
+        d3axis_ = d3Axis;
+        return axis;
+      }
+      return d3axis_;
+    };
+
     obj.extend(axis, config(axis, config_, []));
     return axis();
   };
