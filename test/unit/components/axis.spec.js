@@ -37,7 +37,7 @@ function (axisComponent) {
 
         expect(node).toHaveAttr({
           'shape-rendering': 'crispEdges',
-          'font-family': 'sans-serif',
+          'font-family': 'arial',
           'font-size': '10',
           'fill': 'none',
           'stroke-width': 1,
@@ -56,7 +56,7 @@ function (axisComponent) {
         axis.render(container);
         expect(node).toHaveAttr({
           'shape-rendering': 'crispEdges',
-          'font-family': 'sans-serif',
+          'font-family': 'arial',
           'font-size': 10,
           'stroke-width': 1,
           'fill': 'none',
@@ -65,6 +65,28 @@ function (axisComponent) {
         });
         expect(getComponentNode()).toHaveClasses('gl-axis', 'gl-x-axis');
       });
+
+      it('sets tickSize to 0 by default', function () {
+        axis.config({
+          type: 'x',
+          scale: d3.time.scale(),
+          orient: 'bottom'
+        });
+        axis.render(container);
+        expect(axis.d3axis().tickSize()).toBe(0);
+      });
+
+      it('sets tickSize to configured value', function () {
+        axis.config({
+          type: 'x',
+          scale: d3.time.scale(),
+          orient: 'bottom',
+          tickSize: 5
+        });
+        axis.render(container);
+       expect(axis.d3axis().tickSize()).toBe(5);
+      });
+
 
       it('renders y axis', function () {
         axis.config({

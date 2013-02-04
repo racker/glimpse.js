@@ -12,27 +12,38 @@ function (obj, config, string) {
 
   return function () {
 
-    var config_ = {},
-      defaults_ = {
+    var config_,
+      defaults_,
+      root_,
+      d3axis_;
+
+    config_ = {};
+
+    defaults_ = {
         type: 'x',
         id: string.random(),
         isFramed: true,
         color: '#333',
         opacity: 0.8,
-        fontFamily: 'sans-serif',
+        fontFamily: 'arial',
         fontSize: 10,
         textBgColor: '#fff',
-        textBgSize: 3
-      },
-      root_,
-      d3axis_;
+        textBgSize: 3,
+        tickSize: 0
+    };
 
+    /**
+     * Main function for Axis component.
+     */
     function axis() {
       obj.extend(config_, defaults_);
       d3axis_ = d3.svg.axis();
       return axis;
     }
 
+    /**
+     * Apply updates to the axis.
+     */
     axis.update = function () {
       if (config_.type === 'x') {
         root_.attr('transform', 'translate(0,' + (config_.height) + ')');
@@ -40,7 +51,9 @@ function (obj, config, string) {
 
       root_.selectAll('g').remove();
       d3axis_.scale(config_.scale)
-        .orient(config_.orient);
+        .orient(config_.orient)
+        .tickSize(config_.tickSize);
+
       root_.call(d3axis_);
 
       // remove boldness from default axis path
@@ -48,6 +61,7 @@ function (obj, config, string) {
         .attr({
           'fill': 'none'
         });
+
       // update fonts
       root_.selectAll('text')
         .attr({
@@ -72,6 +86,11 @@ function (obj, config, string) {
         });
     };
 
+    /**
+     * Render the axis to the selection
+     * @param {d3.selection|String} selection A d3 selection
+     * @return {component.axis}
+     */
     axis.render = function (selection) {
 
       root_ = selection.append('g')
@@ -90,6 +109,19 @@ function (obj, config, string) {
       axis.update();
 
       return axis;
+    };
+
+    /**
+     * Gets or sets the d3axis function
+     * @param  {d3.svg.axis} d3Axis
+     * @return {component.axis}
+     */
+    axis.d3axis = function (d3Axis) {
+      if (d3Axis) {
+        d3axis_ = d3Axis;
+        return axis;
+      }
+      return d3axis_;
     };
 
     obj.extend(axis, config(axis, config_, []));
