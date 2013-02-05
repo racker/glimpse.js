@@ -37,7 +37,8 @@
           var lineGraph = glimpse.graph()
             .config({
               width: 700,
-              height: 250
+              height: 250,
+              forceY: [0]
             })
             .data([
               { id: 'latencyDfw',
@@ -63,7 +64,6 @@
             .component({ type: 'line', dataId: 'latencyOrd', color: '#206ec2' })
             .component({ type: 'line', dataId: 'latencyLon', color: '#c40022' })
             .render('#container');
-
 
           var lineGraph2 = glimpse.graph()
             .config({

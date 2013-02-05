@@ -8,11 +8,13 @@ function (graph, assetLoader) {
   describe('graphs.graph', function () {
     var testGraph,
       defaults,
+      epochBaseMs,
       fakeData,
       testComponent,
       xAxis,
       yAxis,
       legend,
+      oneDayMs,
       xScale,
       yScale;
 
@@ -23,12 +25,19 @@ function (graph, assetLoader) {
       marginLeft: 0
     };
 
+    epochBaseMs = new Date('Tue Jan 29 2013 17:13:34 GMT-0800 (PST)').getTime();
+    oneDayMs = 1000 * 60 * 60 * 24;
+
     fakeData = [{
       id:'fakeData',
       data: [
-        {'x':13, 'y':106},
-        {'x':15, 'y':56},
-        {'x':17, 'y':100}
+        { x: epochBaseMs + 0 * oneDayMs, y: 106},
+        { x: epochBaseMs + 1 * oneDayMs, y: 56},
+        { x: epochBaseMs + 2 * oneDayMs, y: 100},
+        { x: epochBaseMs + 3 * oneDayMs, y: 103},
+        { x: epochBaseMs + 4 * oneDayMs, y: 90},
+        { x: epochBaseMs + 5 * oneDayMs, y: 200},
+        { x: epochBaseMs + 6 * oneDayMs, y: 130}
       ]
     }];
 
@@ -66,8 +75,8 @@ function (graph, assetLoader) {
       spyOn(xAxis, 'update');
       spyOn(yAxis, 'update');
       spyOn(legend, 'update');
-      spyOn(xScale, 'domain');
-      spyOn(yScale, 'domain');
+      spyOn(xScale, 'domain').andCallThrough();
+      spyOn(yScale, 'domain').andCallThrough();
     }
 
     beforeEach(function (){
@@ -132,13 +141,33 @@ function (graph, assetLoader) {
     });
 
     describe('data()', function () {
+      var dataWithAccessors, accessor;
+
+      beforeEach(function() {
+        accessor = {
+          x: function (d) { return d.x + 2; },
+          y: function (d) { return d.y + 2; }
+        };
+
+        dataWithAccessors = [{
+          id:'dataWithAccessors',
+          data: [
+            { x: 13, y: 106},
+            { x: 15, y: 56},
+            { x: 17, y: 100}
+          ],
+          x: accessor.x,
+          y: accessor.y
+        }];
+
+      });
 
       it('gets/sets data', function() {
         testGraph.data(fakeData);
         expect(testGraph.data()).toEqual(fakeData);
       });
 
-      it('appends data when object is based', function() {
+      it('appends data when object is passed', function() {
         testGraph.data(fakeData);
         expect(testGraph.data().length).toBe(1);
         testGraph.data({
@@ -152,6 +181,83 @@ function (graph, assetLoader) {
         expect(testGraph.data().length).toBe(2);
       });
 
+      it('sets default x accessor function if not provided', function() {
+        var data;
+        testGraph.data(fakeData);
+        data = testGraph.data('fakeData');
+        expect(data.x).toBeDefinedAndNotNull();
+      });
+
+      it('sets default y accessor function if not provided', function() {
+        var data;
+        testGraph.data(fakeData);
+        data = testGraph.data('fakeData');
+        expect(data.y).toBeDefinedAndNotNull();
+      });
+
+      it('sets provided x accessor function', function() {
+        var data;
+        testGraph.data(dataWithAccessors);
+        data = testGraph.data('dataWithAccessors');
+        expect(data.x).toBe(accessor.x);
+
+      });
+
+      it('sets provided y accessor function', function() {
+        var data;
+        testGraph.data(dataWithAccessors);
+        data = testGraph.data('dataWithAccessors');
+        expect(data.y).toBe(accessor.y);
+      });
+
+      it('updates object if id already exists', function() {
+        var data, xAccessor;
+        testGraph.data(dataWithAccessors);
+        xAccessor = function (d) {
+          return d.x + 10;
+        };
+        testGraph.data({
+          id: 'dataWithAccessors',
+          x: xAccessor
+        });
+        data = testGraph.data('dataWithAccessors');
+        expect(data.x).toBe(xAccessor);
+      });
+
+    });
+
+    describe('appendData()', function () {
+      var someData;
+
+      beforeEach(function() {
+
+        someData = {
+          id:'someData',
+          data: [
+            { x: 13, y: 106},
+            { x: 15, y: 56},
+            { x: 17, y: 100}
+          ]
+        };
+
+      });
+
+      it('pushes data for a given id', function() {
+        testGraph.data(someData);
+        expect(testGraph.data('someData').data.length).toBe(3);
+        testGraph.appendData('someData', { x: 14, y: 106})
+          .update();
+        expect(testGraph.data('someData').data.length).toBe(4);
+      });
+
+      it('concats array of data for a given id', function() {
+        testGraph.data(someData);
+        expect(testGraph.data('someData').data.length).toBe(3);
+        testGraph.appendData('someData', [{ x: 18, y: 156}, { x: 15, y: 196}])
+          .update();
+        expect(testGraph.data('someData').data.length).toBe(5);
+      });
+
     });
 
     describe('component()', function () {
@@ -161,7 +267,7 @@ function (graph, assetLoader) {
           type: 'line',
           dataId: 'fakeData'
         });
-        expect(testGraph.getComponents().length).toBe(1);
+        expect(testGraph.component().length).toBe(1);
       });
 
       it('returns a component when id is passed', function() {
@@ -201,20 +307,67 @@ function (graph, assetLoader) {
         panel = selection.select('svg');
       });
 
-      it('updates domain for xScale', function () {
+      it('calls domain for xScale', function () {
         expect(xScale.domain).toHaveBeenCalled();
       });
 
+      it('updates domain for xScale', function () {
+        expect(xScale.domain().toString()).toBe(
+          'Tue Jan 29 2013 17:13:34 GMT-0800 (PST),' +
+          'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
+        );
+      });
+
+      it('updates domain for xScale based on domain interval period(days)',
+        function () {
+          testGraph.config({
+            domainIntervalUnit: d3.time.day,
+            domainIntervalPeriod: 2
+          });
+          testGraph.update();
+          expect(xScale.domain().toString()).toBe(
+            'Sat Feb 02 2013 17:13:34 GMT-0800 (PST),' +
+            'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
+          );
+        }
+      );
+
+      it('updates domain for xScale based on domain interval period(week)',
+        function () {
+          testGraph.config({
+            domainIntervalUnit: d3.time.week,
+            domainIntervalPeriod: 1
+          });
+          testGraph.update();
+          expect(xScale.domain().toString()).toBe(
+            'Tue Jan 29 2013 17:13:34 GMT-0800 (PST),' +
+            'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
+          );
+        }
+      );
+
       it('updates domain for yScale', function () {
+        expect(yScale.domain()).toEqual([56, 200]);
+      });
+
+      it('updates domain for based on force property the config', function () {
+        testGraph.config({
+          forceY: [0]
+        });
+        testGraph.update();
+        expect(yScale.domain()).toEqual([0, 200]);
+      });
+
+      it('calls domain for yScale', function () {
         expect(yScale.domain).toHaveBeenCalled();
+      });
+
+      it('updates the xScale based on domain Interval', function () {
+        expect(xScale.domain).toHaveBeenCalled();
       });
 
       it('calls update on legend component', function () {
         expect(legend.update).toHaveBeenCalled();
-      });
-
-      it('calls update on x-axis component', function () {
-        expect(xAxis.update).toHaveBeenCalled();
       });
 
       it('calls update on y-axis component', function () {

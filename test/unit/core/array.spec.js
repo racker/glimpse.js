@@ -62,6 +62,14 @@ function (array) {
 
     });
 
+    describe('append()', function () {
+
+      it('appends at the end of the array', function () {
+        expect(array.append([1,2], [3,4]).toString()).toBe('1,2,3,4');
+      });
+
+    });
+
   });
 
 });

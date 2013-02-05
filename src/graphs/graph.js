@@ -12,6 +12,7 @@ define([
   'components/component'
 ],
 function (obj, config, array, assetLoader, components) {
+
   'use strict';
 
   return function () {
@@ -34,6 +35,7 @@ function (obj, config, array, assetLoader, components) {
     var addComponent_,
       addAxes_,
       addLegend_,
+      configureXScale_,
       defaultXaccessor_,
       defaultYaccessor_,
       getFrameHeight_,
@@ -46,7 +48,8 @@ function (obj, config, array, assetLoader, components) {
       renderSvg_,
       update_,
       updateScales_,
-      updateLegend_;
+      updateLegend_,
+      upsertData_;
 
     config_ = {};
 
@@ -257,12 +260,40 @@ function (obj, config, array, assetLoader, components) {
     };
 
     /**
+     * configures the X scale
+     * @param  {Array} xExtents
+     */
+    configureXScale_ = function (xExtents) {
+      var max, min;
+
+      max = d3.max(xExtents);
+      min = d3.min(xExtents);
+
+      //TODO: find a better way to check if the scale is a time scale
+      if (config_.xScale.toString() === d3.time.scale().toString()) {
+
+        if (config_.domainIntervalUnit) {
+          var offset, newMin;
+          offset = config_.domainIntervalUnit.offset(
+            max,
+            -config_.domainIntervalPeriod || -1
+          );
+          newMin = +min > +offset ? min : offset;
+          min = newMin;
+        }
+      }
+
+      config_.xScale.rangeRound([0, getFrameWidth_()])
+        .domain([min, max]);
+    };
+
+    /**
      * @private
      * Updates the domain on the scales
      */
     updateScales_ = function () {
       var xExtents = [],
-          yExtents = [];
+        yExtents = [];
 
       components_.forEach(function (component) {
         var componentData;
@@ -276,10 +307,18 @@ function (obj, config, array, assetLoader, components) {
           }
         }
       });
-      config_.xScale.rangeRound([0, getFrameWidth_()])
-        .domain(d3.extent(xExtents));
+
+      if (config_.forceX) {
+        xExtents = xExtents.concat(config_.forceX);
+      }
+
+      if (config_.forceY) {
+        yExtents = yExtents.concat(config_.forceY);
+      }
+
+      configureXScale_(xExtents);
       config_.yScale.rangeRound([getFrameHeight_(), 0])
-        .domain([0, d3.max(yExtents)]);
+        .domain(d3.extent(yExtents));
     };
 
     /**
@@ -289,6 +328,28 @@ function (obj, config, array, assetLoader, components) {
     update_ = function () {
       updateScales_();
       updateLegend_();
+    };
+
+    /**
+     * Inserts/Updates object in data array
+     * @param  {object} data
+     */
+    upsertData_ = function (data) {
+      var index = array.findIndex(data_, function (d) {
+        return d.id === data.id;
+      });
+      if (index !== -1) {
+        data_[index] = obj.extend(data_[index], data);
+      } else {
+        //Set default x and y accessors.
+        if (!data.x) {
+          data.x = defaultXaccessor_;
+        }
+        if (!data.y) {
+          data.y = defaultYaccessor_;
+        }
+        data_.push(data);
+      }
     };
 
     /**
@@ -338,16 +399,48 @@ function (obj, config, array, assetLoader, components) {
      */
     graph.data = function (data) {
       if (data) {
-        // TODO: loop thru each data config and apply default X/Y
-        // accessor functions
+        // Single string indicates id of data to return.
+        if (typeof data === 'string') {
+          return array.find(data_, function (d) {
+            return d.id === data;
+          });
+        }
         if (Array.isArray(data)) {
-          data_ = data_.concat(data);
+          var i, len = data.length;
+          for (i = 0; i < len; i++) {
+            upsertData_(data[i]);
+          }
         } else {
-          data_.push(data);
+          upsertData_(data);
         }
         return graph;
       }
+
       return data_;
+    };
+
+    /**
+     * Append data to an existing data object
+     * @param  {string} id
+     * @param  {Array|Object} dataToAppend
+     * @return {graphs.graph}
+     */
+    graph.appendData = function (id, dataToAppend) {
+
+      var index = array.findIndex(data_, function (d) {
+        return d.id === id;
+      });
+
+      if (index !== -1) {
+        if (Array.isArray(dataToAppend)) {
+          var originalData = data_[index].data;
+          array.append(originalData, dataToAppend);
+        } else {
+          data_[index].data.push(dataToAppend);
+        }
+      }
+
+      return graph;
     };
 
     /**
@@ -381,6 +474,7 @@ function (obj, config, array, assetLoader, components) {
      */
     graph.update = function () {
       update_();
+
       components_.forEach(function (component) {
         component.update();
       });
@@ -405,14 +499,6 @@ function (obj, config, array, assetLoader, components) {
     };
 
     /**
-     * Returns components of the graph
-     * @return {Array}
-     */
-    graph.getComponents = function () {
-      return components_;
-    };
-
-    /**
      * X-Axis
      * @param  {Object|} config
      * @return {components.axis|graphs.graph}
@@ -425,7 +511,7 @@ function (obj, config, array, assetLoader, components) {
       return xAxis_;
     };
 
-     /**
+    /**
      * Y-Axis
      * @param  {Object} config
      * @return {graphs.graph|components.axis}
