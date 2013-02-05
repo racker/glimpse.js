@@ -84,9 +84,19 @@ function (axisComponent) {
           tickSize: 5
         });
         axis.render(container);
-       expect(axis.d3axis().tickSize()).toBe(5);
+        expect(axis.d3axis().tickSize()).toBe(5);
       });
 
+      it('sets ticks if configured axis', function () {
+        axis.config({
+          type: 'x',
+          scale: d3.scale.linear().domain([5,10]),
+          orient: 'left',
+          ticks: 3
+        });
+        axis.render(container);
+        expect(axis.d3axis().ticks()[0]).toBe(3);
+      });
 
       it('renders y axis', function () {
         axis.config({
