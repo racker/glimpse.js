@@ -29,7 +29,8 @@ function (obj, config, string) {
         fontSize: 10,
         textBgColor: '#fff',
         textBgSize: 3,
-        tickSize: 0
+        tickSize: 0,
+        ticks: 0
     };
 
     /**
@@ -54,6 +55,9 @@ function (obj, config, string) {
         .orient(config_.orient)
         .tickSize(config_.tickSize);
 
+      if (config_.ticks) {
+        d3axis_.ticks(config_.ticks);
+      }
       root_.call(d3axis_);
 
       // remove boldness from default axis path

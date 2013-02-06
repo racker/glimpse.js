@@ -65,7 +65,9 @@ function (obj, config, array, assetLoader, components) {
       marginLeft: 0,
       xScale: d3.time.scale(),
       yScale: d3.scale.linear(),
-      showLegend: true
+      showLegend: true,
+      xTicks: undefined,
+      yTicks: 3
     };
 
     /**
@@ -363,12 +365,14 @@ function (obj, config, array, assetLoader, components) {
       xAxis_ = components.axis().config({
         type: 'x',
         orient: 'bottom',
-        scale: config_.xScale
+        scale: config_.xScale,
+        ticks: config_.xTicks
       });
       yAxis_ = components.axis().config({
         type: 'y',
         orient: 'right',
-        scale: config_.yScale
+        scale: config_.yScale,
+        ticks: config_.yTicks
       });
       legend_ = components.legend();
       return graph;
