@@ -230,6 +230,7 @@ function (graph, assetLoader) {
       var someData;
 
       beforeEach(function() {
+        var selection = jasmine.htmlFixture();
 
         someData = {
           id:'someData',
@@ -240,18 +241,19 @@ function (graph, assetLoader) {
           ]
         };
 
+        testGraph.data(someData);
+        testGraph.render(selection.node());
+
       });
 
       it('pushes data for a given id', function() {
-        testGraph.data(someData);
         expect(testGraph.data('someData').data.length).toBe(3);
-        testGraph.appendData('someData', { x: 14, y: 106})
-          .update();
+        testGraph.appendData('someData', { x: 14, y: 106});
+        testGraph.update();
         expect(testGraph.data('someData').data.length).toBe(4);
       });
 
       it('concats array of data for a given id', function() {
-        testGraph.data(someData);
         expect(testGraph.data('someData').data.length).toBe(3);
         testGraph.appendData('someData', [{ x: 18, y: 156}, { x: 15, y: 196}])
           .update();
@@ -409,12 +411,12 @@ function (graph, assetLoader) {
       });
 
       it('renders unframed components group', function () {
-        var group = panel.select('.gl-components.gl-unframed');
+        var group = panel.select('.gl-unframed');
         expect(group.node().nodeName.toLowerCase()).toBe('g');
       });
 
       it('renders framed components group', function () {
-        var group = panel.select('.gl-components.gl-framed');
+        var group = panel.select('.gl-framed');
         expect(group.node().nodeName.toLowerCase()).toBe('g');
       });
 

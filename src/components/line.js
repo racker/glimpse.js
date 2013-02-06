@@ -26,7 +26,7 @@ function (array, config, obj, string, util) {
 
     defaults_ = {
       id: string.random(),
-      isFramed: true,
+      target: '.gl-framed',
       strokeWidth: 2,
       color: 'steelBlue',
       showInLegend: true,

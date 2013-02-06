@@ -21,6 +21,43 @@ beforeEach(function() {
     return actualAttrValue === attrValue.toString();
   }
 
+  function serializeXML (node, output) {
+    var nodeType = node.nodeType, attrMap, attrNode, i, len, childNodes;
+    if (nodeType === 3) { // TEXT nodes.
+      // Replace special XML characters with their entities.
+      output.push(node.textContent.replace(/&/, '&amp;')
+            .replace(/</, '&lt;').replace('>', '&gt;'));
+    } else if (nodeType === 1) { // ELEMENT nodes.
+      // Serialize Element nodes.
+      output.push('<', node.tagName);
+      if (node.hasAttributes()) {
+        attrMap = node.attributes;
+        for (i = 0, len = attrMap.length; i < len; i += 1) {
+          attrNode = attrMap.item(i);
+          output.push(' ', attrNode.name, '="', attrNode.value, '"');
+        }
+      }
+      if (node.hasChildNodes()) {
+        output.push('>');
+        childNodes = node.childNodes;
+        for (i = 0, len = childNodes.length; i < len; i += 1) {
+          serializeXML(childNodes.item(i), output);
+        }
+        output.push('</', node.tagName, '>');
+      } else {
+        output.push('/>');
+      }
+    } else if (nodeType === 8) {
+      // TODO(codedread): Replace special characters with XML entities?
+      output.push('<!--', node.nodeValue, '-->');
+    } else {
+      // TODO: Handle CDATA nodes.
+      // TODO: Handle ENTITY nodes.
+      // TODO: Handle DOCUMENT nodes.
+      throw 'Error serializing XML. Unhandled node of type: ' + nodeType;
+    }
+  }
+
   this.addMatchers({
 
     toBeArray: function() {
@@ -88,6 +125,35 @@ beforeEach(function() {
       return true;
     },
 
+    toHaveTranslate: function (x, y) {
+      var actual = d3.select(this.actual), translate;
+      translate = d3.transform(actual.attr('transform')).translate;
+      this.message = function () {
+        return [
+          'Expected node to have translate of: ' + jasmine.pp([x, y]) +
+          ' but was: ' + jasmine.pp(translate),
+          'Expected node not to have translate of: ' + jasmine.pp([x, y]) +
+          ' but was: ' + jasmine.pp(arguments)
+        ];
+      };
+      return x === translate[0] && y === translate[1];
+    },
+
+    toHaveXY: function (x, y) {
+      var actual = d3.select(this.actual),
+          ax = parseInt(actual.attr('x'), 10),
+          ay = parseInt(actual.attr('y'), 10);
+      this.message = function () {
+        return [
+          'Expected node to have x, y co-ordinates of: ' + jasmine.pp([x, y]) +
+          ' but was: ' + jasmine.pp([ax, ay]),
+          'Expected node not to have translate of: ' + jasmine.pp([x, y]) +
+          ' but was: ' + jasmine.pp([ax, ay])
+        ];
+      };
+      return x ===  ax && y === ay;
+    },
+
     toBeDefinedAndNotNull: function () {
       var actual = this.actual;
 
@@ -152,6 +218,17 @@ beforeEach(function() {
         ];
       };
       return actualValue === expectedValue;
+    },
+
+    toHaveXML: function (xmlString) {
+      var output = [], serializedXML;
+      serializeXML(this.actual, output);
+      serializedXML = output.join('');
+      this.message = function () {
+        return ['Expected ' + jasmine.pp(serializedXML) + ' to be ' + xmlString,
+          'Expected ' + jasmine.pp(serializedXML) + 'not to be ' + xmlString];
+      };
+      return serializedXML  ===  xmlString;
     }
 
   });

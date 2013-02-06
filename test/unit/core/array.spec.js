@@ -70,6 +70,28 @@ function (array) {
 
     });
 
+    describe('getArray()', function() {
+
+      it('returns an empty array if input is undefined', function() {
+        expect(array.getArray()).toEqual([]);
+      });
+
+      it('returns an empty array if input is null', function() {
+        expect(array.getArray(null)).toEqual([]);
+      });
+
+      it('returns array with single object if input is an Object', function() {
+        var obj = {'hello': 'bye'};
+        expect(array.getArray(obj)).toEqual([obj]);
+      });
+
+      it('returns the array if input is an array', function() {
+        var arr = [1, 2, 3];
+        expect(array.getArray(arr)).toEqual(arr);
+      });
+
+    });
+
   });
 
 });

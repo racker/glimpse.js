@@ -22,7 +22,7 @@ function (obj, config, string) {
     defaults_ = {
         type: 'x',
         id: string.random(),
-        isFramed: true,
+        target: '.gl-framed',
         color: '#333',
         opacity: 0.8,
         fontFamily: 'arial',
@@ -47,7 +47,9 @@ function (obj, config, string) {
      */
     axis.update = function () {
       if (config_.type === 'x') {
-        root_.attr('transform', 'translate(0,' + (config_.height) + ')');
+        // TODO: Formalize a way to get the container height.
+        root_.attr('transform', 'translate(' +
+                   [0, d3.select(root_.node().parentNode).height()] + ')');
       }
 
       root_.selectAll('g').remove();

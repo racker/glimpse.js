@@ -27,7 +27,6 @@ function(obj, config, string, array) {
       dataId: undefined,
       cssClass: undefined,
       text: undefined,
-      isFramed: false,
       marginTop: 0,
       marginRight: 0,
       marginBottom: 0,

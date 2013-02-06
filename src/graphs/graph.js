@@ -3,16 +3,15 @@
  *
  * A reusable X-Y graph.
  */
-
 define([
   'core/object',
   'core/config',
   'core/array',
   'core/asset-loader',
-  'components/component'
+  'components/component',
+  'layout/layoutmanager'
 ],
-function (obj, config, array, assetLoader, components) {
-
+function (obj, config, array, assetLoader, components, layoutManager) {
   'use strict';
 
   return function () {
@@ -41,9 +40,7 @@ function (obj, config, array, assetLoader, components) {
       getFrameHeight_,
       getFrameWidth_,
       renderComponents_,
-      renderComponentGroup_,
       renderDefs_,
-      renderFramedComponentGroup_,
       renderPanel_,
       renderSvg_,
       update_,
@@ -54,6 +51,7 @@ function (obj, config, array, assetLoader, components) {
     config_ = {};
 
     defaults_ = {
+      layout: 'default',
       width: 700,
       height: 250,
       viewBoxHeight: 250,
@@ -134,7 +132,7 @@ function (obj, config, array, assetLoader, components) {
      * @return {number}
      */
     getFrameHeight_ = function () {
-      return config_.viewBoxHeight - config_.marginTop - config_.marginBottom;
+      return svg_.select('.gl-framed').height();
     };
 
     /**
@@ -143,7 +141,7 @@ function (obj, config, array, assetLoader, components) {
      * @return {number}
      */
     getFrameWidth_ = function () {
-      return config_.viewBoxWidth - config_.marginLeft - config_.marginRight;
+      return svg_.select('.gl-framed').width();
     };
 
     /**
@@ -152,28 +150,14 @@ function (obj, config, array, assetLoader, components) {
      * @param  {d3.selection} selection
      */
     renderComponents_ = function (selection) {
-      var framedGroup, unframedGroup;
       if (!components_) {
         return;
       }
-      framedGroup = selection.select('.gl-components.gl-framed');
-      unframedGroup = selection.select('.gl-components.gl-unframed');
       components_.forEach(function (component) {
-        var renderTarget, componentConfig;
-        if (component.config('isFramed')) {
-          renderTarget = framedGroup;
-          componentConfig = {
-            'height': getFrameHeight_(),
-            'width': getFrameWidth_()
-          };
-        } else {
-          renderTarget = unframedGroup;
-          componentConfig = {
-            'height': config_.viewBoxHeight,
-            'width': config_.viewBoxWidth
-          };
-        }
-        component.config(componentConfig).render(renderTarget);
+        var renderTarget;
+        renderTarget = selection.select(
+            component.config('target') || '.gl-unframed');
+        component.render(renderTarget);
       });
     };
 
@@ -184,32 +168,6 @@ function (obj, config, array, assetLoader, components) {
      */
     renderDefs_ = function (selection) {
       return selection.append('defs');
-    };
-
-    /**
-     * @private
-     * Appends g node to the selection
-     * @param  {d3.selection} selection
-     */
-    renderComponentGroup_ = function (selection) {
-      selection.append('g')
-        .attr({
-          'class': 'gl-components gl-unframed'
-        });
-    };
-
-    /**
-     * @private
-     * Appends g node to the selection
-     * @param  {d3.selection} selection
-     */
-    renderFramedComponentGroup_ = function (selection) {
-      selection.append('g')
-        .attr({
-          'class': 'gl-components gl-framed',
-          'transform':
-            'translate(' + config_.marginLeft + ',' + config_.marginTop + ')'
-        });
     };
 
     /**
@@ -239,8 +197,11 @@ function (obj, config, array, assetLoader, components) {
     renderPanel_ = function (selection) {
       svg_ = renderSvg_(selection);
       renderDefs_(svg_);
-      renderComponentGroup_(svg_);
-      renderFramedComponentGroup_(svg_);
+      layoutManager.setLayout(
+        config_.layout,
+        svg_,
+        config_.width,
+        config_.height);
     };
 
     /**

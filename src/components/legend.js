@@ -21,14 +21,14 @@ function(obj, config, string, util) {
       root_,
       enter_,
       update_,
-      remove_,
-      reposition_;
+      remove_;
 
     config_ = {};
 
     defaults_ = {
       id: string.random(),
-      isFramed: false,
+      position: 'center-left',
+      target: '.gl-info',
       indicatorWidth: 10,
       indicatorHeight: 10,
       indicatorSpacing: 4,
@@ -41,6 +41,8 @@ function(obj, config, string, util) {
       marginRight: 0,
       marginBottom: 0,
       marginLeft: 10,
+      layout: 'horizontal',
+      gap: 10,
       keys: []
     };
 
@@ -111,29 +113,6 @@ function(obj, config, string, util) {
     };
 
     /**
-     * Iterate thru each key and apply proper translation based on
-     * previous text width.
-     * @param {d3.selection} selection
-     */
-    reposition_ = function(selection) {
-      var keyYTranslate = config_.marginLeft;
-
-      selection.each(function() {
-        d3.select(this).attr('transform',
-          function() {
-            var prevNode = this.previousElementSibling;
-            if (prevNode) {
-              keyYTranslate += config_.indicatorWidth +
-                config_.keySpacing +
-                config_.indicatorSpacing +
-                prevNode.childNodes[1].getBBox().width;
-            }
-            return 'translate(' + [keyYTranslate, config_.marginTop] + ')';
-          });
-      });
-    };
-
-    /**
      * Remove any keys that were removed.
      * @param {d3.selection} selection
      */
@@ -176,7 +155,8 @@ function(obj, config, string, util) {
       remove_(selection);
       enter_(selection);
       update_(selection);
-      reposition_(selection);
+      root_.layout({type: config_.layout, gap: config_.gap});
+      root_.position(config_.position);
       return legend;
     };
 

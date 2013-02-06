@@ -54,7 +54,6 @@ function (d3, object, line) {
       var config, defaults;
 
       defaults = {
-        isFramed: true,
         strokeWidth: 2,
         color: 'steelBlue',
         showInLegend: true,
@@ -64,10 +63,6 @@ function (d3, object, line) {
 
       beforeEach(function (){
         config = testLine.config();
-      });
-
-      it('has default isFramed', function () {
-        expect(config.isFramed).toBe(defaults.isFramed);
       });
 
       it('has default strokeWidth', function () {

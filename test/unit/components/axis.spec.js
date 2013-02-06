@@ -14,7 +14,7 @@ function (axisComponent) {
     }
 
     beforeEach(function() {
-      container = jasmine.svgFixture().append('g');
+      container = jasmine.svgFixture().append('g').size(400, 200);
       axis = axisComponent();
       axis.config({id: componentId });
     });
@@ -112,11 +112,10 @@ function (axisComponent) {
         axis.config({
           type: 'x',
           scale: d3.scale.linear(),
-          orient: 'right',
-          height: 200
+          orient: 'right'
         });
         axis.render(container);
-        expect(getComponentNode()).toHaveAttr('transform', 'translate(0,200)');
+        expect(getComponentNode()).toHaveTranslate(0, 200);
       });
 
       it('does not position y axis', function () {

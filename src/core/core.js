@@ -1,6 +1,8 @@
+// d3-ext is extending d3. Do not remove the require.
 define([
   'graphs/graph',
-  'components/component'
+  'components/component',
+  'd3-ext/d3-ext'
 ],
 function (graph, component) {
   'use strict';

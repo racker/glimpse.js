@@ -58,6 +58,14 @@ function () {
     append: function (arr, arrToAppend) {
       Array.prototype.splice.apply(arr, [arr.length, 0].concat(arrToAppend));
       return arr;
+    },
+
+    /*
+     * Converts input to an array object, if it isn't.
+     * Returns empty array if input is null or undefined.
+     */
+    getArray: function (obj) {
+      return obj ? (Array.isArray(obj) ? obj: [obj]) : [];
     }
 
   };

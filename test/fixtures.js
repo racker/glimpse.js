@@ -1,11 +1,9 @@
 (function() {
   'use strict';
 
-  var body;
-  body = d3.select(document.body);
-
   jasmine.htmlFixture = function() {
-    var fixture = d3.select('#html-fixture');
+    var fixture = d3.select('#html-fixture'),
+        body = d3.select(document.body);
     if (!fixture.empty()) {
       return fixture;
     }
@@ -13,7 +11,8 @@
   };
 
   jasmine.svgFixture = function () {
-    var fixture = d3.select('#svg-fixture');
+    var fixture = d3.select('#svg-fixture'),
+        body = d3.select(document.body);
     if (!fixture.empty()) {
       return fixture;
     }

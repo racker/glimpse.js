@@ -18,7 +18,7 @@
   "quotmark": "single",
   "unused": true,
   "maxdepth": 3,
-  "maxcomplexity": 5,
+  "maxcomplexity": 10,
     "globals": {
     "define": true,
     "require": true,
