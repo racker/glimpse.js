@@ -45,18 +45,6 @@ function (d3, config) {
         expect(result.config('foo')).not.toBeDefined();
       });
 
-      it('executes a function if config value is function', function () {
-        result.config('foo', d3.functor(10));
-        expect(result.config('foo')).toBe(10);
-      });
-
-      it('provides a context arg for function configs', function () {
-        var fn = function (ctx) {
-          return ctx.config('foo') + 1; };
-        result.config({ 'foo': 1, 'bar': fn });
-        expect(result.config('bar')).toBe(2);
-      });
-
       it('returns all config options when no args provided', function () {
         var cnf = { 'foo': 'bar', 'biz': 'bang' };
         result.config(cnf);

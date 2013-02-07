@@ -7,7 +7,8 @@ require({
   baseUrl: '/base/src',
   paths: {
     require: '../lib/require',
-    d3:   '../lib/d3'
+    d3:   '../lib/d3',
+    'test-util': '../test/util'
   },
   shim: {
     'd3': { exports: 'd3' }

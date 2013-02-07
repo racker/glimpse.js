@@ -25,24 +25,36 @@ function (lm) {
         fixture = jasmine.svgFixture().node();
 
         expect(fixture).toHaveXML(xmlString([
-            '<g gl-width="700" gl-height="250" class="gl-vgroup" split="15,85">',
-              '<rect class="gl-layout-size" width="700" height="250" fill="none"/>',
-                '<g gl-width="700" gl-height="37.5" transform="translate(0,0)">',
-                  '<rect class="gl-layout-size" width="700" height="37.5" fill="none"/>',
-                  '<g padding="1" gl-width="686" gl-height="36.26" transform="translate(7,0.37)" class="gl-info">',
-                    '<rect class="gl-layout-size" width="686" height="36.26" fill="none"/>',
-                  '</g>',
-                '</g>',
-                '<g gl-width="700" gl-height="212.5" transform="translate(0,37)">',
-                  '<rect class="gl-layout-size" width="700" height="212.5" fill="none"/>',
-                  '<g padding="1" padding-bottom="10" gl-width="686" gl-height="186.56" transform="translate(7,2.12)" class="gl-unframed">',
-                    '<rect class="gl-layout-size" width="686" height="186.56" fill="none"/>',
-                    '<g gl-width="686" gl-height="186" class="gl-framed"><rect class="gl-layout-size" width="686" height="186" fill="none"/>',
-                  '</g>',
+          '<g gl-width="700" gl-height="250" class="gl-vgroup" split="10,70,10,10">',
+            '<rect class="gl-layout-size" width="700" height="250" fill="none"/>',
+            '<g gl-width="700" gl-height="25" transform="translate(0,0)">',
+              '<rect class="gl-layout-size" width="700" height="25" fill="none"/>',
+              '<g padding="1" padding-left="2" gl-width="672" gl-height="24.5" transform="translate(21,0.25)" class="gl-info">',
+                '<rect class="gl-layout-size" width="672" height="24.5" fill="none"/>',
+              '</g>',
+            '</g>',
+            '<g gl-width="700" gl-height="175" transform="translate(0,25)">',
+              '<rect class="gl-layout-size" width="700" height="175" fill="none"/>',
+              '<g padding="1" padding-bottom="0" gl-width="686" gl-height="171.5" transform="translate(7,1.75)" class="gl-unframed">',
+                '<rect class="gl-layout-size" width="686" height="171.5" fill="none"/>',
+                '<g gl-width="686" gl-height="171" class="gl-framed">',
+                  '<rect class="gl-layout-size" width="686" height="171" fill="none"/>',
                 '</g>',
               '</g>',
-            '</g>']));
-
+            '</g>',
+            '<g gl-width="700" gl-height="25" transform="translate(0,200)">',
+              '<rect class="gl-layout-size" width="700" height="25" fill="none"/>',
+              '<g padding="1" gl-width="686" gl-height="24.5" transform="translate(7,0.25)" class="gl-xaxis">',
+                '<rect class="gl-layout-size" width="686" height="24.5" fill="none"/>',
+              '</g>',
+            '</g>',
+            '<g gl-width="700" gl-height="25" transform="translate(0,225)">',
+              '<rect class="gl-layout-size" width="700" height="25" fill="none"/>',
+              '<g padding="1" padding-top="2" gl-width="686" gl-height="24" transform="translate(7,0.75)" class="gl-footer">',
+                '<rect class="gl-layout-size" width="686" height="24" fill="none"/>',
+              '</g>',
+            '</g>',
+          '</g>']));
       });
 
       it('renders layout 1', function () {

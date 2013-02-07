@@ -6,9 +6,10 @@ define([
   'core/object',
   'core/config',
   'core/string',
-  'core/array'
+  'core/array',
+  'd3-ext/util'
 ],
-function(obj, config, string, array) {
+function(obj, config, string, array, util) {
   'use strict';
 
   return function() {
@@ -23,10 +24,13 @@ function(obj, config, string, array) {
     config_ = {};
 
     defaults_ = {
-      id: string.random(),
+      cid: undefined,
       dataId: undefined,
       cssClass: undefined,
       text: undefined,
+      gap: undefined,
+      layout: 'horizontal',
+      position: 'center-right',
       marginTop: 0,
       marginRight: 0,
       marginBottom: 0,
@@ -55,16 +59,19 @@ function(obj, config, string, array) {
      * @return {Object|components.label}
      */
     label.data = function(data) {
+      // Set data if provided.
       if (data) {
         data_ = data;
         return label;
       }
-      if (!config_.dataId) {
-        return null;
+      // Find corresponding data group if dataId is set.
+      if (config_.dataId) {
+        return array.find(data_, function(d) {
+          return d.id === config_.dataId;
+        });
       }
-      return array.find(data_, function(d) {
-        return d.id === config_.dataId;
-      });
+      // Otherwise return the entire raw data.
+      return data_;
     };
 
     /**
@@ -78,12 +85,7 @@ function(obj, config, string, array) {
         config_.text = d3.functor(text);
         return label;
       }
-      // Has data, text() is an accessor to the data.
-      if (config_.dataId) {
-        return config_.text(label.data());
-      }
-      // Text is static.
-      return d3.functor(config_.text)();
+      return d3.functor(config_.text)(label.data());
     };
 
     /**
@@ -93,7 +95,7 @@ function(obj, config, string, array) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      root_ = selection.append('g');
+      root_ = util.select(selection).append('g');
       root_.append('text');
       label.update();
       return label;
@@ -114,13 +116,15 @@ function(obj, config, string, array) {
       }
 
       root_.attr({
-        'id': config_.id,
         'class': 'gl-component gl-label',
         'transform':
           'translate(' + [config_.marginLeft, config_.marginTop] + ')'
       });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
+      }
+      if (config_.cid) {
+        root_.attr('gl-cid', config_.cid);
       }
       root_.select('text').attr({
         'fill': config_.color,
@@ -129,6 +133,7 @@ function(obj, config, string, array) {
         'font-weight': config_.fontWeight
       })
       .text(text);
+      root_.position(config_.position);
       return label;
     };
 
@@ -138,7 +143,8 @@ function(obj, config, string, array) {
     obj.extend(
       label,
       config(label, config_, [
-        'id',
+        'cid',
+        'target',
         'cssClass',
         'color',
         'fontFamily',

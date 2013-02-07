@@ -26,9 +26,9 @@ function(obj, config, string, util) {
     config_ = {};
 
     defaults_ = {
-      id: string.random(),
       position: 'center-left',
       target: '.gl-info',
+      cid: undefined,
       indicatorWidth: 10,
       indicatorHeight: 10,
       indicatorSpacing: 4,
@@ -142,10 +142,9 @@ function(obj, config, string, util) {
         return;
       }
 
-      root_.attr({
-        'class': 'gl-component gl-legend',
-        'id': config_.id
-      });
+      if (config_.cid) {
+        root_.attr('gl-cid', config_.cid);
+      }
 
       // The selection of legend keys.
       selection = root_
@@ -167,7 +166,10 @@ function(obj, config, string, util) {
      *    or a selector string.
      */
     legend.render = function(selection) {
-      root_ = util.select(selection).append('g');
+      root_ = util.select(selection).append('g')
+        .attr({
+          'class': 'gl-component gl-legend'
+        });
       legend.update();
       return legend;
     };
@@ -176,7 +178,7 @@ function(obj, config, string, util) {
     obj.extend(
       legend,
       config(legend, config_, [
-        'id',
+        'cid',
         'keys',
         'fontColor',
         'fontFamily',

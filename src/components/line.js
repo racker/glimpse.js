@@ -25,8 +25,8 @@ function (array, config, obj, string, util) {
       update_;
 
     defaults_ = {
-      id: string.random(),
       target: '.gl-framed',
+      cid: undefined,
       strokeWidth: 2,
       color: 'steelBlue',
       showInLegend: true,
@@ -87,6 +87,10 @@ function (array, config, obj, string, util) {
       var dataConfig, selection;
       dataConfig = line.data();
 
+      if (config_.cid) {
+        root_.attr('gl-cid', config_.cid);
+      }
+
       // Configure the lineGenerator function
       config_.lineGenerator
         .x(function(d, i) {
@@ -116,7 +120,6 @@ function (array, config, obj, string, util) {
     line.render = function (selection) {
       root_ = util.select(selection).append('g')
         .attr({
-          'id': config_.id,
           'class': 'gl-component gl-line'
         });
       root_.append('path')
@@ -132,7 +135,7 @@ function (array, config, obj, string, util) {
 
     obj.extend(line, config(line, config_,
       [
-        'id',
+        'cid',
         'xScale',
         'yScale',
         'lineGenerator'

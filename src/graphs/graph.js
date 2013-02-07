@@ -8,10 +8,13 @@ define([
   'core/config',
   'core/array',
   'core/asset-loader',
+  'core/format',
   'components/component',
-  'layout/layoutmanager'
+  'layout/layoutmanager',
+  'd3-ext/util'
 ],
-function (obj, config, array, assetLoader, components, layoutManager) {
+function (obj, config, array, assetLoader, format, components, layoutManager,
+  d3util) {
   'use strict';
 
   return function () {
@@ -26,7 +29,8 @@ function (obj, config, array, assetLoader, components, layoutManager) {
       xAxis_,
       yAxis_,
       legend_,
-      svg_;
+      svg_,
+      xDomainLabel_;
 
     /**
      * Private functions
@@ -46,15 +50,16 @@ function (obj, config, array, assetLoader, components, layoutManager) {
       update_,
       updateScales_,
       updateLegend_,
-      upsertData_;
+      upsertData_,
+      updateXDomainLabel_;
 
     config_ = {};
 
     defaults_ = {
       layout: 'default',
       width: 700,
-      height: 250,
-      viewBoxHeight: 250,
+      height: 350,
+      viewBoxHeight: 350,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
       marginTop: 10,
@@ -65,7 +70,8 @@ function (obj, config, array, assetLoader, components, layoutManager) {
       yScale: d3.scale.linear(),
       showLegend: true,
       xTicks: undefined,
-      yTicks: 3
+      yTicks: 3,
+      xDomainLabelFormatter: format.timeDomain
     };
 
     /**
@@ -229,8 +235,8 @@ function (obj, config, array, assetLoader, components, layoutManager) {
     configureXScale_ = function (xExtents) {
       var max, min;
 
-      max = d3.max(xExtents);
-      min = d3.min(xExtents);
+      max = d3.max(xExtents) || config_.xScale.domain()[1];
+      min = d3.min(xExtents) || config_.xScale.domain()[0];
 
       //TODO: find a better way to check if the scale is a time scale
       if (config_.xScale.toString() === d3.time.scale().toString()) {
@@ -286,11 +292,23 @@ function (obj, config, array, assetLoader, components, layoutManager) {
 
     /**
      * @private
+     * Updates the text in the label showing the date range.
+     * TODO: position this with layout manager
+     */
+    updateXDomainLabel_ = function() {
+      xDomainLabel_
+        .data(config_.xScale.domain())
+        .text(config_.xDomainLabelFormatter);
+    };
+
+    /**
+     * @private
      * Updates scales and legend
      */
     update_ = function () {
       updateScales_();
       updateLegend_();
+      updateXDomainLabel_();
     };
 
     /**
@@ -327,7 +345,8 @@ function (obj, config, array, assetLoader, components, layoutManager) {
         type: 'x',
         orient: 'bottom',
         scale: config_.xScale,
-        ticks: config_.xTicks
+        ticks: config_.xTicks,
+        target: '.gl-xaxis'
       });
       yAxis_ = components.axis().config({
         type: 'y',
@@ -336,6 +355,9 @@ function (obj, config, array, assetLoader, components, layoutManager) {
         ticks: config_.yTicks
       });
       legend_ = components.legend();
+      xDomainLabel_ = components.label()
+        .cid('xDomainLabel')
+        .target('.gl-footer');
       return graph;
     }
 
@@ -410,7 +432,7 @@ function (obj, config, array, assetLoader, components, layoutManager) {
 
     /**
      * Creates and adds a component to the graph based on the type
-     * or returns the component based on the id
+     * or returns the component based on the cid.
      * @param  {string|Object} componentConfig
      * @return {component|graphs.graph}
      */
@@ -421,10 +443,10 @@ function (obj, config, array, assetLoader, components, layoutManager) {
         // TODO: clone this?
         return components_;
       }
-      // Single string indicates id of component to return.
+      // Single string indicates cid of component to return.
       if (typeof componentConfig === 'string') {
         return array.find(components_, function (c) {
-          return c.id() === componentConfig;
+          return c.cid() === componentConfig;
         });
       }
       component = components[componentConfig.type]();
@@ -453,10 +475,11 @@ function (obj, config, array, assetLoader, components, layoutManager) {
      * @return {graphs.graph}
      */
     graph.render = function (selector) {
-      var selection = d3.select(selector);
+      var selection = d3util.select(selector);
       assetLoader.loadAll();
       addLegend_();
       addAxes_();
+      addComponent_(xDomainLabel_);
       renderPanel_(selection);
       update_();
       renderComponents_(svg_);

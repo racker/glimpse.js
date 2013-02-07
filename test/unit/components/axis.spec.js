@@ -10,13 +10,13 @@ function (axisComponent) {
         axis, container, node;
 
     function getComponentNode() {
-      return container.select('#' + componentId).node();
+      return container.select('[gl-cid=' + componentId + ']').node();
     }
 
     beforeEach(function() {
       container = jasmine.svgFixture().append('g').size(400, 200);
       axis = axisComponent();
-      axis.config({id: componentId });
+      axis.config({cid: componentId });
     });
 
     it('axis to be defined', function () {
@@ -106,16 +106,6 @@ function (axisComponent) {
         });
         axis.render(container);
         expect(getComponentNode()).toHaveClasses('gl-axis', 'gl-y-axis');
-      });
-
-      it('positions x axis', function () {
-        axis.config({
-          type: 'x',
-          scale: d3.scale.linear(),
-          orient: 'right'
-        });
-        axis.render(container);
-        expect(getComponentNode()).toHaveTranslate(0, 200);
       });
 
       it('does not position y axis', function () {

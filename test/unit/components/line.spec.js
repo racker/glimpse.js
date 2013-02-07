@@ -42,7 +42,7 @@ function (d3, object, line) {
 
     it('has required set of properties', function () {
       expect(testLine).toHaveProperties(
-        'id',
+        'cid',
         'xScale',
         'yScale',
         'data',

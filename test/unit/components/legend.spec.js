@@ -30,7 +30,7 @@ function(legend) {
       it('adds convenience functions', function() {
         expect(testLegend)
           .toHaveProperties(
-            'id',
+            'cid',
             'keys',
             'fontColor',
             'fontFamily',

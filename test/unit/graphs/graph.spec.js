@@ -1,8 +1,9 @@
 define([
   'graphs/graph',
-  'core/asset-loader'
+  'core/asset-loader',
+  'test-util/component'
 ],
-function (graph, assetLoader) {
+function (graph, assetLoader, compUtil) {
   'use strict';
 
   describe('graphs.graph', function () {
@@ -53,10 +54,10 @@ function (graph, assetLoader) {
             y: function (d) { return d.y; }
           }
         ])
-        .component({ id: 'testComponent', type: 'line', dataId: 'fakeData' })
-        .xAxis({ id: 'xAxis' })
-        .yAxis({ id: 'yAxis' })
-        .legend({ id: 'legend' });
+        .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
+        .xAxis({ cid: 'xAxis' })
+        .yAxis({ cid: 'yAxis' })
+        .legend({ cid: 'legend' });
     }
 
     function setSpies() {
@@ -265,7 +266,7 @@ function (graph, assetLoader) {
     describe('component()', function () {
       it('adds component', function() {
         testGraph.component({
-          id: 'testComponent',
+          cid: 'testComponent',
           type: 'line',
           dataId: 'fakeData'
         });
@@ -275,7 +276,7 @@ function (graph, assetLoader) {
       it('returns a component when id is passed', function() {
         var line;
         testGraph.component({
-          id: 'testComponent',
+          cid: 'testComponent',
           type: 'line',
           dataId: 'fakeData'
         });
@@ -286,7 +287,7 @@ function (graph, assetLoader) {
       it('updates the config on the component', function() {
         var line;
         testGraph.component({
-          id: 'testComponent',
+          cid: 'testComponent',
           type: 'line',
           dataId: 'fakeData',
           'strokeWidth': 5
@@ -476,6 +477,37 @@ function (graph, assetLoader) {
         testGraph.toggleLoading(true);
         testGraph.toggleLoading(false);
         expect(selection.selectAll('.gl-asset-spinner').empty()).toBe(true);
+      });
+
+    });
+
+    describe('x domain label', function() {
+      var domain, formatter, label, xScale;
+
+      beforeEach(function() {
+        domain = [new Date(0), new Date(34347661000)];
+        formatter = testGraph.config('xDomainLabelFormatter');
+        testGraph.render(jasmine.htmlFixture());
+        label = testGraph.component('xDomainLabel');
+        xScale = testGraph.config('xScale');
+      });
+
+      it('formats dates correctly using default formatter', function() {
+        expect(formatter(domain)).toBe('Jan 1, 12:00 AM - Feb 2, 01:01 PM UTC');
+      });
+
+      it('renders the label', function() {
+        expect(compUtil.getByCid('xDomainLabel').node()).toBeDefined();
+      });
+
+      it('has an xDomainLabel component', function() {
+        expect(label).toBeDefined();
+      });
+
+      it('updates the text when the domain changes', function() {
+        xScale.domain([0, 44715661000]);
+        testGraph.update();
+        expect(label.text()).toBe('Jan 1, 12:00 AM - Jun 2, 01:01 PM UTC');
       });
 
     });

@@ -15,13 +15,15 @@ function (obj, config, string) {
     var config_,
       defaults_,
       root_,
-      d3axis_;
+      d3axis_,
+      formatAxis_;
 
     config_ = {};
 
     defaults_ = {
         type: 'x',
         id: string.random(),
+        gap: 0,
         target: '.gl-framed',
         color: '#333',
         opacity: 0.8,
@@ -34,34 +36,10 @@ function (obj, config, string) {
     };
 
     /**
-     * Main function for Axis component.
+     * @private
+     * Changes the default formatting of the d3 axis.
      */
-    function axis() {
-      obj.extend(config_, defaults_);
-      d3axis_ = d3.svg.axis();
-      return axis;
-    }
-
-    /**
-     * Apply updates to the axis.
-     */
-    axis.update = function () {
-      if (config_.type === 'x') {
-        // TODO: Formalize a way to get the container height.
-        root_.attr('transform', 'translate(' +
-                   [0, d3.select(root_.node().parentNode).height()] + ')');
-      }
-
-      root_.selectAll('g').remove();
-      d3axis_.scale(config_.scale)
-        .orient(config_.orient)
-        .tickSize(config_.tickSize);
-
-      if (config_.ticks) {
-        d3axis_.ticks(config_.ticks);
-      }
-      root_.call(d3axis_);
-
+    formatAxis_ = function() {
       // remove boldness from default axis path
       root_.selectAll('path')
         .attr({
@@ -93,6 +71,34 @@ function (obj, config, string) {
     };
 
     /**
+     * Main function for Axis component.
+     */
+    function axis() {
+      obj.extend(config_, defaults_);
+      d3axis_ = d3.svg.axis();
+      return axis;
+    }
+
+    /**
+     * Apply updates to the axis.
+     */
+    axis.update = function () {
+      root_.selectAll('g').remove();
+      d3axis_.scale(config_.scale)
+        .orient(config_.orient)
+        .tickSize(config_.tickSize);
+
+      if (config_.ticks) {
+        d3axis_.ticks(config_.ticks);
+      }
+      root_.call(d3axis_);
+      if (config_.cid) {
+        root_.attr('gl-cid', config_.cid);
+      }
+      formatAxis_();
+    };
+
+    /**
      * Render the axis to the selection
      * @param {d3.selection|String} selection A d3 selection
      * @return {component.axis}
@@ -101,7 +107,6 @@ function (obj, config, string) {
 
       root_ = selection.append('g')
         .attr({
-          'id': config_.id,
           'fill': 'none',
           'shape-rendering': 'crispEdges',
           'font-family': config_.fontFamily,
@@ -111,9 +116,7 @@ function (obj, config, string) {
           'stroke-width': 1,
           'opacity': config_.opacity
         });
-
       axis.update();
-
       return axis;
     };
 
@@ -130,7 +133,7 @@ function (obj, config, string) {
       return d3axis_;
     };
 
-    obj.extend(axis, config(axis, config_, []));
+    obj.extend(axis, config(axis, config_, ['cid']));
     return axis();
   };
 

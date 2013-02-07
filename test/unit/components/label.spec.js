@@ -20,7 +20,7 @@ function(label) {
 
       it('adds convenience functions for common config options', function() {
         expect(testLabel).toHaveProperties(
-          'id',
+          'cid',
           'cssClass',
           'color',
           'fontFamily',
@@ -86,10 +86,10 @@ function(label) {
         expect(textSelection.text()).toBe('foo');
       });
 
-      it('updates the id', function() {
-        testLabel.id('my-id');
+      it('updates the cid', function() {
+        testLabel.cid('my-id');
         testLabel.update();
-        expect(root.node()).toHaveAttr('id', 'my-id');
+        expect(root.node()).toHaveAttr('gl-cid', 'my-id');
       });
 
       it('updates the css class', function() {

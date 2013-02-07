@@ -53,9 +53,7 @@ function (obj, array) {
       firstArg = args[0];
       if (argCount === 1) {
         if (typeof firstArg === 'string') {
-          return typeof configObj[firstArg] === 'function' ?
-            configObj[firstArg](context) :
-            configObj[firstArg];
+          return configObj[firstArg];
         }
         if (typeof firstArg === 'object') {
           obj.extend(configObj, firstArg);

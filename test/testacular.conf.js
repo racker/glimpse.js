@@ -22,6 +22,7 @@ files = [
   { pattern: 'src/*.js', included: false },
   { pattern: 'test/unit/*.spec.js', included: false },
   { pattern: 'test/unit/**/*.spec.js', included: false },
+  { pattern: 'test/util/*.js', included: false },
 
   // custom jasmine matchers
   'test/matchers.js',
@@ -42,15 +43,16 @@ exclude = [];
   //'**/src/**/*.js': 'coverage'
 //};
 
-coverageReporter = {
-  type : 'html',
-  dir : 'test/coverage/'
-}
+//coverageReporter = {
+  //type : 'html',
+  //dir : 'test/coverage/'
+//}
 
 
 // test results reporter to use
 // possible values: 'dots', 'progress', 'junit'
-reporters = ['progress', 'coverage'];
+//reporters = ['progress', 'coverage'];
+reporters = ['progress'];
 
 
 // web server port
