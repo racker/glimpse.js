@@ -9,39 +9,39 @@ define([
   /*jshint validthis: true */
   'use strict';
 
-  function getPosition(pos, nodeBBox, parentBBox) {
+  function getPosition(pos, node, parent) {
     var x = 0, y = 0;
     switch(pos) {
       case 'center':
-        x = (parentBBox.width - nodeBBox.width)/2;
-        y = (parentBBox.height - nodeBBox.height)/2;
+        x = (parent.width() - node.width())/2;
+        y = (parent.height() - node.height())/2;
       break;
       case 'center-top':
-        x = (parentBBox.width - nodeBBox.width)/2;
+        x = (parent.width() - node.width())/2;
         y = 0;
       break;
       case 'center-bottom':
-        x = (parentBBox.width - nodeBBox.width)/2;
-        y = parentBBox.height - nodeBBox.height;
+        x = (parent.width() - node.width())/2;
+        y = parent.height() - node.height();
       break;
       case 'center-left':
-        y = (parentBBox.height - nodeBBox.height)/2;
+        y = (parent.height() - node.height())/2;
       break;
       case 'center-right':
-        x = parentBBox.width - nodeBBox.width;
-        y = (parentBBox.height - nodeBBox.height)/2;
+        x = parent.width() - node.width();
+        y = (parent.height() - node.height())/2;
       break;
       case 'top-left':
       break;
       case 'top-right':
-        x = parentBBox.width - nodeBBox.width;
+        x = parent.width() - node.width();
       break;
       case 'bottom-left':
-        y = parentBBox.height - nodeBBox.height;
+        y = parent.height() - node.height();
       break;
       case 'bottom-right':
-        x = parentBBox.width - nodeBBox.width;
-        y = parentBBox.height - nodeBBox.height;
+        x = parent.width() - node.width();
+        y = parent.height() - node.height();
       break;
     }
     return [x, y];
@@ -57,16 +57,16 @@ define([
     offsetY = offsetY || 0;
 
     this.each(function() {
-      var nodeBBox = this.getBBox(),
-          parentBBox = this.parentNode.getBBox(),
+      var node = d3.select(this),
+          parent = d3.select(this.parentNode),
           x, y, posXY;
-      posXY = getPosition(pos, nodeBBox, parentBBox);
+      posXY = getPosition(pos, node, parent);
       x = posXY[0] + offsetX;
       y = posXY[1] + offsetY;
       if (this.tagName === 'g') {
-        d3.select(this).attr('transform', 'translate(' + [x, y] +')');
+        node.attr('transform', 'translate(' + [x, y] +')');
       } else {
-        d3.select(this).attr({ x: x, y: y });
+        node.attr({ x: x, y: y });
       }
     });
     return this;

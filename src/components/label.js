@@ -96,7 +96,7 @@ function(obj, config, string, array, util) {
      */
     label.render = function(selection) {
       root_ = util.select(selection).append('g');
-      root_.append('text');
+      root_.append('text').style('dominant-baseline', 'hanging');
       label.update();
       return label;
     };

@@ -41,11 +41,11 @@ define([
 
     child = node.append('g');
     child.attr({
-      'padding': nodeInfo.padding,
-      'padding-left': nodeInfo.paddingLeft,
-      'padding-right': nodeInfo.paddingRight,
-      'padding-top': nodeInfo.paddingTop,
-      'padding-bottom': nodeInfo.paddingBottom
+      'gl-padding': nodeInfo.padding,
+      'gl-padding-left': nodeInfo.paddingLeft,
+      'gl-padding-right': nodeInfo.paddingRight,
+      'gl-padding-top': nodeInfo.paddingTop,
+      'gl-padding-bottom': nodeInfo.paddingBottom
     });
     percentWidth = percent(node.width());
     percentHeight = percent(node.height());

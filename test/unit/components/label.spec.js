@@ -58,6 +58,11 @@ function(label) {
         expect(root.select('text').text()).toBe(textContent);
       });
 
+      it('expect text to have dominant-baseline of hanging', function() {
+        expect(root.select('text').style('dominant-baseline'))
+          .toBe('hanging');
+      });
+
       it('calls update()', function() {
         expect(testLabel.update).toHaveBeenCalled();
       });
