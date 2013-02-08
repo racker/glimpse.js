@@ -10,7 +10,7 @@ define(function () {
 
     'default': {
       'class': 'gl-vgroup',
-      'split': [10, 70, 10, 10],
+      'split': [15, 60, 10, 15],
       children: [{
         padding: 1,
         paddingLeft: 2,
@@ -24,11 +24,11 @@ define(function () {
         }
       }, {
         'class': 'gl-xaxis',
-        padding: 1
+        padding: 1,
+        paddingTop: 20
       }, {
         'class': 'gl-footer',
-        padding: 1,
-        paddingTop: 2
+        padding: 1
       }]
     },
 

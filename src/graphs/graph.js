@@ -58,8 +58,8 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
     defaults_ = {
       layout: 'default',
       width: 700,
-      height: 350,
-      viewBoxHeight: 350,
+      height: 250,
+      viewBoxHeight: 250,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
       marginTop: 10,
@@ -206,8 +206,8 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       layoutManager.setLayout(
         config_.layout,
         svg_,
-        config_.width,
-        config_.height);
+        config_.viewBoxWidth,
+        config_.viewBoxHeight);
     };
 
     /**
@@ -346,7 +346,8 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
         orient: 'bottom',
         scale: config_.xScale,
         ticks: config_.xTicks,
-        target: '.gl-xaxis'
+        target: '.gl-xaxis',
+        position: 'center'
       });
       yAxis_ = components.axis().config({
         type: 'y',
@@ -356,8 +357,11 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       });
       legend_ = components.legend();
       xDomainLabel_ = components.label()
-        .cid('xDomainLabel')
-        .target('.gl-footer');
+        .config({
+          cid: 'xDomainLabel',
+          target: '.gl-footer',
+          position: 'center-right'
+        });
       return graph;
     }
 

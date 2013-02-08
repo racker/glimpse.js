@@ -31,10 +31,6 @@ function(obj, config, string, array, util) {
       gap: undefined,
       layout: 'horizontal',
       position: 'center-right',
-      marginTop: 0,
-      marginRight: 0,
-      marginBottom: 0,
-      marginLeft: 0,
       color: '#333',
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'normal',
@@ -116,9 +112,7 @@ function(obj, config, string, array, util) {
       }
 
       root_.attr({
-        'class': 'gl-component gl-label',
-        'transform':
-          'translate(' + [config_.marginLeft, config_.marginTop] + ')'
+        'class': 'gl-component gl-label'
       });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
