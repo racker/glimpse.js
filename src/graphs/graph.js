@@ -26,6 +26,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       defaults_,
       data_,
       components_,
+      root_,
       xAxis_,
       yAxis_,
       legend_,
@@ -41,12 +42,14 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       configureXScale_,
       defaultXaccessor_,
       defaultYaccessor_,
+      getComponent_,
       getFrameHeight_,
       getFrameWidth_,
       renderComponents_,
       renderDefs_,
       renderPanel_,
       renderSvg_,
+      toggle_,
       update_,
       updateScales_,
       updateLegend_,
@@ -133,6 +136,17 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
+     * Returns the component in the array
+     * @param  {string} cid
+     * @return {components.component}
+     */
+    getComponent_ = function (cid) {
+      return array.find(components_, function (c) {
+        return c.cid() === cid;
+      });
+    };
+
+    /**
      * @private
      * Calculates the frame height
      * @return {number}
@@ -182,7 +196,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
      * @param  {d3.selection} selection
      */
     renderSvg_ = function (selection) {
-      return selection.append('svg')
+      root_ = selection.append('svg')
         .attr({
           'width': config_.width,
           'height': config_.height,
@@ -193,6 +207,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
             config_.viewBoxHeight].toString(),
           'preserveAspectRatio': config_.preserveAspectRatio
         });
+      return root_;
     };
 
     /**
@@ -208,6 +223,34 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
         svg_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
+    };
+
+    /**
+     * Toggles visibility of graph/components
+     * @param  {string|Array} cid
+     * @param  {bool} isVisible
+     */
+    toggle_ = function (cid, isVisible) {
+      var display, comp;
+
+      if (!cid) {
+        display = isVisible ? null : 'none';
+        root_.attr('display', display);
+        return;
+      }
+
+      cid = array.getArray(cid);
+
+      cid.forEach(function (id) {
+        comp = getComponent_(id);
+        if (comp) {
+          if (isVisible) {
+            comp.show();
+          } else {
+            comp.hide();
+          }
+        }
+      });
     };
 
     /**
@@ -529,7 +572,37 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       return legend_;
     };
 
-    obj.extend(graph, config(graph, config_, ['id', 'width', 'height']));
+     /**
+     * Returns the root_
+     * @return {d3.selection}
+     */
+    graph.root = function () {
+      return root_;
+    };
+
+    /**
+     * Shows components with provided cid/cids
+     *   if no cid is provided, shows the graph
+     * @param  {string|Array} cid
+     * @return {graphs.graph}
+     */
+    graph.show = function (cid) {
+      toggle_(cid, true);
+      return graph;
+    };
+
+     /**
+     * Hides components with provided cid/cids
+     *   if no cid is provided, hides the graph
+     * @param  {string|Array} cid
+     * @return {graphs.graph}
+     */
+    graph.hide = function (cid) {
+      toggle_(cid, false);
+      return graph;
+    };
+
+    obj.extend(graph, config(graph, config_, ['cid', 'width', 'height']));
     return graph();
   };
 

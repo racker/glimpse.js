@@ -46,7 +46,9 @@ function (d3, object, line) {
         'xScale',
         'yScale',
         'data',
-        'lineGenerator'
+        'lineGenerator',
+        'show',
+        'hide'
       );
     });
 

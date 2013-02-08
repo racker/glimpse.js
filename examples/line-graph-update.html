@@ -71,19 +71,23 @@
                 y: function (d, i) { return d.y + Math.random()*10; }
               }
           ])
-          .component({ id: 'lineOrd', type: 'line', dataId: 'latencyOrd', color: '#206ec2' })
-          .component({ id: 'lineDfw', type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
-          .component({ id: 'lineLon', type: 'line', dataId: 'latencyLon', color: '#c40022' })
+          .component({ cid: 'lineOrd', type: 'line', dataId: 'latencyOrd', color: '#206ec2', opacity: '0.4' })
+          .component({ cid: 'lineDfw', type: 'line', dataId: 'latencyDfw', color: '#e65b1f', opacity: '0.6'  })
+          .component({ cid: 'lineLon', type: 'line', dataId: 'latencyLon', color: '#c40022', opacity: '0.7'  })
           .render('#container');
 
         currentDay = latencyData[0].data.length;
+
+        //for debugging
+        window.graph = lineGraph;
 
         update = function () {
           lineGraph.appendData(
               'latencyOrd',
               {"x":epochBaseMs + currentDay++ * oneDayMs, "y": (Math.random() * 150)}
             )
-            .update();
+            .update()
+            .hide('lineOrd');
         };
 
         document.getElementById('update').addEventListener('click', update, false);

@@ -7,9 +7,10 @@ define([
   'core/object',
   'core/config',
   'core/string',
-  'd3-ext/util'
+  'd3-ext/util',
+  'components/mixins'
 ],
-function(obj, config, string, util) {
+function(obj, config, string, util, mixins) {
   'use strict';
 
   return function() {
@@ -174,6 +175,14 @@ function(obj, config, string, util) {
       return legend;
     };
 
+    /**
+     * Returns the root_
+     * @return {d3.selection}
+     */
+    legend.root = function () {
+      return root_;
+    };
+
     // MIXINS
     obj.extend(
       legend,
@@ -186,7 +195,7 @@ function(obj, config, string, util) {
         'fontWeight',
         'indicatorWidth',
         'indicatorHeight'
-      ]));
+      ]), mixins.toggle);
 
     return legend();
   };

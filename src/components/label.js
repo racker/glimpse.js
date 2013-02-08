@@ -7,9 +7,10 @@ define([
   'core/config',
   'core/string',
   'core/array',
-  'd3-ext/util'
+  'd3-ext/util',
+  'components/mixins'
 ],
-function(obj, config, string, array, util) {
+function(obj, config, string, array, util, mixins) {
   'use strict';
 
   return function() {
@@ -131,6 +132,13 @@ function(obj, config, string, array, util) {
       return label;
     };
 
+    /**
+     * Returns the root_
+     * @return {d3.selection}
+     */
+    label.root = function () {
+      return root_;
+    };
 
     // MIXINS
 
@@ -144,7 +152,7 @@ function(obj, config, string, array, util) {
         'fontFamily',
         'fontSize',
         'fontWeight'
-      ]));
+      ]), mixins.toggle);
 
     return label();
   };

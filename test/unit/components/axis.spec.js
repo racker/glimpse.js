@@ -23,6 +23,13 @@ function (axisComponent) {
       expect(axis).toBeDefinedAndNotNull();
     });
 
+    it('has required set of properties', function () {
+      expect(axis).toHaveProperties(
+        'show',
+        'hide'
+      );
+    });
+
     describe('.render()', function() {
 
       it('handles defaults', function () {

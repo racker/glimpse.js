@@ -5,9 +5,10 @@
 define([
   'core/object',
   'core/config',
-  'core/string'
+  'core/string',
+  'components/mixins'
 ],
-function (obj, config, string) {
+function (obj, config, string, mixins) {
   'use strict';
 
   return function () {
@@ -133,7 +134,16 @@ function (obj, config, string) {
       return d3axis_;
     };
 
-    obj.extend(axis, config(axis, config_, ['cid']));
+    /**
+     * Returns the root_
+     * @return {d3.selection}
+     */
+    axis.root = function () {
+      return root_;
+    };
+
+    obj.extend(axis, config(axis, config_, ['cid']), mixins.toggle);
+
     return axis();
   };
 

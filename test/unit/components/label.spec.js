@@ -25,7 +25,9 @@ function(label) {
           'color',
           'fontFamily',
           'fontSize',
-          'fontWeight'
+          'fontWeight',
+          'show',
+          'hide'
         );
       });
 

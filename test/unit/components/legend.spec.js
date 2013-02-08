@@ -37,7 +37,9 @@ function(legend) {
             'fontSize',
             'fontWeight',
             'indicatorWidth',
-            'indicatorHeight'
+            'indicatorHeight',
+            'show',
+            'hide'
           );
       });
 

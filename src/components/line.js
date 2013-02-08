@@ -7,9 +7,10 @@ define([
   'core/config',
   'core/object',
   'core/string',
-  'd3-ext/util'
+  'd3-ext/util',
+  'components/mixins'
 ],
-function (array, config, obj, string, util) {
+function (array, config, obj, string, d3Util, mixins) {
   'use strict';
 
   return function () {
@@ -33,7 +34,8 @@ function (array, config, obj, string, util) {
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
       ease: 'linear',
-      duration: 500
+      duration: 500,
+      opacity: 1
     };
 
     /**
@@ -46,6 +48,7 @@ function (array, config, obj, string, util) {
         .attr({
           'stroke-width': config_.strokeWidth,
           'stroke': config_.color,
+          'opacity': config_.opacity,
           'd': config_.lineGenerator
       });
     };
@@ -118,19 +121,26 @@ function (array, config, obj, string, util) {
      * @return {components.line}
      */
     line.render = function (selection) {
-      root_ = util.select(selection).append('g')
+      root_ = d3Util.select(selection).append('g')
         .attr({
           'class': 'gl-component gl-line'
         });
       root_.append('path')
         .attr({
           'class': 'gl-path',
-          'fill': 'none',
-          'opacity': 1
+          'fill': 'none'
         });
       line.update();
 
       return line;
+    };
+
+    /**
+     * Returns the root_
+     * @return {d3.selection}
+     */
+    line.root = function () {
+      return root_;
     };
 
     obj.extend(line, config(line, config_,
@@ -140,7 +150,7 @@ function (array, config, obj, string, util) {
         'yScale',
         'lineGenerator'
       ]
-    ));
+    ), mixins.toggle);
 
     return line();
 
