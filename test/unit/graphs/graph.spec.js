@@ -90,7 +90,7 @@ function (graph, assetLoader, compUtil) {
 
     it('has required convenience functions', function () {
       expect(testGraph).toHaveProperties(
-        'cid',
+        'id',
         'height',
         'width'
       );

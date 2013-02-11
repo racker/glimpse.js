@@ -6,9 +6,10 @@ define([
   'core/object',
   'core/config',
   'core/string',
-  'components/mixins'
+  'components/mixins',
+  'd3-ext/util'
 ],
-function (obj, config, string, mixins) {
+function (obj, config, string, mixins, d3util) {
   'use strict';
 
   return function () {
@@ -33,7 +34,7 @@ function (obj, config, string, mixins) {
         textBgColor: '#fff',
         textBgSize: 3,
         tickSize: 0,
-        ticks: 0
+        ticks: 3
     };
 
     /**
@@ -77,6 +78,16 @@ function (obj, config, string, mixins) {
     function axis() {
       obj.extend(config_, defaults_);
       d3axis_ = d3.svg.axis();
+      axis.rebind(
+        d3axis_,
+        'scale',
+        'orient',
+        'ticks',
+        'tickValues',
+        'tickSubdivide',
+        'tickSize',
+        'tickPadding',
+        'tickFormat');
       return axis;
     }
 
@@ -85,18 +96,20 @@ function (obj, config, string, mixins) {
      */
     axis.update = function () {
       root_.selectAll('g').remove();
-      d3axis_.scale(config_.scale)
-        .orient(config_.orient)
-        .tickSize(config_.tickSize);
-
-      if (config_.ticks) {
-        d3axis_.ticks(config_.ticks);
-      }
+      axis.reapply();
       root_.call(d3axis_);
+      root_.attr({
+        'font-family': config_.fontFamily,
+        'font-size': config_.fontSize,
+        'class': string.classes('axis', config_.type + '-axis '),
+        'stroke': config_.color,
+        'opacity': config_.opacity
+      });
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
       formatAxis_();
+      return axis;
     };
 
     /**
@@ -105,17 +118,11 @@ function (obj, config, string, mixins) {
      * @return {component.axis}
      */
     axis.render = function (selection) {
-
-      root_ = selection.append('g')
+      root_ = d3util.select(selection).append('g')
         .attr({
           'fill': 'none',
           'shape-rendering': 'crispEdges',
-          'font-family': config_.fontFamily,
-          'font-size': config_.fontSize,
-          'class': string.classes('axis', config_.type + '-axis '),
-          'stroke': config_.color,
-          'stroke-width': 1,
-          'opacity': config_.opacity
+          'stroke-width': 1
         });
       axis.update();
       return axis;
@@ -142,8 +149,7 @@ function (obj, config, string, mixins) {
       return root_;
     };
 
-    obj.extend(axis, config(axis, config_, ['cid']), mixins.toggle);
-
+    obj.extend(axis, config.mixin(config_, 'cid'), mixins.toggle);
     return axis();
   };
 

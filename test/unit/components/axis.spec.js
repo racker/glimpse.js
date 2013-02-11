@@ -132,7 +132,7 @@ function (axisComponent) {
           var axisGroups;
           axis.config({
             type: 'x',
-            scale: d3.scale.linear(),
+            scale: d3.scale.linear().domain([0, 100]).range([0,100]),
             orient: 'right'
           });
           axis.render(container);

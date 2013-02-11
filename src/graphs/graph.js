@@ -54,7 +54,8 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       updateScales_,
       updateLegend_,
       upsertData_,
-      updateXDomainLabel_;
+      updateXDomainLabel_,
+      updateAxes_;
 
     config_ = {};
 
@@ -72,9 +73,9 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       xScale: d3.time.scale(),
       yScale: d3.scale.linear(),
       showLegend: true,
-      xTicks: undefined,
-      yTicks: 3,
-      xDomainLabelFormatter: format.timeDomain
+      xDomainLabelFormatter: format.timeDomain,
+      xTicks: 7,
+      yTicks: 3
     };
 
     /**
@@ -333,6 +334,17 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
         .domain(d3.extent(yExtents));
     };
 
+    updateAxes_ = function() {
+      xAxis_.config({
+        scale: config_.xScale,
+        ticks: config_.xTicks
+      });
+      yAxis_.config({
+        scale: config_.yScale,
+        ticks: config_.yTicks
+      });
+    };
+
     /**
      * @private
      * Updates the text in the label showing the date range.
@@ -350,6 +362,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
      */
     update_ = function () {
       updateScales_();
+      updateAxes_();
       updateLegend_();
       updateXDomainLabel_();
     };
@@ -384,20 +397,17 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       obj.extend(config_, defaults_);
       components_ = [];
       data_ = [];
-      xAxis_ = components.axis().config({
-        type: 'x',
-        orient: 'bottom',
-        scale: config_.xScale,
-        ticks: config_.xTicks,
-        target: '.gl-xaxis',
-        position: 'center'
-      });
-      yAxis_ = components.axis().config({
-        type: 'y',
-        orient: 'right',
-        scale: config_.yScale,
-        ticks: config_.yTicks
-      });
+      xAxis_ = components.axis()
+        .config({
+          'type': 'x',
+          'orient': 'bottom',
+          'target': '.gl-xaxis'
+        });
+      yAxis_ = components.axis()
+        .config({
+          'type': 'y',
+          'orient': 'right'
+        });
       legend_ = components.legend();
       xDomainLabel_ = components.label()
         .config({
@@ -508,7 +518,6 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
      */
     graph.update = function () {
       update_();
-
       components_.forEach(function (component) {
         component.update();
       });
@@ -602,7 +611,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       return graph;
     };
 
-    obj.extend(graph, config(graph, config_, ['cid', 'width', 'height']));
+    obj.extend(graph, config.mixin(config_, 'id', 'width', 'height'));
     return graph();
   };
 

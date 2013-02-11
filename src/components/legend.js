@@ -186,7 +186,8 @@ function(obj, config, string, util, mixins) {
     // MIXINS
     obj.extend(
       legend,
-      config(legend, config_, [
+      config.mixin(
+        config_,
         'cid',
         'keys',
         'fontColor',
@@ -195,7 +196,7 @@ function(obj, config, string, util, mixins) {
         'fontWeight',
         'indicatorWidth',
         'indicatorHeight'
-      ]), mixins.toggle);
+      ), mixins.toggle);
 
     return legend();
   };

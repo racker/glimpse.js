@@ -144,7 +144,8 @@ function(obj, config, string, array, util, mixins) {
 
     obj.extend(
       label,
-      config(label, config_, [
+      config.mixin(
+        config_,
         'cid',
         'target',
         'cssClass',
@@ -152,7 +153,7 @@ function(obj, config, string, array, util, mixins) {
         'fontFamily',
         'fontSize',
         'fontWeight'
-      ]), mixins.toggle);
+      ), mixins.toggle);
 
     return label();
   };

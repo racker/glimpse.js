@@ -143,13 +143,14 @@ function (array, config, obj, string, d3Util, mixins) {
       return root_;
     };
 
-    obj.extend(line, config(line, config_,
-      [
+    obj.extend(
+      line,
+      config.mixin(
+        config_,
         'cid',
         'xScale',
         'yScale',
         'lineGenerator'
-      ]
     ), mixins.toggle);
 
     return line();
