@@ -2,7 +2,10 @@
  * @fileOverview
  * d3 selection layout helpers.
  */
-define(['d3'], function(d3) {
+define([
+  'd3',
+  'd3-ext/position'
+], function(d3) {
   'use strict';
 
   /**
@@ -13,7 +16,9 @@ define(['d3'], function(d3) {
     settings = settings || {};
     var type = settings.type || 'horizontal',
         gap = settings.gap || 0,
-        ignore = settings.ignore || 'gl-layout-size';
+        ignore = settings.ignore || 'gl-layout-size',
+        position = settings.position;
+
     this.each(function() {
       var node, offset = 0;
       d3.selectAll(this.childNodes).each(function () {
@@ -30,6 +35,12 @@ define(['d3'], function(d3) {
         }
       });
     });
+
+    if (position) {
+      this.position(position);
+    }
+
+    return this;
   };
 
   return d3;
