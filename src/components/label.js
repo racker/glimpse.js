@@ -35,7 +35,8 @@ function(obj, config, string, array, util, mixins) {
       color: '#333',
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'normal',
-      fontSize: 13
+      fontSize: 13,
+
     };
 
     // PUBLIC
@@ -48,6 +49,22 @@ function(obj, config, string, array, util, mixins) {
       obj.extend(config_, defaults_);
       return label;
     }
+
+    // Apply Mixins
+    obj.extend(
+      label,
+      config.mixin(
+        config_,
+        'cid',
+        'target',
+        'cssClass',
+        'color',
+        'fontFamily',
+        'fontSize',
+        'fontWeight'
+      ),
+      mixins.lifecycle,
+      mixins.toggle);
 
     /**
      * @description Gets/Sets the data source to be used with the label.
@@ -92,8 +109,8 @@ function(obj, config, string, array, util, mixins) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      root_ = util.select(selection).append('g');
-      root_.append('text').style('dominant-baseline', 'hanging');
+      root_ = util.select(selection || config_.target).append('g');
+      root_.append('text').attr('baseline-shift', '-100%');
       label.update();
       return label;
     };
@@ -139,21 +156,6 @@ function(obj, config, string, array, util, mixins) {
     label.root = function () {
       return root_;
     };
-
-    // MIXINS
-
-    obj.extend(
-      label,
-      config.mixin(
-        config_,
-        'cid',
-        'target',
-        'cssClass',
-        'color',
-        'fontFamily',
-        'fontSize',
-        'fontWeight'
-      ), mixins.toggle);
 
     return label();
   };

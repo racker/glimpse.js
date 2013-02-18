@@ -35,11 +35,9 @@ define([
         }
       });
     });
-
     if (position) {
       this.position(position);
     }
-
     return this;
   };
 

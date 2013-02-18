@@ -31,12 +31,14 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       yAxis_,
       legend_,
       svg_,
-      xDomainLabel_;
+      xDomainLabel_,
+      STATES;
 
     /**
      * Private functions
      */
     var addComponent_,
+      removeComponent_,
       addAxes_,
       addLegend_,
       configureXScale_,
@@ -55,7 +57,22 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       updateLegend_,
       upsertData_,
       updateXDomainLabel_,
-      updateAxes_;
+      updateAxes_,
+      showLoadingOverlay_,
+      showEmptyOverlay_,
+      showErrorOverlay_;
+
+    /**
+     * @enum
+     * The possible states a graph can be in.
+     */
+    STATES = {
+      NORMAL: 'normal',
+      EMPTY: 'empty',
+      LOADING: 'loading',
+      ERROR: 'error',
+      DESTROYED: 'destroyed'
+    };
 
     config_ = {};
 
@@ -75,7 +92,11 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       showLegend: true,
       xDomainLabelFormatter: format.timeDomain,
       xTicks: 7,
-      yTicks: 3
+      yTicks: 3,
+      emptyMessage: 'No data to display',
+      loadingMessage: 'Loading...',
+      errorMessage: 'Error loading graph data',
+      state: 'normal'
     };
 
     /**
@@ -95,6 +116,15 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
         component.yScale(config_.yScale);
       }
       components_.push(component);
+    };
+
+    /**
+     * @param {String|Array} cid
+     */
+    removeComponent_ = function(cid) {
+      array.remove(components_, getComponent_(cid)).forEach(function(c) {
+        c.destroy();
+      });
     };
 
     /**
@@ -138,13 +168,20 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
 
     /**
      * Returns the component in the array
-     * @param  {string} cid
-     * @return {components.component}
+     * @param  {string|Array} cid
+     * @return {Array|components.component}
      */
-    getComponent_ = function (cid) {
-      return array.find(components_, function (c) {
-        return c.cid() === cid;
+    getComponent_ = function(cid) {
+      var cids,
+          matches;
+      cids = array.getArray(cid);
+      matches = components_.filter(function(c) {
+        return cids.indexOf(c.cid()) !== -1;
       });
+      if (!matches.length) {
+        return null;
+      }
+      return Array.isArray(cid) ? matches : matches[0];
     };
 
     /**
@@ -390,6 +427,100 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
+     * @private
+     * Displays the loading spinner and message over the framed area.
+     */
+    showEmptyOverlay_ = function() {
+      var labelTexts,
+          overlay,
+          labels,
+          layoutConfig;
+
+      layoutConfig = {
+        type: 'vertical', position: 'center', gap: 6
+      };
+      labelTexts = array.getArray(config_.emptyMessage);
+      labels = labelTexts.map(function(text, idx) {
+        var label = components.label().text(text);
+        if (idx === 0) {
+          label.config({
+            color: '#666',
+            fontSize: 18,
+            fontWeight: 'bold'
+          });
+        } else {
+          label.config({
+            color: '#a9a9a9',
+            fontSize: 13
+          });
+        }
+        return label;
+      });
+      overlay = components.overlay()
+        .config({
+          cid: 'emptyOverlay',
+          layoutConfig: layoutConfig,
+          components: labels
+        });
+      addComponent_(overlay);
+      overlay.render(root_.select('.gl-framed'));
+    };
+
+    /**
+     * @private
+     * Displays the loading spinner and message over the framed area.
+     */
+    showLoadingOverlay_ = function() {
+      var label,
+          spinner,
+          overlay;
+
+      spinner = components.asset().config({
+        assetId: 'gl-asset-spinner'
+      });
+      label = components.label()
+        .text(config_.loadingMessage)
+        .config({
+          color: '#666',
+          fontSize: 13
+        });
+      overlay = components.overlay()
+        .config({
+          cid: 'loadingOverlay',
+          components: [spinner, label]
+        });
+      addComponent_(overlay);
+      overlay.render(root_.select('.gl-framed'));
+    };
+
+    /**
+     * @private
+     * Displays the error icon and message over the framed area.
+     */
+    showErrorOverlay_ = function() {
+      var label,
+          icon,
+          overlay;
+
+      icon = components.asset().config({
+        assetId: 'gl-asset-icon-error'
+      });
+      label = components.label()
+        .text(config_.errorMessage)
+        .config({
+          color: '#C40022',
+          fontSize: 13
+        });
+      overlay = components.overlay()
+        .config({
+          cid: 'errorOverlay',
+          components: [icon, label]
+        });
+      addComponent_(overlay);
+      overlay.render(root_.select('.gl-framed'));
+    };
+
+    /**
      * Main function, sets defaults, scales and axes
      * @return {graphs.graph}
      */
@@ -418,21 +549,42 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       return graph;
     }
 
+    graph.STATES = STATES;
+
     /**
-     * Toggles the loading asset on/off.
-     * @param {boolean} isVisible
-     * @returns {graphs.graph}
+     * Gets/sets the state of the graph.
+     * @public
+     * @return {graph.STATES}
      */
-    graph.toggleLoading = function(isVisible) {
-      if (isVisible) {
-        svg_.append('use')
-          .attr({
-            'class': 'gl-asset-spinner',
-            'xlink:href': '#gl-asset-spinner'
-          });
-      } else {
-        svg_.selectAll('.gl-asset-spinner').remove();
+    graph.state = function(newState) {
+      var oldState = config_.state;
+
+      if (!newState) {
+        return oldState;
       }
+      removeComponent_('emptyOverlay');
+      removeComponent_('loadingOverlay');
+      removeComponent_('errorOverlay');
+      graph.xAxis().show();
+      graph.legend().show();
+      switch (newState) {
+        case STATES.EMPTY:
+          showEmptyOverlay_();
+          break;
+        case STATES.LOADING:
+          graph.xAxis().hide();
+          graph.legend().hide();
+          showLoadingOverlay_();
+          break;
+        case STATES.ERROR:
+          graph.xAxis().hide();
+          showErrorOverlay_();
+          break;
+        default:
+          // Rest to normal if invalid state.
+          newState = STATES.NORMAL;
+      }
+      config_.state = newState;
       return graph;
     };
 
@@ -540,6 +692,10 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       update_();
       renderComponents_(svg_);
       return graph;
+    };
+
+    graph.destroy = function() {
+      config_.state = STATES.DESTROYED;
     };
 
     /**

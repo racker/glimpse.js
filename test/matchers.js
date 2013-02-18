@@ -10,8 +10,8 @@ beforeEach(function() {
   function toHaveAttr (attrName, attrValue) {
     var actualAttrValue, msg;
     actualAttrValue = this.actual.getAttribute(attrName);
-    msg = jasmine.pp(attrName) + ' and value ' +
-          jasmine.pp(actualAttrValue) + ' instead of ' + jasmine.pp(attrValue);
+    msg = jasmine.pp(attrName) + ' and value ' + jasmine.pp(attrValue) +
+          ' instead of ' + jasmine.pp(actualAttrValue);
     this.message = function () {
       return [
         'Expected node to have attribute name ' + msg,

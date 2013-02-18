@@ -16,12 +16,7 @@ define(function () {
         paddingLeft: 2,
         'class': 'gl-info'
       }, {
-        'class': 'gl-unframed',
-        padding: 1,
-        paddingBottom: 0,
-        children: {
-          'class': 'gl-framed'
-        }
+        'class': 'gl-framed'
       }, {
         'class': 'gl-xaxis',
         padding: 1,

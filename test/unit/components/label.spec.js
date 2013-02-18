@@ -60,9 +60,9 @@ function(label) {
         expect(root.select('text').text()).toBe(textContent);
       });
 
-      it('expect text to have dominant-baseline of hanging', function() {
-        expect(root.select('text').style('dominant-baseline'))
-          .toBe('hanging');
+      it('expect text to have baseline-shift of -100%', function() {
+        expect(root.select('text').node())
+          .toHaveAttr('baseline-shift', '-100%');
       });
 
       it('calls update()', function() {

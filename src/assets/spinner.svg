@@ -4,7 +4,7 @@
   <defs>
     <line id="gl-asset-spinner-line" opacity="1" fill="none" stroke-linecap="round" stroke-width="1.4" x1="2.9" y1="2.9" x2="5" y2="5" stroke="#333"/>
   </defs>
-  <g transform="translate(10,10)">
+  <g transform="translate(8, 8)">
     <use xlink:href="#gl-asset-spinner-line" transform="rotate(30)">
       <animate attributeName="opacity" repeatCount="indefinite" attributeType="CSS" from="1" to="0.3" dur="1.2s" begin="0.1s"></animate>
     </use>

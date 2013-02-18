@@ -411,11 +411,6 @@ function (graph, assetLoader, compUtil) {
         expect(defs.node().nodeName.toLowerCase()).toBe('defs');
       });
 
-      it('renders unframed components group', function () {
-        var group = panel.select('.gl-unframed');
-        expect(group.node().nodeName.toLowerCase()).toBe('g');
-      });
-
       it('renders framed components group', function () {
         var group = panel.select('.gl-framed');
         expect(group.node().nodeName.toLowerCase()).toBe('g');
@@ -458,7 +453,7 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('toggleLoading()', function() {
+    describe('state()', function() {
       var selection;
 
       beforeEach(function() {
@@ -467,16 +462,42 @@ function (graph, assetLoader, compUtil) {
         testGraph.render(selection.node());
       });
 
-      it('toggles the loader on', function() {
-        testGraph.toggleLoading(true);
-        expect(selection.selectAll('.gl-asset-spinner'))
-          .not.toBeEmptySelection();
+      it('shows loading state', function() {
+        testGraph.state('loading');
+        expect(compUtil.getByCid('loadingOverlay').node())
+          .not.toBeNull();
       });
 
-      it('toggles the loader off', function() {
-        testGraph.toggleLoading(true);
-        testGraph.toggleLoading(false);
-        expect(selection.selectAll('.gl-asset-spinner').empty()).toBe(true);
+      it('shows error state', function() {
+        testGraph.state('error');
+        expect(compUtil.getByCid('errorOverlay').node())
+          .not.toBeNull();
+      });
+
+      it('shows empty state', function() {
+        testGraph.state('empty');
+        expect(compUtil.getByCid('emptyOverlay').node())
+          .not.toBeNull();
+      });
+
+      it('has no overlays for "normal" state', function() {
+        testGraph.state('normal');
+        expect(selection.selectAll('.gl-overlay'))
+          .toBeEmptySelection();
+      });
+
+      it('gets the current state', function() {
+        expect(testGraph.state()).toBe('normal');
+      });
+
+      it('gets the current state after update', function() {
+        testGraph.state('error');
+        expect(testGraph.state()).toBe('error');
+      });
+
+      it('defaults to previous state for invalid arg', function() {
+        testGraph.state('invalid state');
+        expect(testGraph.state()).toBe('normal');
       });
 
     });

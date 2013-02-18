@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
     <style>
       .gl-framed > rect {
         fill:none;
@@ -45,9 +46,7 @@
             .data([
               { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
-                data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y; }
+                data: latencyData[0].data
               },
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',

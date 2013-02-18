@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg id="gl-asset-icon-error" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-    viewBox="0 0 12 12" width="60" height="60">
+    viewBox="0 0 12 12" width="12" height="12">
   <path fill='#C40022' d='M1.922,10.923c-1.713,0-2.413-1.245-1.557-2.729l4.076-7.078c0.856-1.483,2.258-1.491,3.114-0.008 l4.078,7.09c0.856,1.483,0.156,2.725-1.557,2.725H1.922z'/>
   <circle fill='#fff' cx='6' cy='8.75' r='1'/>
   <line x1='6' y1='3' x2='6' y2='6' stroke='#fff' stroke-width='2' stroke-linecap='round'/>

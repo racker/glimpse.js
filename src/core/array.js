@@ -4,7 +4,9 @@ define(
 function () {
   'use strict';
 
-  return {
+  var array;
+
+  array = {
 
     /**
      * Finds the first occurance of an item in an array.
@@ -66,8 +68,28 @@ function () {
      */
     getArray: function (obj) {
       return obj ? (Array.isArray(obj) ? obj: [obj]) : [];
+    },
+
+    /**
+     * Removes items from an array by mutating it.
+     * @param {Array} arr The array to remove from.
+     * @param {Object|Array} items The item or array of items to remove.
+     * @return {Array} The items actually removed.
+     */
+    remove: function(arr, items) {
+      var removedItems = [];
+      array.getArray(items).forEach(function(item) {
+        var index = arr.indexOf(item);
+        if (index !== -1) {
+          arr.splice(index, 1);
+          removedItems.push(item);
+        }
+      });
+      return removedItems;
     }
 
   };
+
+  return array;
 
 });

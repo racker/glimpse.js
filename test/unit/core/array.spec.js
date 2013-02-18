@@ -92,6 +92,35 @@ function (array) {
 
     });
 
+    describe('remove()', function() {
+      var testArray;
+
+      beforeEach(function() {
+        testArray = ['a', 'b', 'c', 'd'];
+      });
+
+      it('removes a single element from the array', function() {
+        array.remove(testArray, 'b');
+        expect(testArray).toEqual(['a', 'c', 'd']);
+      });
+
+      it('removes multiple elements from the array', function() {
+        array.remove(testArray, ['b', 'd']);
+        expect(testArray).toEqual(['a', 'c']);
+      });
+
+      it('ignores non-existing elements', function() {
+        array.remove(testArray, ['a', 'z']);
+        expect(testArray).toEqual(['b', 'c', 'd']);
+      });
+
+      it('returns only the removed elements', function() {
+        expect(array.remove(testArray, ['a', 'z']))
+          .toEqual(['a']);
+      });
+
+    });
+
   });
 
 });
