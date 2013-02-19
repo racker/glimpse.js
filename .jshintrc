@@ -19,7 +19,8 @@
   "unused": true,
   "maxdepth": 3,
   "maxcomplexity": 10,
-    "globals": {
+  "onevar": true,
+  "globals": {
     "define": true,
     "require": true,
     "d3": true

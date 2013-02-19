@@ -32,12 +32,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       legend_,
       svg_,
       xDomainLabel_,
-      STATES;
-
-    /**
-     * Private functions
-     */
-    var addComponent_,
+      addComponent_,
       removeComponent_,
       addAxes_,
       addLegend_,
@@ -60,7 +55,8 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       updateAxes_,
       showLoadingOverlay_,
       showEmptyOverlay_,
-      showErrorOverlay_;
+      showErrorOverlay_,
+      STATES;
 
     /**
      * @enum
@@ -314,7 +310,7 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
      * @param  {Array} xExtents
      */
     configureXScale_ = function (xExtents) {
-      var max, min;
+      var max, min, offset, newMin;
 
       max = d3.max(xExtents) || config_.xScale.domain()[1];
       min = d3.min(xExtents) || config_.xScale.domain()[0];
@@ -323,10 +319,9 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
       if (config_.xScale.toString() === d3.time.scale().toString()) {
 
         if (config_.domainIntervalUnit) {
-          var offset, newMin;
           offset = config_.domainIntervalUnit.offset(
             max,
-            -config_.domainIntervalPeriod || -1
+            -(config_.domainIntervalPeriod || 1)
           );
           newMin = +min > +offset ? min : offset;
           min = newMin;
@@ -622,14 +617,15 @@ function (obj, config, array, assetLoader, format, components, layoutManager,
      * @return {graphs.graph}
      */
     graph.appendData = function (id, dataToAppend) {
+      var index, originalData;
 
-      var index = array.findIndex(data_, function (d) {
+      index = array.findIndex(data_, function (d) {
         return d.id === id;
       });
 
       if (index !== -1) {
         if (Array.isArray(dataToAppend)) {
-          var originalData = data_[index].data;
+          originalData = data_[index].data;
           array.append(originalData, dataToAppend);
         } else {
           data_[index].data.push(dataToAppend);

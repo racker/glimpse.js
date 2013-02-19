@@ -32,11 +32,11 @@ function () {
      *    that passes the test, or -1 if no element is found.
      */
     findIndex: function (arr, fn, optObj) {
-      var len, arr2;
+      var len, arr2, i;
 
       len = arr.length;  // must be fixed during loop... see docs
       arr2 = typeof arr === 'string' ? arr.split('') : arr;
-      for (var i = 0; i < len; i++) {
+      for (i = 0; i < len; i += 1) {
         if (i in arr2 && fn.call(optObj, arr2[i], i, arr)) {
           return i;
         }

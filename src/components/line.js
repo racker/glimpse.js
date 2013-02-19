@@ -19,10 +19,8 @@ function (array, config, obj, string, d3Util, mixins) {
     var config_ = {},
       defaults_,
       data_,
-      root_;
-
-    //Private functions
-    var remove_,
+      root_,
+      remove_,
       update_;
 
     defaults_ = {
