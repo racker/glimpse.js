@@ -1,22 +1,22 @@
 define([
   'components/mixins'
 ],
-function (mixins) {
+function(mixins) {
   'use strict';
 
-  describe('components.mixins', function () {
+  describe('components.mixins', function() {
 
-    describe('mixins.toggle', function () {
+    describe('mixins.toggle', function() {
       var selection, root, component;
 
-      beforeEach(function () {
+      beforeEach(function() {
         selection = jasmine.svgFixture();
         root = d3.select('#svg-fixture').append('g')
           .attr({
             'class': 'gl-component'
           });
         component = {
-          root: function () {
+          root: function() {
             return root;
           }
         };
@@ -24,13 +24,13 @@ function (mixins) {
         component.hide = mixins.toggle.hide;
       });
 
-      it('hide()', function () {
+      it('hide()', function() {
         component.hide();
         expect(d3.select('.gl-component').node())
           .toHaveAttr('display', 'none');
       });
 
-      it('show()', function () {
+      it('show()', function() {
         component.hide();
         component.show();
         expect(d3.select('.gl-component').node())

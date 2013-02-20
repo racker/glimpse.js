@@ -3,10 +3,10 @@ define([
   'core/asset-loader',
   'test-util/component'
 ],
-function (graph, assetLoader, compUtil) {
+function(graph, assetLoader, compUtil) {
   'use strict';
 
-  describe('graphs.graph', function () {
+  describe('graphs.graph', function() {
     var testGraph,
       defaults,
       epochBaseMs,
@@ -50,8 +50,8 @@ function (graph, assetLoader, compUtil) {
             color: 'black',
             title: 'DFW',
             data: fakeData[0].data,
-            x: function (d) { return d.x; },
-            y: function (d) { return d.y; }
+            x: function(d) { return d.x; },
+            y: function(d) { return d.y; }
           }
         ])
         .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
@@ -80,15 +80,15 @@ function (graph, assetLoader, compUtil) {
       spyOn(yScale, 'domain').andCallThrough();
     }
 
-    beforeEach(function (){
+    beforeEach(function(){
       testGraph = graph();
     });
 
-    afterEach(function (){
+    afterEach(function(){
       testGraph = null;
     });
 
-    it('has required convenience functions', function () {
+    it('has required convenience functions', function() {
       expect(testGraph).toHaveProperties(
         'id',
         'height',
@@ -96,58 +96,58 @@ function (graph, assetLoader, compUtil) {
       );
     });
 
-    it('sets default X-Axis', function () {
+    it('sets default X-Axis', function() {
       expect(testGraph.xAxis()).toBeDefinedAndNotNull();
     });
 
-    it('sets default Y-Axis', function () {
+    it('sets default Y-Axis', function() {
       expect(testGraph.yAxis()).toBeDefinedAndNotNull();
     });
 
-    describe('config()', function () {
+    describe('config()', function() {
       var config;
 
-      beforeEach(function (){
+      beforeEach(function(){
         config = testGraph.config();
       });
 
-      it('has default marginTop', function () {
+      it('has default marginTop', function() {
         expect(testGraph.config().marginTop).toBe(defaults.marginTop);
       });
 
-      it('has default marginRight', function () {
+      it('has default marginRight', function() {
         expect(config.marginRight).toBe(defaults.marginRight);
       });
 
-      it('has default marginBottom', function () {
+      it('has default marginBottom', function() {
         expect(config.marginBottom).toBe(defaults.marginBottom);
       });
 
-      it('has default marginLeft', function () {
+      it('has default marginLeft', function() {
         expect(config.marginLeft).toBe(defaults.marginLeft);
       });
 
-      it('has default xScale set', function () {
+      it('has default xScale set', function() {
         expect(config.xScale.toString()).toBe(d3.time.scale().toString());
       });
 
-      it('has default yScale set', function () {
+      it('has default yScale set', function() {
         expect(config.yScale.toString()).toEqual(d3.scale.linear().toString());
       });
 
-      it('has default showLegend set', function () {
+      it('has default showLegend set', function() {
         expect(config.showLegend).toBe(true);
       });
 
     });
 
-    describe('data()', function () {
+    describe('data()', function() {
       var dataWithAccessors, accessor;
 
       beforeEach(function() {
         accessor = {
-          x: function (d) { return d.x + 2; },
-          y: function (d) { return d.y + 2; }
+          x: function(d) { return d.x + 2; },
+          y: function(d) { return d.y + 2; }
         };
 
         dataWithAccessors = [{
@@ -214,7 +214,7 @@ function (graph, assetLoader, compUtil) {
       it('updates object if id already exists', function() {
         var data, xAccessor;
         testGraph.data(dataWithAccessors);
-        xAccessor = function (d) {
+        xAccessor = function(d) {
           return d.x + 10;
         };
         testGraph.data({
@@ -227,7 +227,7 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('appendData()', function () {
+    describe('appendData()', function() {
       var someData;
 
       beforeEach(function() {
@@ -263,7 +263,7 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('component()', function () {
+    describe('component()', function() {
       it('adds component', function() {
         testGraph.component({
           cid: 'testComponent',
@@ -298,10 +298,10 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('update()', function () {
+    describe('update()', function() {
       var selection, panel;
 
-      beforeEach(function () {
+      beforeEach(function() {
         setGraph();
         setSpies();
         selection = jasmine.htmlFixture();
@@ -310,7 +310,7 @@ function (graph, assetLoader, compUtil) {
         panel = selection.select('svg');
       });
 
-      it('calls domain for xScale', function () {
+      it('calls domain for xScale', function() {
         expect(xScale.domain).toHaveBeenCalled();
       });
 
@@ -323,8 +323,9 @@ function (graph, assetLoader, compUtil) {
       });
 
       it('updates domain for xScale based on domain interval period(days)',
-        function () {
+        function() {
           var start, end;
+
           testGraph.config({
             domainIntervalUnit: d3.time.day,
             domainIntervalPeriod: 2
@@ -338,8 +339,9 @@ function (graph, assetLoader, compUtil) {
       );
 
       it('updates domain for xScale based on domain interval period(week)',
-        function () {
+        function() {
           var start, end;
+
           testGraph.config({
             domainIntervalUnit: d3.time.week,
             domainIntervalPeriod: 1
@@ -352,44 +354,53 @@ function (graph, assetLoader, compUtil) {
         }
       );
 
-      it('updates domain for yScale', function () {
-        expect(yScale.domain()).toEqual([56, 200]);
+      it('updates domain for yScale', function() {
+        expect(yScale.domain()).toEqual([56, 240]);
       });
 
-      it('updates domain for based on force property the config', function () {
+      it('updates domain for based on force property the config', function() {
         testGraph.config({
           forceY: [0]
         });
         testGraph.update();
-        expect(yScale.domain()).toEqual([0, 200]);
+        expect(yScale.domain()).toEqual([0, 240]);
       });
 
-      it('calls domain for yScale', function () {
+      it('updates domain for based on yDomainModifier', function() {
+        expect(yScale.domain()).toEqual([56, 240]);
+        testGraph.config({
+          yDomainModifier: 1.5
+        });
+        testGraph.update();
+        expect(yScale.domain()).toEqual([56, 300]);
+      });
+
+      it('calls domain for yScale', function() {
         expect(yScale.domain).toHaveBeenCalled();
       });
 
-      it('updates the xScale based on domain Interval', function () {
+      it('updates the xScale based on domain Interval', function() {
         expect(xScale.domain).toHaveBeenCalled();
       });
 
-      it('calls update on legend component', function () {
+      it('calls update on legend component', function() {
         expect(legend.update).toHaveBeenCalled();
       });
 
-      it('calls update on y-axis component', function () {
+      it('calls update on y-axis component', function() {
         expect(yAxis.update).toHaveBeenCalled();
       });
 
-      it('calls update on test component', function () {
+      it('calls update on test component', function() {
         expect(testComponent.update).toHaveBeenCalled();
       });
 
     });
 
-    describe('render()', function () {
+    describe('render()', function() {
       var selection, panel;
 
-      beforeEach(function () {
+      beforeEach(function() {
         setGraph();
         setSpies();
         selection = jasmine.htmlFixture();
@@ -401,53 +412,53 @@ function (graph, assetLoader, compUtil) {
         expect(assetLoader.loadAll).toHaveBeenCalledOnce();
       });
 
-      it('adds legend', function () {
+      it('adds legend', function() {
          expect(testGraph.legend()).toBeDefinedAndNotNull();
       });
 
-      it('renders svg node', function () {
+      it('renders svg node', function() {
         expect(panel.node().nodeName.toLowerCase()).toBe('svg');
       });
 
-      it('renders defs node', function () {
+      it('renders defs node', function() {
         var defs = panel.select('defs');
         expect(defs.node().nodeName.toLowerCase()).toBe('defs');
       });
 
-      it('renders framed components group', function () {
+      it('renders framed components group', function() {
         var group = panel.select('.gl-framed');
         expect(group.node().nodeName.toLowerCase()).toBe('g');
       });
 
-      it('updates domain for xScale', function () {
+      it('updates domain for xScale', function() {
         expect(xScale.domain).toHaveBeenCalled();
       });
 
-      it('updates domain for yScale', function () {
+      it('updates domain for yScale', function() {
         expect(yScale.domain).toHaveBeenCalled();
       });
 
-      it('updates legend', function () {
+      it('updates legend', function() {
         expect(legend.update).toHaveBeenCalled();
       });
 
-      it('updates legend keys', function () {
+      it('updates legend keys', function() {
         expect(legend.config().keys).toBeDefinedAndNotNull();
       });
 
-      it('calls render on test component', function () {
+      it('calls render on test component', function() {
         expect(testComponent.render).toHaveBeenCalled();
       });
 
-      it('calls render on legend component', function () {
+      it('calls render on legend component', function() {
         expect(legend.render).toHaveBeenCalled();
       });
 
-      it('calls render on x-axis component', function () {
+      it('calls render on x-axis component', function() {
         expect(xAxis.render).toHaveBeenCalled();
       });
 
-      it('calls render on y-axis component', function () {
+      it('calls render on y-axis component', function() {
         expect(yAxis.render).toHaveBeenCalled();
       });
 
@@ -536,7 +547,7 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('hide()', function () {
+    describe('hide()', function() {
       var selection;
 
       beforeEach(function() {
@@ -569,7 +580,7 @@ function (graph, assetLoader, compUtil) {
 
     });
 
-    describe('show()', function () {
+    describe('show()', function() {
       var selection;
 
       beforeEach(function() {

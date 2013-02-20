@@ -9,10 +9,10 @@ define([
   'components/mixins',
   'd3-ext/util'
 ],
-function (obj, config, string, mixins, d3util) {
+function(obj, config, string, mixins, d3util) {
   'use strict';
 
-  return function () {
+  return function() {
 
     var config_,
       defaults_,
@@ -55,8 +55,21 @@ function (obj, config, string, mixins, d3util) {
           'fill': config_.color
         });
 
+      //Apply padding to the first tick on Y axis
+      if (config_.type === 'y') {
+        var zeroTick, transform;
+
+        zeroTick = root_.select('g');
+        if (zeroTick.node()) {
+          transform = d3.transform(zeroTick.attr('transform'));
+          transform.translate[1] -= 10;
+          zeroTick.attr('transform', transform.toString());
+        }
+      }
+
       // apply text background for greater readability.
-      root_.selectAll('.gl-axis text').each(function () {
+      root_.selectAll('.gl-axis text').each(function() {
+
         var textBg = this.cloneNode(true);
         d3.select(textBg).attr({
           stroke: config_.textBgColor,
@@ -94,7 +107,7 @@ function (obj, config, string, mixins, d3util) {
     /**
      * Apply updates to the axis.
      */
-    axis.update = function () {
+    axis.update = function() {
       root_.selectAll('g').remove();
       axis.reapply();
       root_.call(d3axis_);
@@ -117,7 +130,7 @@ function (obj, config, string, mixins, d3util) {
      * @param {d3.selection|String} selection A d3 selection
      * @return {component.axis}
      */
-    axis.render = function (selection) {
+    axis.render = function(selection) {
       root_ = d3util.select(selection).append('g')
         .attr({
           'fill': 'none',
@@ -133,7 +146,7 @@ function (obj, config, string, mixins, d3util) {
      * @param  {d3.svg.axis} d3Axis
      * @return {component.axis}
      */
-    axis.d3axis = function (d3Axis) {
+    axis.d3axis = function(d3Axis) {
       if (d3Axis) {
         d3axis_ = d3Axis;
         return axis;
@@ -145,7 +158,7 @@ function (obj, config, string, mixins, d3util) {
      * Returns the root_
      * @return {d3.selection}
      */
-    axis.root = function () {
+    axis.root = function() {
       return root_;
     };
 

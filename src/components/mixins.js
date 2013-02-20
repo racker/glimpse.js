@@ -1,4 +1,3 @@
-
 define([
   'components/mixins/toggle',
   'components/mixins/lifecycle'

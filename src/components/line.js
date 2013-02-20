@@ -10,10 +10,10 @@ define([
   'd3-ext/util',
   'components/mixins'
 ],
-function (array, config, obj, string, d3Util, mixins) {
+function(array, config, obj, string, d3Util, mixins) {
   'use strict';
 
-  return function () {
+  return function() {
 
     //Private variables
     var config_ = {},
@@ -40,7 +40,7 @@ function (array, config, obj, string, d3Util, mixins) {
      * Updates the line component
      * @param  {d3.selection} selection
      */
-    update_ = function (selection) {
+    update_ = function(selection) {
       selection
         .datum(line.data().data)
         .attr({
@@ -55,7 +55,7 @@ function (array, config, obj, string, d3Util, mixins) {
      * Removes elements from the exit selection
      * @param  {d3.selection|Node|string} selection
      */
-    remove_ = function (selection) {
+    remove_ = function(selection) {
       selection.exit().remove();
     };
 
@@ -70,12 +70,12 @@ function (array, config, obj, string, d3Util, mixins) {
 
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
-    line.data = function (data) {
+    line.data = function(data) {
       if (data) {
         data_ = data;
         return line;
       }
-      return array.find(data_, function (d) {
+      return array.find(data_, function(d) {
         return d.id === config_.dataId;
       });
     };
@@ -84,7 +84,7 @@ function (array, config, obj, string, d3Util, mixins) {
      * Updates the line component with new/updated data/config
      * @return {components.line}
      */
-    line.update = function () {
+    line.update = function() {
       var dataConfig, selection;
       dataConfig = line.data();
 
@@ -100,7 +100,7 @@ function (array, config, obj, string, d3Util, mixins) {
         .y(function(d, i) {
           return config_.yScale(dataConfig.y(d, i));
         })
-        .defined(function (d, i) {
+        .defined(function(d, i) {
           var minX = config_.xScale.range()[0];
           return(config_.xScale(dataConfig.x(d, i)) >= minX);
         })
@@ -118,7 +118,7 @@ function (array, config, obj, string, d3Util, mixins) {
      * @param  {d3.selection|Node|string} selection
      * @return {components.line}
      */
-    line.render = function (selection) {
+    line.render = function(selection) {
       root_ = d3Util.select(selection).append('g')
         .attr({
           'class': 'gl-component gl-line'
@@ -137,7 +137,7 @@ function (array, config, obj, string, d3Util, mixins) {
      * Returns the root_
      * @return {d3.selection}
      */
-    line.root = function () {
+    line.root = function() {
       return root_;
     };
 

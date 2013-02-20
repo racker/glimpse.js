@@ -1,10 +1,10 @@
 define([
   'components/axis'
 ],
-function (axisComponent) {
+function(axisComponent) {
   'use strict';
 
-  describe('components.axis', function () {
+  describe('components.axis', function() {
 
     var componentId = 'axis123',
         axis, container, node;
@@ -19,11 +19,11 @@ function (axisComponent) {
       axis.config({cid: componentId });
     });
 
-    it('axis to be defined', function () {
+    it('axis to be defined', function() {
       expect(axis).toBeDefinedAndNotNull();
     });
 
-    it('has required set of properties', function () {
+    it('has required set of properties', function() {
       expect(axis).toHaveProperties(
         'show',
         'hide'
@@ -32,7 +32,7 @@ function (axisComponent) {
 
     describe('.render()', function() {
 
-      it('handles defaults', function () {
+      it('handles defaults', function() {
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
@@ -54,7 +54,7 @@ function (axisComponent) {
         expect(node).toHaveClasses('gl-axis', 'gl-x-axis');
       });
 
-      it('renders x axis', function () {
+      it('renders x axis', function() {
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
@@ -73,7 +73,7 @@ function (axisComponent) {
         expect(getComponentNode()).toHaveClasses('gl-axis', 'gl-x-axis');
       });
 
-      it('sets tickSize to 0 by default', function () {
+      it('sets tickSize to 0 by default', function() {
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
@@ -83,7 +83,7 @@ function (axisComponent) {
         expect(axis.d3axis().tickSize()).toBe(0);
       });
 
-      it('sets tickSize to configured value', function () {
+      it('sets tickSize to configured value', function() {
         axis.config({
           type: 'x',
           scale: d3.time.scale(),
@@ -94,7 +94,7 @@ function (axisComponent) {
         expect(axis.d3axis().tickSize()).toBe(5);
       });
 
-      it('sets ticks if configured axis', function () {
+      it('sets ticks if configured axis', function() {
         axis.config({
           type: 'x',
           scale: d3.scale.linear().domain([5,10]),
@@ -105,7 +105,7 @@ function (axisComponent) {
         expect(axis.d3axis().ticks()[0]).toBe(3);
       });
 
-      it('renders y axis', function () {
+      it('renders y axis', function() {
         axis.config({
           type: 'y',
           scale: d3.scale.linear(),
@@ -115,7 +115,7 @@ function (axisComponent) {
         expect(getComponentNode()).toHaveClasses('gl-axis', 'gl-y-axis');
       });
 
-      it('does not position y axis', function () {
+      it('does not position y axis', function() {
         axis.config({
           type: 'y',
           scale: d3.scale.linear(),
@@ -124,6 +124,18 @@ function (axisComponent) {
         });
         axis.render(container);
         expect(getComponentNode()).not.toHaveAttr('transform');
+      });
+
+      it('it applies padding 0 tick', function() {
+        var zeroTick, transform;
+        axis.config({
+          type: 'y',
+          scale: d3.scale.linear()
+        });
+        axis.render(container);
+        zeroTick = d3.select(getComponentNode()).select('.gl-axis g');
+        transform = d3.transform(zeroTick.attr('transform'));
+        expect(transform.translate[1]).toBe(-10);
       });
 
       describe('axis label background', function() {
