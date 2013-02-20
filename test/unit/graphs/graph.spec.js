@@ -26,7 +26,7 @@ function (graph, assetLoader, compUtil) {
       marginLeft: 0
     };
 
-    epochBaseMs = new Date('Tue Jan 29 2013 17:13:34 GMT-0800 (PST)').getTime();
+    epochBaseMs = 0;
     oneDayMs = 1000 * 60 * 60 * 24;
 
     fakeData = [{
@@ -315,37 +315,40 @@ function (graph, assetLoader, compUtil) {
       });
 
       it('updates domain for xScale', function () {
-        expect(xScale.domain().toString()).toBe(
-          'Tue Jan 29 2013 17:13:34 GMT-0800 (PST),' +
-          'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
-        );
+        var start, end;
+        start = new Date(xScale.domain()[0]).getTime();
+        end = new Date(xScale.domain()[1]).getTime();
+        expect(start).toBe(0);
+        expect(end).toBe(fakeData[0].data[6].x);
       });
 
       it('updates domain for xScale based on domain interval period(days)',
         function () {
+          var start, end;
           testGraph.config({
             domainIntervalUnit: d3.time.day,
             domainIntervalPeriod: 2
           });
           testGraph.update();
-          expect(xScale.domain().toString()).toBe(
-            'Sat Feb 02 2013 17:13:34 GMT-0800 (PST),' +
-            'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
-          );
+          start = new Date(xScale.domain()[0]).getTime();
+          end = new Date(xScale.domain()[1]).getTime();
+          expect(start).toBe(fakeData[0].data[4].x);
+          expect(end).toBe(fakeData[0].data[6].x);
         }
       );
 
       it('updates domain for xScale based on domain interval period(week)',
         function () {
+          var start, end;
           testGraph.config({
             domainIntervalUnit: d3.time.week,
             domainIntervalPeriod: 1
           });
           testGraph.update();
-          expect(xScale.domain().toString()).toBe(
-            'Tue Jan 29 2013 17:13:34 GMT-0800 (PST),' +
-            'Mon Feb 04 2013 17:13:34 GMT-0800 (PST)'
-          );
+          start = new Date(xScale.domain()[0]).getTime();
+          end = new Date(xScale.domain()[1]).getTime();
+          expect(start).toBe(fakeData[0].data[0].x);
+          expect(end).toBe(fakeData[0].data[6].x);
         }
       );
 
