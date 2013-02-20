@@ -35,12 +35,11 @@ module.exports = function(grunt) {
        */
       staticBuild: {
         options: {
-          almond: true,
           baseUrl: 'src',
           include: ['glimpse'],
           out: 'build/glimpse.js',
           wrap: {
-            startFile: 'src/wrap.start',
+            startFile: ['src/wrap.start', 'lib/almond.js'],
             endFile: 'src/wrap.end'
           },
           generateSourceMaps: true,

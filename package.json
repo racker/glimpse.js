@@ -16,15 +16,15 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "grunt": ">=0.4.0rc7",
-    "grunt-contrib-clean": ">=0.4.0rc6",
-    "grunt-contrib-jshint": ">=0.1.1rc6",
-    "grunt-contrib-requirejs": "~0.3.4",
-    "uglify-js2": ">=2.1.11",
-    "grunt-contrib-watch": "~0.1.4",
-    "grunt-exec": ">=0.3.0",
-    "testacular": ">=0.5.2",
-    "sax": "~0.5.1"
+    "grunt": "~0.4.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-contrib-jshint": "~0.1.1",
+    "grunt-contrib-requirejs": "~0.4.0",
+    "grunt-contrib-watch": "~0.2.0",
+    "grunt-exec": "~0.4.0",
+    "uglify-js2": "~2.1.11",
+    "testacular": "~0.5.2",
+    "sax": "~0.5.2"
   },
   "scripts": {
     "test": "grunt test"
