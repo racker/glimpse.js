@@ -10,6 +10,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadTasks('grunt/tasks/');
 
@@ -23,6 +24,18 @@ module.exports = function(grunt) {
     clean: {
       build: ['build/*'],
       assets: ['src/assets/assets.js']
+    },
+
+    /**
+     * Copy built files into root.
+     */
+    copy: {
+      release: {
+        files: [
+          { src: 'build/glimpse.js', dest: './glimpse.min.js' },
+          { src: 'build/glimpse.js.src', dest: './glimpse.js' }
+        ]
+      }
     },
 
     /**
@@ -154,7 +167,8 @@ module.exports = function(grunt) {
     'clean:build',
     'requirejs:amdBuild']);
   grunt.registerTask('compile', 'compile-static');
-  grunt.registerTask('release', ['jshint', 'assets', 'test', 'compile']);
+  grunt.registerTask('release', ['jshint', 'assets', 'test', 'compile',
+    'copy:release']);
   grunt.registerTask('default', ['jshint', 'assets', 'exec:testPhantomOnly']);
 };
 
