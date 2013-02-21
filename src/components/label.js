@@ -110,7 +110,7 @@ function(obj, config, string, array, util, mixins) {
      */
     label.render = function(selection) {
       root_ = util.select(selection || config_.target).append('g');
-      root_.append('text').attr('baseline-shift', '-100%');
+      root_.append('text');
       label.update();
       return label;
     };
@@ -123,12 +123,10 @@ function(obj, config, string, array, util, mixins) {
       var text;
 
       text = label.text();
-
       // Return early if no data or render() hasn't been called yet.
       if (!root_ || !text) {
         return;
       }
-
       root_.attr({
         'class': 'gl-component gl-label'
       });
@@ -142,7 +140,10 @@ function(obj, config, string, array, util, mixins) {
         'fill': config_.color,
         'font-family': config_.fontFamily,
         'font-size': config_.fontSize,
-        'font-weight': config_.fontWeight
+        'font-weight': config_.fontWeight,
+        // NOTE: Need to manually set y position since dominant-baseline
+        //   doesn't work in FF or IE.
+        'y': config_.fontSize
       })
       .text(text);
       root_.position(config_.position);

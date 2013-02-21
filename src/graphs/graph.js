@@ -30,7 +30,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxis_,
       yAxis_,
       legend_,
-      svg_,
       xDomainLabel_,
       addComponent_,
       removeComponent_,
@@ -188,7 +187,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @return {number}
      */
     getFrameHeight_ = function() {
-      return svg_.select('.gl-framed').height();
+      return root_.select('.gl-framed').height();
     };
 
     /**
@@ -197,7 +196,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @return {number}
      */
     getFrameWidth_ = function() {
-      return svg_.select('.gl-framed').width();
+      return root_.select('.gl-framed').width();
     };
 
     /**
@@ -252,11 +251,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @param  {d3.selection} selection
      */
     renderPanel_ = function(selection) {
-      svg_ = renderSvg_(selection);
-      renderDefs_(svg_);
+      root_ = renderSvg_(selection);
+      renderDefs_(root_);
       layoutManager.setLayout(
         config_.layout,
-        svg_,
+        root_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
     };
@@ -700,7 +699,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       addComponent_(xDomainLabel_);
       renderPanel_(selection);
       update_();
-      renderComponents_(svg_);
+      renderComponents_(root_);
       return graph;
     };
 

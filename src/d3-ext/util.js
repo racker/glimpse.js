@@ -13,7 +13,7 @@ function() {
      * @param {d3.selection|string} selection
      */
     select: function(selection) {
-      return (selection instanceof d3.selection) ?
+      return (Array.isArray(selection)) ?
         selection :
         d3.select(selection);
     }

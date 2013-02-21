@@ -60,9 +60,9 @@ function(label) {
         expect(root.select('text').text()).toBe(textContent);
       });
 
-      it('expect text to have baseline-shift of -100%', function() {
+      it('expect text to have y value equal to fontSize', function() {
         expect(root.select('text').node())
-          .toHaveAttr('baseline-shift', '-100%');
+          .toHaveAttr('y', testLabel.config('fontSize'));
       });
 
       it('calls update()', function() {
