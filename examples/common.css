@@ -1,4 +1,10 @@
 body {
-  background-color: #eee;
+  background-color: #ddd;
   font-family: arial;
+}
+
+.gl-framed > rect {
+  fill:none;
+  stroke: #000;
+  opacity: 1;
 }

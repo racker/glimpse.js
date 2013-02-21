@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Stacked Area Graph</h1>
+    <h3>This example illustrates how to stack data series</h3>
+    <hr>
+    <div id="container"></div>
+    <script src="../lib/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        var sampleData = [
+          {
+            "name": "sys",
+            "values": [
+              { "x": 1317279600000, "y": 30 },
+              { "x": 1317695968421, "y": 31 },
+              { "x": 1318112336842, "y": 30 },
+              { "x": 1318528705263, "y": 30 },
+              { "x": 1318945073684, "y": 40 },
+              { "x": 1319361442105, "y": 30 }
+            ]
+          },
+          {
+            "name": "user",
+            "values": [
+              { "x": 1317279600000, "y": 20 },
+              { "x": 1317695968421, "y": 19 },
+              { "x": 1318112336842, "y": 21 },
+              { "x": 1318528705263, "y": 21 },
+              { "x": 1318945073684, "y": 21 },
+              { "x": 1319361442105, "y": 21 }
+            ]
+          },
+          {
+            "name": "stolen",
+            "values": [
+              { "x": 1317279600000, "y": 1 },
+              { "x": 1317695968421, "y": 1 },
+              { "x": 1318112336842, "y": 0 },
+              { "x": 1318528705263, "y": 0 },
+              { "x": 1318945073684, "y": 0 },
+              { "x": 1319361442105, "y": 0 }
+            ]
+          },
+          {
+            "name": "wait",
+            "values": [
+              { "x": 1317279600000, "y": 9 },
+              { "x": 1317695968421, "y": 9 },
+              { "x": 1318112336842, "y": 9 },
+              { "x": 1318528705263, "y": 9 },
+              { "x": 1318945073684, "y": 9 },
+              { "x": 1319361442105, "y": 9 }
+            ]
+          },
+          {
+            "name": "idle",
+            "values": [
+              { "x": 1317279600000, "y": 40 },
+              { "x": 1317695968421, "y": 40 },
+              { "x": 1318112336842, "y": 40 },
+              { "x": 1318528705263, "y": 40 },
+              { "x": 1318945073684, "y": 30 },
+              { "x": 1319361442105, "y": 40 }
+            ]
+          }
+        ];
+
+        // Create copy for mutating.
+        var mappedData = sampleData.concat();
+
+        // d3 stack function to calculate Y-baselines and Y-offsets.
+        var stack = d3.layout.stack()
+          .values(function(d) { return d.values; });
+        stack(mappedData);
+
+        // Utility for accessing individual data series.
+        function filterData(processName) {
+          return mappedData.filter(function(d) {
+            return d.name === processName;
+          })[0].values;
+        }
+
+        // Accessor to provide Y-baseline when drawing area components.
+        var y0 = function(d, i) { return d.y0; };
+
+        var areaGraph = glimpse.graph()
+          .config({
+            'forceY': [0],
+            'yDomainModifier': 1
+          })
+          .data([
+            { id: 'cpu-sys',
+              title: 'System',
+              data: filterData('sys'),
+              y0: y0
+            },
+            { id: 'cpu-user',
+              title: 'User',
+              data: filterData('user'),
+              y0: y0
+            },
+            { id: 'cpu-idle',
+              title: 'Idle',
+              data: filterData('idle'),
+              y0: y0
+            },
+            { id: 'cpu-wait',
+              title: 'Wait',
+              data: filterData('wait'),
+              y0: y0
+            },
+            { id: 'cpu-stolen',
+              title: 'Stolen',
+              data: filterData('stolen'),
+              y0: y0
+            }
+          ])
+          // TODO: allow component() function to take an array
+          .component({ type: 'area', dataId: 'cpu-idle', color: '#EFEFEF' })
+          .component({ type: 'area', dataId: 'cpu-user', color: '#89D6FF' })
+          .component({ type: 'area', dataId: 'cpu-sys', color: '#FFB578' })
+          .component({ type: 'area', dataId: 'cpu-wait', color: '#F5F692' })
+          .component({ type: 'area', dataId: 'cpu-stolen', color: '#FF5A86' })
+          .render('#container');
+
+
+          // for debugging
+          window.graph = areaGraph;
+          window.gl = glimpse;
+        });
+    </script>
+  </body>
+</html>

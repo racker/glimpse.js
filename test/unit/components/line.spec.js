@@ -58,7 +58,7 @@ function(d3, object, line) {
       defaults = {
         strokeWidth: 2,
         color: 'steelBlue',
-        showInLegend: true,
+        inLegend: true,
         lineGenerator: d3.svg.line(),
         interpolate: 'linear'
       };
@@ -71,8 +71,8 @@ function(d3, object, line) {
         expect(config.strokeWidth).toBe(defaults.strokeWidth);
       });
 
-      it('has default showInLegend', function() {
-        expect(config.showInLegend).toBe(defaults.showInLegend);
+      it('has default inLegend', function () {
+        expect(config.inLegend).toBe(defaults.inLegend);
       });
 
       it('has default lineGenerator', function() {

@@ -28,7 +28,7 @@ function(array, config, obj, string, d3Util, mixins) {
       cid: undefined,
       strokeWidth: 2,
       color: 'steelBlue',
-      showInLegend: true,
+      inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
       ease: 'linear',
