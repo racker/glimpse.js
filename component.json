@@ -14,5 +14,10 @@
     "Gruntfile.js",
     "package.json",
     "pre-commit.js"
-  ]
+  ],
+  "dependencies": {
+    "d3": "~3.0",
+    "almond": "~0.2",
+    "require": "~2.0"
+  }
 }

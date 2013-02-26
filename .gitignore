@@ -2,3 +2,4 @@ node_modules/
 build/
 /test/coverage
 /src/assets/assets.js
+/components

@@ -14,7 +14,7 @@ files = [
   REQUIRE_ADAPTER,
 
   // requirejs shim
-  'lib/d3.js',
+  'components/d3/d3.js',
 
   // requirejs paths
   // src and test modules
