@@ -56,7 +56,9 @@ function(array, config, obj, string, d3Util, mixins) {
      * @param  {d3.selection|Node|string} selection
      */
     remove_ = function(selection) {
-      selection.exit().remove();
+      if (selection && selection.exit) {
+        selection.exit().remove();
+      }
     };
 
     /**
@@ -75,6 +77,9 @@ function(array, config, obj, string, d3Util, mixins) {
         data_ = data;
         return line;
       }
+      if (!data_) {
+        return;
+      }
       return array.find(data_, function(d) {
         return d.id === config_.dataId;
       });
@@ -86,12 +91,15 @@ function(array, config, obj, string, d3Util, mixins) {
      */
     line.update = function() {
       var dataConfig, selection;
-      dataConfig = line.data();
 
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-
+      dataConfig = line.data();
+      // Return early if there's no data.
+      if (!dataConfig || !dataConfig.data) {
+        return line;
+      }
       // Configure the lineGenerator function
       config_.lineGenerator
         .x(function(d, i) {
@@ -105,9 +113,8 @@ function(array, config, obj, string, d3Util, mixins) {
           return(config_.xScale(dataConfig.x(d, i)) >= minX);
         })
         .interpolate(config_.interpolate);
-
-      selection = root_.select('.gl-path').data(dataConfig.data);
-
+      selection = root_.select('.gl-path')
+        .data(dataConfig.data);
       update_(selection);
       remove_(selection);
       return line;

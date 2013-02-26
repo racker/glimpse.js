@@ -220,6 +220,41 @@ function(d3, object, line) {
 
     });
 
+    describe('root()', function() {
+      var selection;
+
+      beforeEach(function() {
+        selection = jasmine.svgFixture();
+        testLine.render(selection);
+      });
+
+      it('gets the root element', function() {
+        var firstChild = selection.node().firstChild;
+        expect(testLine.root().node()).toBe(firstChild);
+      });
+
+    });
+
+    describe('no data', function() {
+      var selection, exceptionCaught;
+
+      beforeEach(function() {
+        exceptionCaught = false;
+        selection = jasmine.svgFixture();
+        try {
+          testLine.render(selection);
+        }
+        catch(e) {
+          exceptionCaught = true;
+        }
+      });
+
+      it('returns graceully with no data', function() {
+        expect(exceptionCaught).toBe(false);
+      });
+
+    });
+
   });
 
 });

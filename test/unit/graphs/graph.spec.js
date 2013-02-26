@@ -617,6 +617,27 @@ function(graph, assetLoader, compUtil) {
 
     });
 
+    describe('no data', function() {
+      var selection, exceptionCaught;
+
+      beforeEach(function() {
+        exceptionCaught = false;
+        selection = jasmine.svgFixture();
+        try {
+          testGraph.component({ type: 'line', dataId: 'foo' });
+          testGraph.render(selection);
+        }
+        catch(e) {
+          exceptionCaught = true;
+        }
+      });
+
+      it('returns graceully when rendered with no data', function() {
+        expect(exceptionCaught).toBe(false);
+      });
+
+    });
+
   });
 
 });
