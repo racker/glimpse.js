@@ -1,5 +1,18 @@
 {
   "name": "glimpse.js",
   "version": "0.0.1",
-  "main": "./glimpse.min.js"
+  "main": "./glimpse.min.js",
+  "ignore": [
+    "build/",
+    "docs/",
+    "grunt/",
+    "lib/",
+    "test/",
+    ".gitignore",
+    ".travis.yml",
+    "CONTRIBUTING.md",
+    "Gruntfile.js",
+    "package.json",
+    "pre-commit.js"
+  ]
 }
