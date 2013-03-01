@@ -6,7 +6,8 @@ define([
   'core/object',
   'core/array',
   'data/selection/selection',
-  'data/selection/diff-quotient'
+  'data/selection/diff-quotient',
+  'data/selection/stack'
 ], function (obj, array, selection) {
   'use strict';
 
