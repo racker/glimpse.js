@@ -82,30 +82,47 @@
             data: d.values
           };
         });
-        mappedData.push({
-          id: 'stack',
-          sources: '*',
-          derivation: function(sources) {
-            return sources.stack().get();
+        var derivedData = [
+          {
+            id: 'stack',
+            sources: '*',
+            derivation: function(sources) {
+              return sources.stack().all();
+            }
+          },
+          // TODO: this is not possible yet
+          {
+            id: 'cpu-sys-stack',
+            srouces: 'stack',
+            derivation: function(sources) {
+              return sources.get();
+            }
+          },
+          // TODO: this is not possible yet
+          {
+            id: 'cpu-idle-stack',
+            srouces: 'stack',
+            derivation: function(sources) {
+              return sources.get(1);
+            }
           }
-        });
+        ];
+        var data = mappedData.concat(derivedData);
 
         var areaGraph = glimpse.graph()
           .config({
             'forceY': [0],
             'yDomainModifier': 1
           })
-          .data(mappedData)
-          // TODO: allow component() function to take an array
-          .component({ type: 'area', dataId: 'stack', color: '#FFB578' })
-          /**
+          .data(data)
+          .component({ type: 'area', dataId: 'cpu-sys-stack', color: '#FFB578' })
           .component({ type: 'area', dataId: 'cpu-idle-stack', color: '#EFEFEF' })
+          /**
           .component({ type: 'area', dataId: 'cpu-user-stack', color: '#89D6FF' })
           .component({ type: 'area', dataId: 'cpu-wait-stack', color: '#F5F692' })
           .component({ type: 'area', dataId: 'cpu-stolen-stack', color: '#FF5A86' })
           */
           .render('#container');
-
 
           // for debugging
           window.graph = areaGraph;

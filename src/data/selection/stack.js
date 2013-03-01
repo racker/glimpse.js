@@ -43,7 +43,6 @@ define([
 
     // Apply d3 stacking function to new copy of the data.
     stack(layers.all());
-    console.log(layers);
     return layers;
   };
 
