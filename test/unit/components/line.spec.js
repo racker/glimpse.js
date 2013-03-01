@@ -51,7 +51,8 @@ function(d3, object, line, dc) {
         'data',
         'lineGenerator',
         'show',
-        'hide'
+        'hide',
+        'destroy'
       );
     });
 
@@ -219,6 +220,23 @@ function(d3, object, line, dc) {
 
       it('calls the update function', function() {
         expect(testLine.update).toHaveBeenCalled();
+      });
+
+    });
+
+    describe('destroy()', function() {
+      var selection;
+
+      beforeEach(function() {
+        selection = jasmine.svgFixture();
+        setData();
+        spyOn(testLine, 'update');
+        testLine.render(selection);
+        testLine.destroy();
+      });
+
+      it('removes all child nodes', function() {
+        expect(selection.selectAll('*')).toBeEmptySelection();
       });
 
     });

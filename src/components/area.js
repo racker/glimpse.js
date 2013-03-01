@@ -89,6 +89,23 @@ function(array, config, obj, string, d3util, mixins) {
       return area;
     }
 
+    // Apply mixins.
+    obj.extend(
+      area,
+      config.mixin(
+        config_,
+        'cid',
+        'target',
+        'xScale',
+        'yScale',
+        'color',
+        'opacity',
+        'cssClass',
+        'areaGenerator'
+      ),
+      mixins.lifecycle,
+      mixins.toggle);
+
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
     area.data = function(data) {
@@ -145,25 +162,13 @@ function(array, config, obj, string, d3util, mixins) {
     };
 
     area.destroy = function() {
-      root_.remove();
+      if(root_) {
+        root_.remove();
+      }
       root_ = null;
       config_ = null;
       defaults_ = null;
     };
-
-    obj.extend(
-      area,
-      config.mixin(
-        config_,
-        'cid',
-        'target',
-        'xScale',
-        'yScale',
-        'color',
-        'opacity',
-        'cssClass',
-        'areaGenerator'
-    ), mixins.toggle);
 
     return area();
 

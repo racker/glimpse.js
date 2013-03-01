@@ -252,7 +252,19 @@ define([
         });
       });
 
+    });
 
+    describe('.remove()', function() {
+
+      beforeEach(function() {
+        dataCollection.add([{ id: 'one' }, { id: 'two' }]);
+      });
+
+      it('removes a data source by id', function() {
+        dataCollection.remove('one');
+        expect(dataCollection.get().length).toBe(1);
+        expect(dataCollection.get()[0].id).toBe('two');
+      });
 
     });
 

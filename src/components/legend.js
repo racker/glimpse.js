@@ -100,7 +100,9 @@ function(obj, config, string, util, mixins) {
         .attr({
           'width': config_.indicatorWidth,
           'height': config_.indicatorHeight,
-          'fill': function(d) { return d.color; }
+          'fill': function(d) {
+            return d3.functor(d.color)();
+          }
         });
 
       // Update key text.
@@ -131,6 +133,23 @@ function(obj, config, string, util, mixins) {
       return legend;
     }
 
+    // Apply Mixins.
+    obj.extend(
+      legend,
+      config.mixin(
+        config_,
+        'cid',
+        'keys',
+        'fontColor',
+        'fontFamily',
+        'fontSize',
+        'fontWeight',
+        'indicatorWidth',
+        'indicatorHeight'
+      ),
+      mixins.lifecycle,
+      mixins.toggle);
+
     /**
      * Apply post-render updates.
      * Insert/update/remove DOM for each key.
@@ -150,7 +169,9 @@ function(obj, config, string, util, mixins) {
       // The selection of legend keys.
       selection = root_
         .selectAll('.gl-legend-key')
-        .data(config_.keys, function(d) { return d.color; });
+        .data(config_.keys, function(d) {
+          return d3.functor(d.color)();
+        });
 
       remove_(selection);
       enter_(selection);
@@ -183,20 +204,18 @@ function(obj, config, string, util, mixins) {
       return root_;
     };
 
-    // MIXINS
-    obj.extend(
-      legend,
-      config.mixin(
-        config_,
-        'cid',
-        'keys',
-        'fontColor',
-        'fontFamily',
-        'fontSize',
-        'fontWeight',
-        'indicatorWidth',
-        'indicatorHeight'
-      ), mixins.toggle);
+    /**
+     * Destroys the legend and removes everything from the DOM.
+     * @public
+     */
+    legend.destroy = function() {
+      if (root_) {
+        root_.remove();
+      }
+      root_ = null;
+      config_ = null;
+      defaults_ = null;
+    };
 
     return legend();
   };

@@ -100,16 +100,17 @@ function(overlay, componentUtil) {
         expect(mockComponent.render).toHaveBeenCalledOnce();
       });
 
-      it('removes previous components', function() {
-        testOverlay.config('components', [mockComponent]);
-        testOverlay.update();
-        // rect + componnets container + component
-        expect(root.selectAll('*')).toBeSelectionLength(3);
-        testOverlay.config('components', []);
-        testOverlay.update();
-        // rect + componnets container
-        expect(root.selectAll('*')).toBeSelectionLength(2);
-      });
+      // TODO: revisit this feature once subcomponents are formalized.
+      //it('removes previous components', function() {
+        //testOverlay.config('components', [mockComponent]);
+        //testOverlay.update();
+        //// rect + componnets container + component
+        //expect(root.selectAll('*')).toBeSelectionLength(3);
+        //testOverlay.config('components', []);
+        //testOverlay.update();
+        //// rect + componnets container
+        //expect(root.selectAll('*')).toBeSelectionLength(2);
+      //});
 
     });
 

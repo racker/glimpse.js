@@ -30,7 +30,8 @@ function(label, dc) {
           'fontSize',
           'fontWeight',
           'show',
-          'hide'
+          'hide',
+          'destroy'
         );
       });
 
@@ -179,6 +180,19 @@ function(label, dc) {
         dataCollection.add(data);
         testLabel.data(dataCollection).config('dataId', 'testData');
         expect(testLabel.data()).toBe(data);
+      });
+
+    });
+
+    describe('destroy', function() {
+
+      beforeEach(function() {
+        testLabel.render(selection);
+        testLabel.destroy();
+      });
+
+      it('removes all child nodes', function() {
+        expect(selection.selectAll('*')).toBeEmptySelection();
       });
 
     });

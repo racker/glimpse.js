@@ -70,6 +70,18 @@ function(array, config, obj, string, d3Util, mixins) {
       return line;
     }
 
+    obj.extend(
+      line,
+      config.mixin(
+        config_,
+        'cid',
+        'xScale',
+        'yScale',
+        'lineGenerator'
+      ),
+      mixins.lifecycle,
+      mixins.toggle);
+
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
     line.data = function(data) {
@@ -146,15 +158,18 @@ function(array, config, obj, string, d3Util, mixins) {
       return root_;
     };
 
-    obj.extend(
-      line,
-      config.mixin(
-        config_,
-        'cid',
-        'xScale',
-        'yScale',
-        'lineGenerator'
-    ), mixins.toggle);
+    /**
+     * Destroys the line and removes everything from the DOM.
+     * @public
+     */
+    line.destroy = function() {
+      if (root_) {
+        root_.remove();
+      }
+      root_ = null;
+      config_ = null;
+      defaults_ = null;
+    };
 
     return line();
 

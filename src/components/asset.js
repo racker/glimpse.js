@@ -106,7 +106,9 @@ function(obj, config, mixins, d3util) {
      * Destroys this component and cleans up after itself.
      */
     asset.destroy = function() {
-      root_.remove();
+      if(root_) {
+        root_.remove();
+      }
       root_ = null;
       config_ = null;
       defaults_ = null;

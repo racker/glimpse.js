@@ -121,6 +121,39 @@ function (array) {
 
     });
 
+    describe('contains()', function() {
+      var testArray;
+
+      beforeEach(function() {
+        testArray = ['a', 'b', 'c'];
+      });
+
+      it('returns false for an empty array', function() {
+        expect(array.contains([], 'z')).toBe(false);
+      });
+
+      it('returns true if item is in the array', function() {
+        expect(array.contains(testArray, 'a')).toBe(true);
+      });
+
+      it('returns false if item is not in the array', function() {
+        expect(array.contains(testArray, 'z')).toBe(false);
+      });
+
+      it('returns true if an object is in the array', function() {
+        var obj = { foo: 'bar' };
+        expect(array.contains([obj], obj)).toBe(true);
+      });
+
+      it('returns false if the object is similar but not the same.',
+      function() {
+        var obj = { foo: 'bar' };
+        expect(array.contains([{ foo: 'bar' }], obj)).toBe(false);
+      });
+
+    });
+
+
   });
 
 });

@@ -18,8 +18,7 @@ function(obj, config, label, mixins, d3util) {
     var defaults_,
       config_,
       root_,
-      removeExisting_,
-      appendChildren_;
+      updateChildren_;
 
     config_ = {};
 
@@ -29,37 +28,34 @@ function(obj, config, label, mixins, d3util) {
       components: [],
       layoutConfig: { type: 'horizontal', position: 'center', gap: 6 },
       opacity: 1,
-      labels: [],
       backgroundColor: '#fff'
-    };
-
-    /**
-     * @private
-     * Remove all existing items from this overlay.
-     */
-    removeExisting_ = function() {
-      root_.selectAll('*').remove();
     };
 
     /**
      * @private
      * Append background rect, all child components, and apply the layout.
      */
-    appendChildren_ = function() {
+    updateChildren_ = function() {
       var parentNode,
           componentsContainer;
 
       parentNode = d3.select(root_.node().parentNode);
-      root_.append('rect').attr({
+
+      root_.select('rect').attr({
         width: parentNode.width(),
         height: parentNode.height(),
         opacity: config_.opacity,
         fill: config_.backgroundColor
       });
-      componentsContainer = root_.append('g')
+      componentsContainer = root_.select('g')
         .attr('class', 'gl-components');
       config_.components.forEach(function(component) {
-        component.render(componentsContainer);
+        if (component.root()) {
+          // If already rendered, just update instead.
+          component.update();
+        } else {
+          component.render(componentsContainer);
+        }
       });
       componentsContainer.layout(config_.layoutConfig);
     };
@@ -103,6 +99,8 @@ function(obj, config, label, mixins, d3util) {
     overlay.render = function(selection) {
       if (!root_) {
         root_ = d3util.select(selection || config_.target).append('g');
+        root_.append('rect');
+        root_.append('g');
         overlay.update();
       }
       return overlay;
@@ -127,8 +125,7 @@ function(obj, config, label, mixins, d3util) {
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-      removeExisting_();
-      appendChildren_();
+      updateChildren_();
       return overlay;
     };
 
@@ -141,7 +138,9 @@ function(obj, config, label, mixins, d3util) {
       config_.components.forEach(function(label) {
         label.destroy();
       });
-      root_.remove();
+      if (root_) {
+        root_.remove();
+      }
       root_ = null;
       config_ = null;
       defaults_ = null;

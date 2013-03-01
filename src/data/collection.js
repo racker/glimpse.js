@@ -60,7 +60,10 @@ define([
        * Remove a data source by id.
        */
       remove: function(id) {
-        delete dataCollection[id];
+        var ids = array.getArray(id);
+        ids.forEach(function(i) {
+          delete dataCollection[i];
+        });
       },
 
       /**

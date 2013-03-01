@@ -156,6 +156,19 @@ function(obj, config, string, array, util, mixins) {
       return root_;
     };
 
+    /**
+     * Destroys the label and removes everything from the DOM.
+     * @public
+     */
+    label.destroy = function() {
+      if (root_) {
+        root_.remove();
+      }
+      root_ = null;
+      config_ = null;
+      defaults_ = null;
+    };
+
     return label();
   };
 

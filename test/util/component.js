@@ -21,6 +21,10 @@ function() {
           parent.append('g').attr('mock-id', mockId);
         },
 
+        root: function() {
+          return null;
+        },
+
         destroy: function() {}
       };
     }

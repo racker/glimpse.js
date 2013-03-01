@@ -26,7 +26,8 @@ function(axisComponent) {
     it('has required set of properties', function() {
       expect(axis).toHaveProperties(
         'show',
-        'hide'
+        'hide',
+        'destroy'
       );
     });
 
@@ -184,6 +185,25 @@ function(axisComponent) {
           });
         });
 
+      });
+
+    });
+
+    describe('destroy()', function() {
+
+      beforeEach(function() {
+        container.selectAll('*').remove();
+        axis.config({
+          type: 'x',
+          scale: d3.time.scale(),
+          orient: 'bottom'
+        });
+        axis.render(container);
+        axis.destroy();
+      });
+
+      it('removes all child nodes', function() {
+        expect(container.selectAll('*')).toBeEmptySelection();
       });
 
     });

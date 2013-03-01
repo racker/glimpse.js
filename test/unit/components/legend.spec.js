@@ -18,7 +18,7 @@ function(legend) {
     beforeEach(function() {
       testLegend = legend();
       key1 = { color: 'blue', label: 'blue label' };
-      key2 = { color: 'green', label: 'green label' };
+      key2 = { color: function() { return 'green'; }, label: 'green label' };
       keys = [key1, key2];
       testLegend.keys(keys);
       svgNode = jasmine.svgFixture().node();
@@ -85,6 +85,14 @@ function(legend) {
 
           it('adds key indicators', function() {
             expect(indicatorNodes.length).toBe(2);
+          });
+
+          it('sets the correct static indicator color', function() {
+            expect(indicatorNodes[0]).toHaveAttr('fill', 'blue');
+          });
+
+          it('sets the correct dynamic indicator color', function() {
+            expect(indicatorNodes[1]).toHaveAttr('fill', 'green');
           });
 
         });
@@ -178,6 +186,21 @@ function(legend) {
             .toHaveAttr('height', 13);
         });
 
+      });
+
+    });
+
+    describe('destroy()', function() {
+      var selection;
+
+      beforeEach(function() {
+        selection = jasmine.svgFixture();
+        testLegend.render(selection);
+        testLegend.destroy();
+      });
+
+      it('removes all the dom nodes', function() {
+        expect(selection.selectAll('*')).toBeEmptySelection();
       });
 
     });

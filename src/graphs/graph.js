@@ -32,7 +32,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       legend_,
       xDomainLabel_,
       addComponent_,
-      removeComponent_,
       addAxes_,
       addLegend_,
       configureXScale_,
@@ -42,6 +41,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       getComponent_,
       getFrameHeight_,
       getFrameWidth_,
+      renderComponent_,
       renderComponents_,
       renderDefs_,
       renderPanel_,
@@ -57,6 +57,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       showEmptyOverlay_,
       showErrorOverlay_,
       dataCollection_,
+      isRendered_,
       STATES;
 
     /**
@@ -114,15 +115,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         component.yScale(config_.yScale);
       }
       components_.push(component);
-    };
-
-    /**
-     * @param {String|Array} cid
-     */
-    removeComponent_ = function(cid) {
-      array.remove(components_, getComponent_(cid)).forEach(function(c) {
-        c.destroy();
-      });
     };
 
     /**
@@ -210,11 +202,15 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         return;
       }
       components_.forEach(function(component) {
-        var renderTarget;
-        renderTarget = selection.select(
-            component.config('target') || '.gl-unframed');
-        component.render(renderTarget);
+        renderComponent_(component, selection);
       });
+    };
+
+    renderComponent_ = function(component, selection) {
+      var renderTarget;
+      renderTarget = selection.select(
+        component.config('target') || root_);
+      component.render(renderTarget);
     };
 
     /**
@@ -304,7 +300,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           });
         }
       });
-      legend_.config({keys: legendConfig})
+      legend_.config({ cid: 'legend', keys: legendConfig })
         .update();
     };
 
@@ -443,7 +439,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
 
     /**
      * @private
-     * Displays the loading spinner and message over the framed area.
+     * Displays the empty message over the framed area.
      */
     showEmptyOverlay_ = function() {
       var labelTexts,
@@ -577,9 +573,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       if (!newState) {
         return oldState;
       }
-      removeComponent_('emptyOverlay');
-      removeComponent_('loadingOverlay');
-      removeComponent_('errorOverlay');
+      graph.removeComponent('emptyOverlay');
+      graph.removeComponent('loadingOverlay');
+      graph.removeComponent('errorOverlay');
       graph.xAxis().show();
       graph.legend().show();
       switch (newState) {
@@ -629,6 +625,17 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
+     * Removes any specified data sets from the data collection.
+     * @public
+     * @param {String|Array} id Single id or array of ids.
+     * @return {graphs.graph}
+     */
+    graph.removeData = function(id) {
+      dataCollection_.remove(id);
+      return graph;
+    };
+
+    /**
      * Append data to an existing data object
      * @param  {string} id
      * @param  {Array|Object} dataToAppend
@@ -661,6 +668,23 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       component = components[componentConfig.type]();
       component.config(componentConfig);
       addComponent_(component);
+
+      if (isRendered_) {
+        renderComponent_(component, root_);
+      }
+
+      return graph;
+    };
+
+    /**
+     * @public
+     * @param {String|Array} cid Component cid or array of cids to remove.
+     * @return {graphs.graph}
+     */
+    graph.removeComponent = function(cid) {
+      array.remove(components_, getComponent_(cid)).forEach(function(c) {
+        c.destroy();
+      });
       return graph;
     };
 
@@ -691,6 +715,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       renderPanel_(selection);
       update_();
       renderComponents_(root_);
+      isRendered_ = true;
       return graph;
     };
 

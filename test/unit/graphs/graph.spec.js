@@ -641,6 +641,82 @@ function(graph, assetLoader, dc, compUtil) {
 
     });
 
+    describe('removeData()', function() {
+      var idMapper;
+      idMapper = function(d) {
+        return d.id;
+      };
+
+      beforeEach(function() {
+        testGraph.data([
+          { id: 'one', data: [] },
+          { id: 'two', data: [] },
+          { id: 'three', data: [] }
+        ]);
+      });
+
+      it('removes a single data item from the collection', function() {
+        testGraph.removeData('one');
+        expect(testGraph.data().get().map(idMapper)).toEqual(['two', 'three']);
+      });
+
+      it('removes multiple data items from the collection', function() {
+        testGraph.removeData(['one', 'two']);
+        expect(testGraph.data().get().map(idMapper)).toEqual(['three']);
+      });
+
+      it('does nothing if data id doesnt exist', function() {
+        var exThrown = false;
+        try {
+          testGraph.removeData('nonsense');
+        }
+        catch (e) {
+          exThrown = true;
+        }
+        expect(exThrown).toBe(false);
+        expect(testGraph.data().get().length).toBe(3);
+      });
+
+    });
+
+    describe('removeComponent', function() {
+      var c1, c2, c3, cidMapper;
+
+      cidMapper = function(c) {
+        return c.cid();
+      };
+
+      beforeEach(function() {
+        testGraph.component({ cid: 'c1', type: 'line' });
+        testGraph.component({ cid: 'c2', type: 'line' });
+        testGraph.component({ cid: 'c3', type: 'line' });
+        c1 = testGraph.component('c1');
+        c2 = testGraph.component('c2');
+        c3 = testGraph.component('c3');
+        spyOn(c1, 'destroy');
+        spyOn(c2, 'destroy');
+        spyOn(c3, 'destroy');
+      });
+
+      it('removes a single component', function() {
+        testGraph.removeComponent('c1');
+        expect(testGraph.component().map(cidMapper)).toEqual(['c2', 'c3']);
+      });
+
+      it('removes multiple components', function() {
+        testGraph.removeComponent(['c1', 'c2']);
+        expect(testGraph.component().map(cidMapper)).toEqual(['c3']);
+      });
+
+      it('calls destroy() when removing a component', function() {
+        testGraph.removeComponent('c1');
+        expect(c1.destroy).toHaveBeenCalledOnce();
+        expect(c2.destroy).not.toHaveBeenCalled();
+        expect(c3.destroy).not.toHaveBeenCalled();
+      });
+
+    });
+
   });
 
 });

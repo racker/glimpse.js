@@ -23,18 +23,17 @@ function(obj, config, string, mixins, d3util) {
     config_ = {};
 
     defaults_ = {
-        type: 'x',
-        id: string.random(),
-        gap: 0,
-        target: '.gl-framed',
-        color: '#333',
-        opacity: 0.8,
-        fontFamily: 'arial',
-        fontSize: 10,
-        textBgColor: '#fff',
-        textBgSize: 3,
-        tickSize: 0,
-        ticks: 3
+      type: 'x',
+      gap: 0,
+      target: '.gl-framed',
+      color: '#333',
+      opacity: 0.8,
+      fontFamily: 'arial',
+      fontSize: 10,
+      textBgColor: '#fff',
+      textBgSize: 3,
+      tickSize: 0,
+      ticks: 3
     };
 
     /**
@@ -104,6 +103,16 @@ function(obj, config, string, mixins, d3util) {
       return axis;
     }
 
+
+    // Apply mixins.
+    obj.extend(
+      axis,
+      config.mixin(
+        config_,
+        'cid'),
+      mixins.lifecycle,
+      mixins.toggle);
+
     /**
      * Apply updates to the axis.
      */
@@ -162,7 +171,20 @@ function(obj, config, string, mixins, d3util) {
       return root_;
     };
 
-    obj.extend(axis, config.mixin(config_, 'cid'), mixins.toggle);
+    /**
+     * Destroys the axis and removes everything from the DOM.
+     * @public
+     */
+    axis.destroy = function() {
+      if (root_) {
+        root_.remove();
+      }
+      root_ = null;
+      config_ = null;
+      defaults_ = null;
+      d3axis_ = null;
+    };
+
     return axis();
   };
 

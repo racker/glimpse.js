@@ -86,6 +86,16 @@ function () {
         }
       });
       return removedItems;
+    },
+
+    /**
+     * Check if an array contains an item.
+     * @param {Array} arr The array to check.
+     * @param {Object} item The item to check for.
+     * @return {Boolean}
+     */
+    contains: function(arr, item) {
+      return !!arr.length && arr.indexOf(item) !== -1;
     }
 
   };
