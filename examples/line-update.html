@@ -29,11 +29,11 @@
         latencyData = [
           {
             data: [
-              {"x":epochBaseMs + 0 * oneDayMs,"y": 80},
-              {"x":epochBaseMs + 1 * oneDayMs,"y": 120},
-              {"x":epochBaseMs + 2 * oneDayMs,"y": 60},
-              {"x":epochBaseMs + 3 * oneDayMs,"y": 90},
-              {"x":epochBaseMs + 4 * oneDayMs,"y": 100}
+              {"time":epochBaseMs + 0 * oneDayMs,"latency": 80},
+              {"time":epochBaseMs + 1 * oneDayMs,"latency": 120},
+              {"time":epochBaseMs + 2 * oneDayMs,"latency": 60},
+              {"time":epochBaseMs + 3 * oneDayMs,"latency": 90},
+              {"time":epochBaseMs + 4 * oneDayMs,"latency": 100}
             ]
           }
         ];
@@ -50,26 +50,43 @@
               id: 'latencyDfw',
               title: 'Time to Connect (DFW)',
               data: latencyData[0].data,
-              x: function (d, i) { return d.x + 5; },
-              y: function (d, i) { return d.y + 10; }
+              x: function (d, i) { return d.time + 5; },
+              y: function (d, i) { return d.latency + 10; }
             },
             {
               id: 'latencyOrd',
               title: 'Time to Connect (ORD)',
               data: latencyData[0].data,
-              x: function (d, i) { return d.x; },
-              y: function (d, i) { return d.y; }
+              x: function (d, i) { return d.time; },
+              y: function (d, i) { return d.latency; }
             },
             { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + Math.random()*10; }
+                x: function (d, i) { return d.time; },
+                y: function (d, i) { return d.latency + Math.random()*10; }
+              },
+              {
+                id: 'stats',
+                sources: '*',
+                derivation: function(sources) {
+                  var points = sources.dim('y').concat();
+                  return {
+                    min: points.min().round().get(),
+                    max: points.max().round().get(),
+                    avg: points.avg().round().get()
+                  };
+                }
               }
           ])
           .component({ cid: 'lineOrd', type: 'line', dataId: 'latencyOrd', color: '#206ec2', opacity: '0.4' })
           .component({ cid: 'lineDfw', type: 'line', dataId: 'latencyDfw', color: '#e65b1f', opacity: '0.6'  })
           .component({ cid: 'lineLon', type: 'line', dataId: 'latencyLon', color: '#c40022', opacity: '0.7'  })
+          .component({ type: 'label', dataId: 'stats',
+              text: function(d) {
+                return 'Min/Max/Avg: ' + d.min + '/' + d.max + '/' + d.avg
+              },
+              position: 'center-left', target: '.gl-footer' })
           .render('#container');
 
         currentDay = latencyData[0].data.length;
@@ -80,7 +97,7 @@
         update = function () {
           lineGraph.appendData(
               'latencyOrd',
-              {"x":epochBaseMs + currentDay++ * oneDayMs, "y": (Math.random() * 150)}
+              {"time":epochBaseMs + currentDay++ * oneDayMs, "latency": (Math.random() * 150)}
             )
             .update()
             .hide('lineOrd');

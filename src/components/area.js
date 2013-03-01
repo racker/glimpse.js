@@ -18,7 +18,7 @@ function(array, config, obj, string, d3util, mixins) {
     //Private variables
     var config_ = {},
       defaults_,
-      data_,
+      dataCollection_,
       root_,
       updateAreaGenerator_;
 
@@ -93,12 +93,10 @@ function(array, config, obj, string, d3util, mixins) {
     // put this func somehwere else and apply as needed
     area.data = function(data) {
       if (data) {
-        data_ = data;
+        dataCollection_ = data;
         return area;
       }
-      return array.find(data_, function(d) {
-        return d.id === config_.dataId;
-      });
+      return dataCollection_.get(config_.dataId);
     };
 
     /**

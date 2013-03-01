@@ -1,12 +1,14 @@
 define([
-  'components/area'
+  'components/area',
+  'data/collection'
 ],
-function(area) {
+function(area, dc) {
   'use strict';
 
   describe('components.area', function() {
 
-    var testArea, testData, selection, areaGenerator;
+    var testArea, testData, selection, areaGenerator,
+        dataCollection;
 
     testData = [{
       id:'fakeData',
@@ -21,16 +23,18 @@ function(area) {
     }];
 
     function setData(d, id) {
+      dataCollection.add(d || testData);
+      testArea.data(dataCollection);
       testArea.config({ 'dataId': id || 'fakeData' });
       testArea.xScale(d3.scale.linear().domain([0, 100]).range([0, 100]));
       testArea.yScale(d3.scale.linear().domain([0, 100]).range([0, 100]));
-      testArea.data(d || testData);
     }
 
     beforeEach(function(){
       selection = jasmine.svgFixture();
       testArea = area();
       areaGenerator = testArea.areaGenerator();
+      dataCollection = dc.create();
     });
 
     it('has has convenience functions', function() {

@@ -1,14 +1,17 @@
 define([
-  'components/label'
+  'components/label',
+  'data/collection'
 ],
-function(label) {
+function(label, dc) {
   'use strict';
 
   describe('components.label', function() {
-    var selection, testLabel, svgNode, root, textContent;
+    var selection, testLabel, svgNode, root, textContent,
+        dataCollection;
 
     beforeEach(function() {
       textContent = 'some random text';
+      dataCollection = dc.create();
       selection = jasmine.svgFixture();
       svgNode = selection.node();
       testLabel = label()
@@ -152,16 +155,18 @@ function(label) {
       });
 
       it('sets text as a function from data', function() {
-        var data = { id: 'testData', text: 'bang' },
-          fn = function(d) { return d.text; };
-        testLabel.data([data]).config('dataId', 'testData').text(fn).update();
+        var fn = function(d) { return d.text; };
+        dataCollection.add({ id: 'testData', text: 'bang' });
+        testLabel.data(dataCollection)
+          .config('dataId', 'testData').text(fn).update();
         expect(root.select('text').text()).toBe('bang');
       });
 
       it('applies the data function', function() {
-        var data = { id: 'testData', text: 'bang' },
-          fn = function(d) { return d.text; };
-        testLabel.data([data]).config('dataId', 'testData').text(fn).update();
+        var fn = function(d) { return d.text; };
+        dataCollection.add({ id: 'testData', text: 'bang' });
+        testLabel.data(dataCollection)
+          .config('dataId', 'testData').text(fn).update();
         expect(testLabel.text()).toBe('bang');
       });
 
@@ -171,7 +176,8 @@ function(label) {
 
       it('gets/sets data', function() {
         var data = { id: 'testData', text: 'bang' };
-        testLabel.data([data]).config('dataId', 'testData');
+        dataCollection.add(data);
+        testLabel.data(dataCollection).config('dataId', 'testData');
         expect(testLabel.data()).toBe(data);
       });
 

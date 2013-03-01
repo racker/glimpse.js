@@ -18,7 +18,7 @@ function(array, config, obj, string, d3Util, mixins) {
     //Private variables
     var config_ = {},
       defaults_,
-      data_,
+      dataCollection_,
       root_,
       remove_,
       update_;
@@ -74,15 +74,13 @@ function(array, config, obj, string, d3Util, mixins) {
     // put this func somehwere else and apply as needed
     line.data = function(data) {
       if (data) {
-        data_ = data;
+        dataCollection_ = data;
         return line;
       }
-      if (!data_) {
+      if (!dataCollection_) {
         return;
       }
-      return array.find(data_, function(d) {
-        return d.id === config_.dataId;
-      });
+      return dataCollection_.get(config_.dataId);
     };
 
     /**

@@ -19,7 +19,7 @@ function(obj, config, string, array, util, mixins) {
 
     var defaults_,
       config_,
-      data_,
+      dataCollection_,
       root_;
 
     config_ = {};
@@ -75,17 +75,15 @@ function(obj, config, string, array, util, mixins) {
     label.data = function(data) {
       // Set data if provided.
       if (data) {
-        data_ = data;
+        dataCollection_ = data;
         return label;
       }
       // Find corresponding data group if dataId is set.
       if (config_.dataId) {
-        return array.find(data_, function(d) {
-          return d.id === config_.dataId;
-        });
+        return dataCollection_.get(config_.dataId);
       }
       // Otherwise return the entire raw data.
-      return data_;
+      return dataCollection_;
     };
 
     /**

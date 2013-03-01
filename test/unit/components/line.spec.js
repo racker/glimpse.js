@@ -1,14 +1,15 @@
 define([
   'd3',
   'core/object',
-  'components/line'
+  'components/line',
+  'data/collection'
 ],
-function(d3, object, line) {
+function(d3, object, line, dc) {
   'use strict';
 
   describe('components.line', function() {
 
-    var testLine, data;
+    var testLine, data, dataCollection;
 
     data = [{
       id:'fakeData',
@@ -22,8 +23,9 @@ function(d3, object, line) {
     }];
 
     function setData(d, id) {
+      dataCollection.add(d || data);
+      testLine.data(dataCollection);
       testLine.config({'dataId': id || 'fakeData'});
-      testLine.data(d || data);
     }
 
     function setScales() {
@@ -32,6 +34,7 @@ function(d3, object, line) {
     }
 
     beforeEach(function(){
+      dataCollection = dc.create();
       spyOn(object, 'extend').andCallThrough();
       testLine = line();
     });

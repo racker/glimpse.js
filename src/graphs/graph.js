@@ -11,10 +11,11 @@ define([
   'core/format',
   'components/component',
   'layout/layoutmanager',
-  'd3-ext/util'
+  'd3-ext/util',
+  'data/collection'
 ],
 function(obj, config, array, assetLoader, format, components, layoutManager,
-  d3util) {
+  d3util, collection) {
   'use strict';
 
   return function() {
@@ -24,7 +25,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      */
     var config_,
       defaults_,
-      data_,
       components_,
       root_,
       xAxis_,
@@ -56,6 +56,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       showLoadingOverlay_,
       showEmptyOverlay_,
       showErrorOverlay_,
+      dataCollection_,
       STATES;
 
     /**
@@ -104,7 +105,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      */
     addComponent_ = function(component) {
       if (component.data) {
-        component.data(data_);
+        component.data(dataCollection_);
       }
       if (component.xScale) {
         component.xScale(config_.xScale);
@@ -418,6 +419,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * Updates scales and legend
      */
     update_ = function() {
+      dataCollection_.updateDerivations();
       updateScales_();
       updateAxes_();
       updateLegend_();
@@ -429,21 +431,14 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @param  {object} data
      */
     upsertData_ = function(data) {
-      var index = array.findIndex(data_, function(d) {
-        return d.id === data.id;
-      });
-      if (index !== -1) {
-        data_[index] = obj.extend(data_[index], data);
-      } else {
-        //Set default x and y accessors.
-        if (!data.x) {
-          data.x = defaultXaccessor_;
-        }
-        if (!data.y) {
-          data.y = defaultYaccessor_;
-        }
-        data_.push(data);
+      //Set default x and y accessors.
+      if (!data.x) {
+        data.x = defaultXaccessor_;
       }
+      if (!data.y) {
+        data.y = defaultYaccessor_;
+      }
+      dataCollection_.upsert(data);
     };
 
     /**
@@ -547,7 +542,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     function graph() {
       obj.extend(config_, defaults_);
       components_ = [];
-      data_ = [];
+      dataCollection_ = collection.create();
       xAxis_ = components.axis()
         .config({
           'type': 'x',
@@ -617,9 +612,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       if (data) {
         // Single string indicates id of data to return.
         if (typeof data === 'string') {
-          return array.find(data_, function(d) {
-            return d.id === data;
-          });
+          return dataCollection_.get(data);
         }
         if (Array.isArray(data)) {
           var i, len = data.length;
@@ -632,7 +625,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         return graph;
       }
 
-      return data_;
+      return dataCollection_;
     };
 
     /**
@@ -642,21 +635,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @return {graphs.graph}
      */
     graph.appendData = function (id, dataToAppend) {
-      var index, originalData;
-
-      index = array.findIndex(data_, function (d) {
-        return d.id === id;
-      });
-
-      if (index !== -1) {
-        if (Array.isArray(dataToAppend)) {
-          originalData = data_[index].data;
-          array.append(originalData, dataToAppend);
-        } else {
-          data_[index].data.push(dataToAppend);
-        }
-      }
-
+      dataCollection_.append(id, dataToAppend);
       return graph;
     };
 

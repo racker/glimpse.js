@@ -1,9 +1,10 @@
 define([
   'graphs/graph',
   'core/asset-loader',
+  'data/collection',
   'test-util/component'
 ],
-function(graph, assetLoader, compUtil) {
+function(graph, assetLoader, dc, compUtil) {
   'use strict';
 
   describe('graphs.graph', function() {
@@ -17,7 +18,8 @@ function(graph, assetLoader, compUtil) {
       legend,
       oneDayMs,
       xScale,
-      yScale;
+      yScale,
+      dataCollection;
 
     defaults = {
       marginTop: 10,
@@ -81,6 +83,7 @@ function(graph, assetLoader, compUtil) {
     }
 
     beforeEach(function(){
+      dataCollection = dc.create();
       testGraph = graph();
     });
 
@@ -165,12 +168,12 @@ function(graph, assetLoader, compUtil) {
 
       it('gets/sets data', function() {
         testGraph.data(fakeData);
-        expect(testGraph.data()).toEqual(fakeData);
+        expect(testGraph.data().get('fakeData')).toEqual(fakeData[0]);
       });
 
       it('appends data when object is passed', function() {
         testGraph.data(fakeData);
-        expect(testGraph.data().length).toBe(1);
+        expect(testGraph.data().get().length).toBe(1);
         testGraph.data({
           id:'moreFakeData',
           data: [
@@ -179,7 +182,7 @@ function(graph, assetLoader, compUtil) {
             {'x':17, 'y':100}
           ]
         });
-        expect(testGraph.data().length).toBe(2);
+        expect(testGraph.data().get().length).toBe(2);
       });
 
       it('sets default x accessor function if not provided', function() {
