@@ -23,7 +23,8 @@ define(function () {
         paddingTop: 20
       }, {
         'class': 'gl-footer',
-        padding: 1
+        paddingTop: 1,
+        paddingBottom: 1
       }]
     },
 
