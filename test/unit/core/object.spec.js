@@ -38,6 +38,47 @@ function (Obj) {
 
     });
 
+    describe('isDef()', function() {
+
+      it('returns true on null', function() {
+        expect(Obj.isDef(null)).toBe(true);
+      });
+
+      it('returns true on an object', function() {
+        expect(Obj.isDef({})).toBe(true);
+        expect(Obj.isDef({hello: 'hi'})).toBe(true);
+      });
+
+      it('returns true on an array', function() {
+        expect(Obj.isDef([])).toBe(true);
+        expect(Obj.isDef([null])).toBe(true);
+        expect(Obj.isDef([1,2, 3])).toBe(true);
+      });
+
+      it('returns true on a strings', function() {
+        expect(Obj.isDef('')).toBe(true);
+        expect(Obj.isDef('asdasd')).toBe(true);
+      });
+
+      it('returns true on a functions', function() {
+        expect(Obj.isDef(function() {})).toBe(true);
+        expect(Obj.isDef(function() { return ''; })).toBe(true);
+      });
+
+      it('returns true on a regular expressions', function() {
+        expect(Obj.isDef(/asdasd/)).toBe(true);
+        expect(Obj.isDef(/hello/gi)).toBe(true);
+      });
+
+      it('returns false on undefined variables', function() {
+        var a, b;
+        b = undefined;
+        expect(Obj.isDef(a)).toBe(false);
+        expect(Obj.isDef(b)).toBe(false);
+      });
+
+    });
+
   });
 
 });

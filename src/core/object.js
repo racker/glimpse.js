@@ -22,6 +22,10 @@ function (array) {
         });
       });
       return target;
+    },
+
+    isDef: function(val) {
+      return val !== undefined;
     }
 
   };

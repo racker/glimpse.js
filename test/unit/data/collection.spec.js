@@ -1,7 +1,8 @@
 define([
   'data/collection',
-  'data/selection/selection'
-], function (dc, sel) {
+  'data/selection/selection',
+  'core/array'
+], function (dc, sel, array) {
   'use strict';
 
   describe('data collection', function () {
@@ -265,6 +266,146 @@ define([
         expect(dataCollection.get().length).toBe(1);
         expect(dataCollection.get()[0].id).toBe('two');
       });
+
+    });
+
+    describe('.updateDerivations', function() {
+
+      var order;
+
+      function genDerivation(str) {
+        return function(sources) {
+          order.push(str);
+          if (array.contains(sources.all(), 'gl-error-circular-dependency')) {
+            return 'gl-error-circular-dependency';
+          }
+          return str;
+        };
+      }
+
+      function setupData1() {
+        dataCollection.add([{
+          id: 'A',
+          sources: '*',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources: '*',
+          derivation: genDerivation('B')
+        }]);
+      }
+
+
+      function setupData2() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources: '*',
+          derivation: genDerivation('B')
+        }]);
+      }
+
+      function setupData3() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources:'C, D',
+          derivation: genDerivation('B')
+        }, {
+          id: 'C',
+          sources: 'E',
+          derivation: genDerivation('C')
+        }, {
+          id: 'D',
+          sources: '*',
+          derivation: genDerivation('D')
+        }, {
+          id: 'E',
+          sources: 'F',
+          derivation: genDerivation('E')
+        }, {
+          id: 'F',
+          sources: 'D',
+          derivation: genDerivation('F')
+        }, {
+          id: 'G',
+          sources: '*',
+          derivation: genDerivation('G')
+        }]);
+      }
+
+      function setupData4() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources:'C, A',
+          derivation: genDerivation('B')
+        }, {
+          id: 'C',
+          sources: '*',
+          derivation: genDerivation('C')
+        }]);
+      }
+
+      function get(id) {
+        return dataCollection.get(id);
+      }
+
+      beforeEach(function() {
+        order = [];
+      });
+
+      it('evaluates derivided data in correct order for data 1', function() {
+        setupData1();
+        dataCollection.updateDerivations();
+
+        expect(order).toEqual(['A', 'B']);
+        expect(get('A')).toBe('A');
+        expect(get('B')).toBe('B');
+      });
+
+      it('evaluates derivided data in correct order for data 2', function() {
+        setupData2();
+        dataCollection.updateDerivations();
+
+        expect(order).toEqual(['B', 'A']);
+        expect(get('A')).toBe('A');
+        expect(get('B')).toBe('B');
+      });
+
+      it('evaluates derivided data in correct order for data 3', function() {
+        setupData3();
+        dataCollection.updateDerivations();
+
+        expect(order).toEqual(['D', 'F', 'E', 'C', 'B', 'A', 'G']);
+        expect(get('A')).toBe('A');
+        expect(get('B')).toBe('B');
+        expect(get('C')).toBe('C');
+        expect(get('D')).toBe('D');
+        expect(get('E')).toBe('E');
+        expect(get('F')).toBe('F');
+      });
+
+      it('evaluates to its best effort on circular dependency', function() {
+        setupData4();
+        dataCollection.updateDerivations();
+
+        expect(order).toEqual(['C', 'B', 'A', 'B', 'A']);
+        expect(get('A')).toBe('gl-error-circular-dependency');
+        expect(get('B')).toBe('gl-error-circular-dependency');
+        expect(get('C')).toBe('C');
+
+      });
+
 
     });
 
