@@ -71,9 +71,9 @@ function(graph, assetLoader, dc, compUtil) {
       yScale = testGraph.config().yScale;
       spyOn(assetLoader, 'loadAll');
       spyOn(testComponent, 'render');
-      spyOn(xAxis, 'render');
-      spyOn(yAxis, 'render');
-      spyOn(legend, 'render');
+      spyOn(xAxis, 'render').andCallThrough();
+      spyOn(yAxis, 'render').andCallThrough();
+      spyOn(legend, 'render').andCallThrough();
       spyOn(testComponent, 'update');
       spyOn(xAxis, 'update');
       spyOn(yAxis, 'update');
@@ -512,9 +512,29 @@ function(graph, assetLoader, dc, compUtil) {
         expect(testGraph.state()).toBe('error');
       });
 
-      it('defaults to previous state for invalid arg', function() {
-        testGraph.state('invalid state');
-        expect(testGraph.state()).toBe('normal');
+      it('pulls state from the config', function() {
+        testGraph.config('state', 'error');
+        expect(testGraph.state()).toBe('error');
+      });
+
+      it('can set the state before rendering', function() {
+        var anotherGraph = graph(), exThrown = false;
+        try {
+          anotherGraph.state('loading');
+        }
+        catch (e) {
+          exThrown = true;
+        }
+        expect(exThrown).toBe(false);
+        expect(anotherGraph.state()).toBe('loading');
+      });
+
+      it('shows the pre-configured state from before render', function() {
+        var anotherGraph = graph();
+        anotherGraph.state('empty');
+        anotherGraph.render(selection);
+        expect(compUtil.getByCid('emptyOverlay').node())
+          .not.toBeNull();
       });
 
     });

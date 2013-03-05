@@ -56,8 +56,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       showLoadingOverlay_,
       showEmptyOverlay_,
       showErrorOverlay_,
+      showComponent,
+      hideComponent,
       dataCollection_,
       isRendered_,
+      updateStateDisplay,
       STATES;
 
     /**
@@ -420,6 +423,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       updateAxes_();
       updateLegend_();
       updateXDomainLabel_();
+      if (isRendered_) {
+        updateStateDisplay();
+      }
     };
 
     /**
@@ -563,7 +569,58 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     graph.STATES = STATES;
 
     /**
-     * Gets/sets the state of the graph.
+     * Shows a component if it is defined.
+     * @private
+     * @param {components.component}
+     */
+    showComponent = function(component) {
+      if (component) {
+        component.show();
+      }
+    };
+
+    /**
+     * Hides a component if it is defined.
+     * @private
+     * @param {components.component}
+     */
+    hideComponent = function(component) {
+      if (component) {
+        component.hide();
+      }
+    };
+
+    /**
+     * Adds/removes overlays & hides/shows components based on state.
+     * @private
+     */
+    updateStateDisplay = function() {
+      graph.removeComponent('emptyOverlay');
+      graph.removeComponent('loadingOverlay');
+      graph.removeComponent('errorOverlay');
+      showComponent(legend_);
+      showComponent(xAxis_);
+      showComponent(xDomainLabel_);
+      switch (config_.state) {
+        case STATES.EMPTY:
+          showEmptyOverlay_();
+          hideComponent(xAxis_);
+          break;
+        case STATES.LOADING:
+          hideComponent(xAxis_);
+          hideComponent(legend_);
+          hideComponent(xDomainLabel_);
+          showLoadingOverlay_();
+          break;
+        case STATES.ERROR:
+          hideComponent(xAxis_);
+          showErrorOverlay_();
+          break;
+      }
+    };
+
+    /**
+     * Configures the graph state and triggers overlays updates.
      * @public
      * @return {graph.STATES}
      */
@@ -573,29 +630,10 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       if (!newState) {
         return oldState;
       }
-      graph.removeComponent('emptyOverlay');
-      graph.removeComponent('loadingOverlay');
-      graph.removeComponent('errorOverlay');
-      graph.xAxis().show();
-      graph.legend().show();
-      switch (newState) {
-        case STATES.EMPTY:
-          showEmptyOverlay_();
-          break;
-        case STATES.LOADING:
-          graph.xAxis().hide();
-          graph.legend().hide();
-          showLoadingOverlay_();
-          break;
-        case STATES.ERROR:
-          graph.xAxis().hide();
-          showErrorOverlay_();
-          break;
-        default:
-          // Rest to normal if invalid state.
-          newState = STATES.NORMAL;
-      }
       config_.state = newState;
+      if (isRendered_) {
+        updateStateDisplay();
+      }
       return graph;
     };
 
@@ -715,6 +753,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       renderPanel_(selection);
       update_();
       renderComponents_(root_);
+      // Force state update.
+      updateStateDisplay();
       isRendered_ = true;
       return graph;
     };

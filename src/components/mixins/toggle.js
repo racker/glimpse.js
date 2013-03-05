@@ -8,7 +8,10 @@ define(function () {
     * @return {components.component}
     */
     show: function () {
-      this.root().attr('display', null);
+      var root = this.root();
+      if (root) {
+        root.attr('display', null);
+      }
       return this;
     },
 
@@ -17,7 +20,10 @@ define(function () {
     * @return {components.component}
     */
     hide: function () {
-      this.root().attr('display', 'none');
+      var root = this.root();
+      if (root) {
+        root.attr('display', 'none');
+      }
       return this;
     }
 
