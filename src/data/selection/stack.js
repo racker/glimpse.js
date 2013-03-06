@@ -26,7 +26,7 @@ define([
       obj.extend(newSource, source);
       // data points to get by accessor methods to change later
       mutatedData = [];
-      newSource.data.forEach(function(d, i) {
+      newSource.data.forEach(function(d) {
         mutatedData.push({
           x: source.x(d),
           y: source.y(d)
@@ -37,7 +37,7 @@ define([
       // Recreate accessors as simplpe getters
       newSource.x = function(d) { return d.x; };
       newSource.y = function(d) { return d.y; };
-      newSource.y = function(d) { return d.y0; };
+      newSource.y0 = function(d) { return d.y0; };
       return newSource;
     });
 

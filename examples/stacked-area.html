@@ -74,54 +74,50 @@
           }
         ];
 
-        // Create copy for mutating.
-        var mappedData = sampleData.map(function(d) {
+        // Map the original data into an appropriate format.
+        var formattedDataSources = sampleData.map(function(d) {
           return {
             id: 'cpu-' + d.name,
             title: d.name,
             data: d.values
           };
         });
-        var derivedData = [
-          {
-            id: 'stack',
-            sources: '*',
-            derivation: function(sources) {
-              return sources.stack().all();
-            }
-          },
-          // TODO: this is not possible yet
-          {
-            id: 'cpu-sys-stack',
-            srouces: 'stack',
-            derivation: function(sources) {
-              return sources.get();
-            }
-          },
-          // TODO: this is not possible yet
-          {
-            id: 'cpu-idle-stack',
-            srouces: 'stack',
-            derivation: function(sources) {
-              return sources.get(1);
-            }
+
+        // A data source to generate the stacked data.
+        var stackedDataSource = {
+          id: 'stack',
+          sources: '*',
+          derivation: function(sources) {
+            return sources.stack().all();
           }
-        ];
-        var data = mappedData.concat(derivedData);
+        };
+
+        // New data sources for all the stacked data sets.
+        var derivedDataSources = formattedDataSources.map(function(d, i) {
+          return {
+            id: d.id + '-stack',
+            sources: 'stack',
+            derivation: function(sources) {
+              return sources.get()[i];
+            }
+          };
+        });
+
+        var data = formattedDataSources
+          .concat(stackedDataSource)
+          .concat(derivedDataSources);
 
         var areaGraph = glimpse.graph()
           .config({
             'forceY': [0],
-            'yDomainModifier': 1
+            'yDomainModifier': 0
           })
           .data(data)
           .component({ type: 'area', dataId: 'cpu-sys-stack', color: '#FFB578' })
           .component({ type: 'area', dataId: 'cpu-idle-stack', color: '#EFEFEF' })
-          /**
           .component({ type: 'area', dataId: 'cpu-user-stack', color: '#89D6FF' })
           .component({ type: 'area', dataId: 'cpu-wait-stack', color: '#F5F692' })
           .component({ type: 'area', dataId: 'cpu-stolen-stack', color: '#FF5A86' })
-          */
           .render('#container');
 
           // for debugging
