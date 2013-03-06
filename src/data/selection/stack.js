@@ -11,8 +11,10 @@ define([
   var selectionPrototype = selection.getSelectionPrototype();
 
   /**
+   * Applies a stacking function to the selected data sources.
+   * Assumes presence of 'y' dimension, and adds a new 'y0' dimension.
    */
-  selectionPrototype.stack = function () {
+  selectionPrototype.stack = function() {
     var mutatedData, stack, layers;
 
     stack = d3.layout.stack()
