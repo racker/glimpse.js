@@ -25,6 +25,7 @@ function(obj, config, string, array, util, mixins) {
     config_ = {};
 
     defaults_ = {
+      type: 'label',
       cid: undefined,
       dataId: undefined,
       cssClass: undefined,

@@ -61,8 +61,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_,
       isRendered_,
       updateStateDisplay,
-      STATES;
-
+      STATES,
+      NO_COLORED_COMPONENTS,
+      coloredComponentsCount;
     /**
      * @enum
      * The possible states a graph can be in.
@@ -74,6 +75,12 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       ERROR: 'error',
       DESTROYED: 'destroyed'
     };
+
+    /**
+     * Components that do not require a default color
+     * @type {Array}
+     */
+    NO_COLORED_COMPONENTS = ['x', 'y', 'legend', 'label'];
 
     config_ = {};
 
@@ -98,7 +105,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       loadingMessage: 'Loading...',
       errorMessage: 'Error loading graph data',
       state: 'normal',
-      yDomainModifier: 1.2
+      yDomainModifier: 1.2,
+      colorPalette: d3.scale.category20().range()
     };
 
     /**
@@ -117,6 +125,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       if (component.yScale) {
         component.yScale(config_.yScale);
       }
+      setDefaultColor(component);
       components_.push(component);
     };
 
@@ -194,6 +203,24 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     getFrameWidth_ = function() {
       return root_.select('.gl-framed').width();
     };
+
+    /**
+     * @private
+     * Sets default color for on component if color not set
+     * @param {Object} component [description]
+     */
+    function setDefaultColor(component) {
+      var colors, len;
+
+      if (!array.contains(NO_COLORED_COMPONENTS, component.config().type)){
+        colors = d3.functor(config_.colorPalette)();
+        len = colors.length;
+        if (component.hasOwnProperty('color')) {
+          component.config().color = component.config().color ?
+            component.config().color : colors[coloredComponentsCount++ % len];
+        }
+      }
+    }
 
     /**
      * @private
@@ -563,6 +590,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           target: '.gl-footer',
           position: 'center-right'
         });
+      coloredComponentsCount = 0;
       return graph;
     }
 

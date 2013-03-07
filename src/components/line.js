@@ -24,10 +24,11 @@ function(array, config, obj, string, d3Util, mixins) {
       update_;
 
     defaults_ = {
+      type: 'line',
       target: '.gl-framed',
       cid: undefined,
       strokeWidth: 2,
-      color: 'steelBlue',
+      color: undefined,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
@@ -77,7 +78,8 @@ function(array, config, obj, string, d3Util, mixins) {
         'cid',
         'xScale',
         'yScale',
-        'lineGenerator'
+        'lineGenerator',
+        'color'
       ),
       mixins.lifecycle,
       mixins.toggle);

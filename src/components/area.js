@@ -23,6 +23,7 @@ function(array, config, obj, string, d3util, mixins) {
       updateAreaGenerator_;
 
     defaults_ = {
+      type: 'area',
       target: '.gl-framed',
       cid: null,
       xScale: null,

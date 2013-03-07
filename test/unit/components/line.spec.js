@@ -25,7 +25,7 @@ function(d3, object, line, dc) {
     function setData(d, id) {
       dataCollection.add(d || data);
       testLine.data(dataCollection);
-      testLine.config({'dataId': id || 'fakeData'});
+      testLine.config({'dataId': id || 'fakeData', color: 'steelBlue'});
     }
 
     function setScales() {
