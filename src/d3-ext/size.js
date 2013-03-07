@@ -42,13 +42,22 @@ define(['d3'], function(d3) {
    * else it returns width and height attribute of the element.
    */
   d3.selection.prototype.size = function(width, height) {
+    var rect;
+
     if (this.node().tagName === 'g') {
-      this.append('rect').attr({
+      rect = this.select('.gl-layout-size');
+
+      if (rect.empty()) {
+        rect = this.append('rect');
+      }
+
+      rect.attr({
         'class': 'gl-layout-size',
         width: width,
         height: height,
         fill: 'none'
       });
+
       this.attr({ 'gl-width': width, 'gl-height': height });
     } else {
       this.attr({ width: width, height: height });

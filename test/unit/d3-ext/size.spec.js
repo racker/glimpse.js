@@ -24,10 +24,24 @@ function() {
           '</g>'].join(''));
       });
 
-      it('appends the rectange and set width, height attributes', function() {
+      it('does not append a second rectangle', function() {
         rect.size(400, 200);
         expect(rect.node()).toHaveAttr({
           width: 400,
+          height: 200
+        });
+      });
+
+      it('only appends rect only once and updates attrs on subsequent calls',
+      function() {
+        var testRect;
+
+        g.size(400, 200);
+        g.size(300, 200);
+        testRect = g.selectAll('rect');
+        expect(testRect[0].length).toBe(1);
+        expect(testRect.node()).toHaveAttr({
+          width: 300,
           height: 200
         });
       });
