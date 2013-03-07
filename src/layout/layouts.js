@@ -10,10 +10,9 @@ define(function () {
 
     'default': {
       'class': 'gl-vgroup',
-      'split': [15, 60, 10, 15],
+      'split': [10, 65, 10, 15],
       children: [{
-        padding: 1,
-        paddingLeft: 2,
+        padding: 0,
         'class': 'gl-info'
       }, {
         'class': 'gl-framed'

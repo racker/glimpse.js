@@ -25,16 +25,13 @@ function (lm) {
         fixture = jasmine.svgFixture().node();
 
         expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="700" gl-height="250" class="gl-vgroup" split="15,60,10,15">',
+          '<g gl-width="700" gl-height="250" class="gl-vgroup" split="10,65,10,15">',
           '<rect class="gl-layout-size" width="700" height="250" fill="none"/>',
-          '<g gl-width="700" gl-height="37.5" transform="translate(0,0)">',
-          '<rect class="gl-layout-size" width="700" height="37.5" fill="none"/>',
-          '<g gl-padding="1" gl-padding-left="2" gl-width="672" gl-height="36.26" transform="translate(21,0.37)" class="gl-info">',
-          '<rect class="gl-layout-size" width="672" height="36.26" fill="none"/>',
+          '<g gl-width="700" gl-height="25" class="gl-info" transform="translate(0,0)">',
+          '<rect class="gl-layout-size" width="700" height="25" fill="none"/>',
           '</g>',
-          '</g>',
-          '<g gl-width="700" gl-height="150" class="gl-framed" transform="translate(0,37)">',
-          '<rect class="gl-layout-size" width="700" height="150" fill="none"/>',
+          '<g gl-width="700" gl-height="162.5" class="gl-framed" transform="translate(0,25)">',
+          '<rect class="gl-layout-size" width="700" height="162.5" fill="none"/>',
           '</g>',
           '<g gl-width="700" gl-height="25" transform="translate(0,187)">',
           '<rect class="gl-layout-size" width="700" height="25" fill="none"/>',

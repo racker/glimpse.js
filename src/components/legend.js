@@ -37,13 +37,8 @@ function(obj, config, string, util, mixins) {
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'bold',
       fontSize: 13,
-      keySpacing: 20,
-      marginTop: 10,
-      marginRight: 0,
-      marginBottom: 0,
-      marginLeft: 10,
       layout: 'horizontal',
-      gap: 10,
+      gap: 20,
       keys: []
     };
 
