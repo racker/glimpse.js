@@ -115,14 +115,14 @@ function(array, config, obj, string, d3Util, mixins) {
       // Configure the lineGenerator function
       config_.lineGenerator
         .x(function(d, i) {
-          return config_.xScale(dataConfig.x(d, i));
+          return config_.xScale(dataConfig.dimensions.x(d, i));
         })
         .y(function(d, i) {
-          return config_.yScale(dataConfig.y(d, i));
+          return config_.yScale(dataConfig.dimensions.y(d, i));
         })
         .defined(function(d, i) {
           var minX = config_.xScale.range()[0];
-          return(config_.xScale(dataConfig.x(d, i)) >= minX);
+          return(config_.xScale(dataConfig.dimensions.x(d, i)) >= minX);
         })
         .interpolate(config_.interpolate);
       selection = root_.select('.gl-path')

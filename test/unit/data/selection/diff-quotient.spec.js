@@ -30,8 +30,10 @@ function (dc) {
         id: 'latencyOrd',
         title: 'Time to Connect (ORD)',
         data: sampleData,
-        x: function (d) { return d.time; },
-        y: function (d) { return d.latency; }
+        dimensions: {
+          x: function (d) { return d.time; },
+          y: function (d) { return d.latency; }
+        }
       });
     });
 

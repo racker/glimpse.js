@@ -10,17 +10,21 @@ function(area, dc) {
     var testArea, testData, selection, areaGenerator,
         dataCollection;
 
-    testData = [{
-      id:'fakeData',
-      data: [
-        { x: 0, y: 0 },
-        { x: 1, y: 50 },
-        { x: 2, y: 100 },
-        { x: 3, y: 75 }
-      ],
-      x: function(d) { return d.x; },
-      y: function(d) { return d.y; }
-    }];
+    function getTestData() {
+      return [{
+        id:'fakeData',
+        data: [
+          { x: 0, y: 0 },
+          { x: 1, y: 50 },
+          { x: 2, y: 100 },
+          { x: 3, y: 75 }
+        ],
+        dimensions: {
+          x: function(d) { return d.x; },
+          y: function(d) { return d.y; }
+        }
+      }];
+    }
 
     function setData(d, id) {
       dataCollection.add(d || testData);
@@ -31,6 +35,7 @@ function(area, dc) {
     }
 
     beforeEach(function(){
+      testData = getTestData();
       selection = jasmine.svgFixture();
       testArea = area();
       areaGenerator = testArea.areaGenerator();
@@ -123,8 +128,8 @@ function(area, dc) {
           y: function(d) { return d.y + 2; },
           y0: function() { return 5; }
         };
-        testData[0].x = accessor.x;
-        testData[0].y = accessor.y;
+        testData[0].dimensions.x = accessor.x;
+        testData[0].dimensions.y = accessor.y;
         setData();
         testArea.render(selection);
       });
@@ -138,7 +143,7 @@ function(area, dc) {
       });
 
       it('applies the Y baseline offset with the Y accessor', function() {
-        testData[0].y0 = accessor.y0;
+        testData[0].dimensions.y0 = accessor.y0;
         setData();
         testArea.update();
         // y + 2 + 5
@@ -249,9 +254,9 @@ function(area, dc) {
           color: 'red',
           opacity: 0.5
         });
-        testData[0].x = function(d) { return d.x + 1; };
-        testData[0].y = function(d) { return d.y + 2; };
-        testData[0].y0 = null;
+        testData[0].dimensions.x = function(d) { return d.x + 1; };
+        testData[0].dimensions.y = function(d) { return d.y + 2; };
+        testData[0].dimensions.y0 = null;
         setData();
         testArea.update();
         path = selection.select('path').node();

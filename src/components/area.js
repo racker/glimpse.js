@@ -44,13 +44,14 @@ function(array, config, obj, string, d3util, mixins) {
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-      if (dataConfig.y0) {
+      if (dataConfig.dimensions.y0) {
         // Use y0 for baseline if supplied.
         y0 = function(d, i) {
-          return config_.yScale(dataConfig.y0(d, i));
+          return config_.yScale(dataConfig.dimensions.y0(d, i));
         };
         y1 = function(d, i) {
-          return config_.yScale(dataConfig.y(d, i) + dataConfig.y0(d, i));
+          return config_.yScale(dataConfig.dimensions.y(d, i) +
+            dataConfig.dimensions.y0(d, i));
         };
       } else {
         // Otherwise default to bottom of range.
@@ -58,21 +59,21 @@ function(array, config, obj, string, d3util, mixins) {
           return config_.yScale.range()[0];
         };
         y1 = function(d, i) {
-          return config_.yScale(dataConfig.y(d, i));
+          return config_.yScale(dataConfig.dimensions.y(d, i));
         };
       }
 
       // Configure the areaGenerator function
       config_.areaGenerator
         .x(function(d, i) {
-          return config_.xScale(dataConfig.x(d, i));
+          return config_.xScale(dataConfig.dimensions.x(d, i));
         })
         .y0(y0)
         .y1(y1)
         .defined(function(d, i) {
           var minX, value;
           minX = 0;
-          value = dataConfig.x(d, i);
+          value = dataConfig.dimensions.x(d, i);
           if (config_.xScale) {
             minX = config_.xScale.range()[0];
             value = config_.xScale(value);

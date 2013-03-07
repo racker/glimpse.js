@@ -18,8 +18,10 @@ function(d3, object, line, dc) {
         { x: 15, y: 56},
         { x: 17, y: 100}
       ],
-      x: function(d) { return d.x + 1; },
-      y: function(d) { return d.y + 1; },
+      dimensions: {
+        x: function(d) { return d.x + 1; },
+        y: function(d) { return d.y + 1; }
+      }
     }];
 
     function setData(d, id) {

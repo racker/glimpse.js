@@ -101,27 +101,37 @@
             { id: 'cpu-sys',
               title: 'System',
               data: filterData('sys'),
-              y0: y0
+              dimensions: {
+                y0: y0
+              }
             },
             { id: 'cpu-user',
               title: 'User',
               data: filterData('user'),
-              y0: y0
+              dimensions: {
+                y0: y0
+              }
             },
             { id: 'cpu-idle',
               title: 'Idle',
               data: filterData('idle'),
-              y0: y0
+              dimensions: {
+                y0: y0
+              }
             },
             { id: 'cpu-wait',
               title: 'Wait',
               data: filterData('wait'),
-              y0: y0
+              dimensions: {
+                y0: y0
+              }
             },
             { id: 'cpu-stolen',
               title: 'Stolen',
               data: filterData('stolen'),
-              y0: y0
+              dimensions: {
+                y0: y0
+              }
             }
           ])
           // TODO: allow component() function to take an array

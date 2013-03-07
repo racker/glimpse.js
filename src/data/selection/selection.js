@@ -46,8 +46,7 @@ define([
 
   Selection.prototype.dim = function(dim) {
     return this.dimMap(function(dataSource) {
-      // TODO: Handle dimensions from dimensions field.
-      return dataSource.data.map(dataSource[dim]);
+      return dataSource.data.map(dataSource.dimensions[dim]);
     });
   };
 

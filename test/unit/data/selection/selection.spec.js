@@ -111,8 +111,10 @@ function (selection) {
             {latency: 300, weight: 40},
             {latency: 400, weight: 60},
             {latency: 500, weight: 30}],
-          latency: function(d) { return d.latency; },
-          weight: function(d) { return d.weight; }
+          dimensions: {
+            latency: function(d) { return d.latency; },
+            weight: function(d) { return d.weight; }
+          }
         });
         sel.add({
           id: 'test2',
@@ -122,8 +124,10 @@ function (selection) {
             {latency: 30, weight: 4},
             {latency: 40, weight: 6},
             {latency: 50, weight: 3}],
-          latency: function(d) { return d.latency; },
-          weight: function(d) { return d.weight; }
+          dimensions: {
+            latency: function(d) { return d.latency; },
+            weight: function(d) { return d.weight; }
+          }
         });
       });
 

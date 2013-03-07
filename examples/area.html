@@ -35,32 +35,42 @@
             { id: 'cpu-sys',
               title: 'System',
               data: sampleData,
-              x: xAccessor,
-              y: function (d, i) { return d.user; }
+              dimensions: {
+                x: xAccessor,
+                y: function (d, i) { return d.user; }
+              }
             },
             { id: 'cpu-user',
               title: 'User',
               data: sampleData,
-              x: xAccessor,
-              y: function (d, i) { return d.sys; }
+              dimensions: {
+                x: xAccessor,
+                y: function (d, i) { return d.sys; }
+              }
             },
             { id: 'cpu-idle',
               title: 'Idle',
               data: sampleData,
-              x: xAccessor,
-              y: function (d, i) { return d.idle; }
+              dimensions: {
+                x: xAccessor,
+                y: function (d, i) { return d.idle; }
+              }
             },
             { id: 'cpu-wait',
               title: 'Wait',
               data: sampleData,
-              x: xAccessor,
-              y: function (d, i) { return d.wait; }
+              dimensions: {
+                x: xAccessor,
+                y: function (d, i) { return d.wait; }
+              }
             },
             { id: 'cpu-stolen',
               title: 'Stolen',
               data: sampleData,
-              x: xAccessor,
-              y: function (d, i) { return d.stolen; }
+              dimensions: {
+                x: xAccessor,
+                y: function (d, i) { return d.stolen; }
+              }
             }
           ])
           // TODO: allow component() to take an array

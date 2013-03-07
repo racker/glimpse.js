@@ -392,18 +392,18 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         var componentData;
         if (component.data) {
           componentData = component.data();
-          if (componentData && componentData.data) {
+          if (componentData && componentData.data && componentData.dimensions) {
             xExtents = xExtents.concat(
-              d3.extent(componentData.data, componentData.x));
+              d3.extent(componentData.data, componentData.dimensions.x));
 
             yExtents = yExtents.concat(
               d3.extent(componentData.data,
                 function(d, i) {
-                  var value = componentData.y(d, i);
+                  var value = componentData.dimensions.y(d, i);
                   // If Y-baselines are used (stacked),
                   //   use the sum of the baseline and Y.
-                  if (componentData.y0) {
-                    value += componentData.y0(d, i);
+                  if (componentData.dimensions.y0) {
+                    value += componentData.dimensions.y0(d, i);
                   }
                   return value;
                 })
@@ -461,11 +461,14 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      */
     upsertData_ = function(data) {
       //Set default x and y accessors.
-      if (!data.x) {
-        data.x = defaultXaccessor_;
+      if(!data.dimensions) {
+        data.dimensions = {};
       }
-      if (!data.y) {
-        data.y = defaultYaccessor_;
+      if (!data.dimensions.x) {
+        data.dimensions.x = defaultXaccessor_;
+      }
+      if (!data.dimensions.y) {
+        data.dimensions.y = defaultYaccessor_;
       }
       dataCollection_.upsert(data);
     };

@@ -50,21 +50,27 @@
               id: 'latencyDfw',
               title: 'Time to Connect (DFW)',
               data: latencyData[0].data,
-              x: function (d, i) { return d.time + 5; },
-              y: function (d, i) { return d.latency + 10; }
+              dimensions: {
+                x: function (d, i) { return d.time + 5; },
+                y: function (d, i) { return d.latency + 10; }
+              }
             },
             {
               id: 'latencyOrd',
               title: 'Time to Connect (ORD)',
               data: latencyData[0].data,
-              x: function (d, i) { return d.time; },
-              y: function (d, i) { return d.latency; }
+              dimensions: {
+                x: function (d, i) { return d.time; },
+                y: function (d, i) { return d.latency; }
+              }
             },
             { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.time; },
-                y: function (d, i) { return d.latency + Math.random()*10; }
+                dimensions: {
+                  x: function (d, i) { return d.time; },
+                  y: function (d, i) { return d.latency + Math.random()*10; }
+                }
               },
               {
                 id: 'stats',

@@ -39,20 +39,26 @@
               { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y; }
+                }
               },
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + 10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + 10; }
+                }
               },
               { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + Math.random()*10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + Math.random()*10; }
+                }
               }
             ])
             .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
@@ -86,20 +92,26 @@
               { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y; }
+                }
               },
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + 10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + 10; }
+                }
               },
               { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + Math.random()*10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + Math.random()*10; }
+                }
               }
             ])
             .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
@@ -133,20 +145,26 @@
               { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y; }
+                }
               },
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + 10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + 10; }
+                }
               },
               { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                x: function (d, i) { return d.x; },
-                y: function (d, i) { return d.y + Math.random()*10; }
+                dimensions: {
+                  x: function (d, i) { return d.x; },
+                  y: function (d, i) { return d.y + Math.random()*10; }
+                }
               }
             ])
             .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })

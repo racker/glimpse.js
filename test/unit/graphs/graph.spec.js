@@ -53,8 +53,10 @@ function(graph, assetLoader, dc, compUtil) {
             color: 'black',
             title: 'DFW',
             data: fakeData[0].data,
-            x: function(d) { return d.x; },
-            y: function(d) { return d.y; }
+            dimensions: {
+              x: function(d) { return d.x; },
+              y: function(d) { return d.y; }
+            }
           }
         ])
         .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
@@ -167,8 +169,10 @@ function(graph, assetLoader, dc, compUtil) {
             { x: 15, y: 56},
             { x: 17, y: 100}
           ],
-          x: accessor.x,
-          y: accessor.y
+          dimensions: {
+            x: accessor.x,
+            y: accessor.y
+          }
         }];
 
       });
@@ -210,7 +214,7 @@ function(graph, assetLoader, dc, compUtil) {
         var data;
         testGraph.data(dataWithAccessors);
         data = testGraph.data('dataWithAccessors');
-        expect(data.x).toBe(accessor.x);
+        expect(data.dimensions.x).toBe(accessor.x);
 
       });
 
@@ -218,7 +222,7 @@ function(graph, assetLoader, dc, compUtil) {
         var data;
         testGraph.data(dataWithAccessors);
         data = testGraph.data('dataWithAccessors');
-        expect(data.y).toBe(accessor.y);
+        expect(data.dimensions.y).toBe(accessor.y);
       });
 
       it('updates object if id already exists', function() {

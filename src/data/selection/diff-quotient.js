@@ -33,8 +33,8 @@ define([
       data = source.data;
       mutatedData = [];
       data.forEach(function(d, i) {
-        curX = source.x(d);
-        curY = source.y(d);
+        curX = source.dimensions.x(d);
+        curY = source.dimensions.y(d);
         if (i !== 0) {
           slope = (curY - prevY) / (curX - prevX);
           mutatedData.push({
@@ -47,8 +47,10 @@ define([
       });
       obj.extend(r, source);
       r.data = mutatedData;
-      r.x = function(d) { return d.x; };
-      r.y = function(d) { return d.y; };
+      r.dimensions = {
+        x: function(d) { return d.x; },
+        y: function(d) { return d.y; }
+      };
       return r;
     });
   };
