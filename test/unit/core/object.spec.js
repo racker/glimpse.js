@@ -79,6 +79,84 @@ function (Obj) {
 
     });
 
+    describe('isDefAndNotNull()', function() {
+
+      it('returns false on null', function() {
+        expect(Obj.isDefAndNotNull(null)).toBe(false);
+      });
+
+      it('returns true on an object', function() {
+        expect(Obj.isDefAndNotNull({})).toBe(true);
+        expect(Obj.isDefAndNotNull({hello: 'hi'})).toBe(true);
+      });
+
+      it('returns true on an array', function() {
+        expect(Obj.isDefAndNotNull([])).toBe(true);
+        expect(Obj.isDefAndNotNull([null])).toBe(true);
+        expect(Obj.isDefAndNotNull([1,2, 3])).toBe(true);
+      });
+
+      it('returns true on a strings', function() {
+        expect(Obj.isDefAndNotNull('')).toBe(true);
+        expect(Obj.isDefAndNotNull('asdasd')).toBe(true);
+      });
+
+      it('returns true on a functions', function() {
+        expect(Obj.isDefAndNotNull(function() {})).toBe(true);
+        expect(Obj.isDefAndNotNull(function() { return ''; })).toBe(true);
+      });
+
+      it('returns true on a regular expressions', function() {
+        expect(Obj.isDefAndNotNull(/asdasd/)).toBe(true);
+        expect(Obj.isDefAndNotNull(/hello/gi)).toBe(true);
+      });
+
+      it('returns false on undefined variables', function() {
+        var a, b;
+        b = undefined;
+        expect(Obj.isDefAndNotNull(a)).toBe(false);
+        expect(Obj.isDefAndNotNull(b)).toBe(false);
+      });
+
+    });
+
+    describe('.get()', function() {
+
+      var obj;
+
+      it('returns value if string is specified', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj, 'hi')).toBe('bye');
+      });
+
+      it('returns null if non-existent key is specified', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj, 'hello')).toBe(null);
+      });
+
+      it('returns value if path array is specified', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj, ['hi'])).toBe('bye');
+      });
+
+      it('returns null if non-existent path array is specified', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj, ['hello'])).toBe(null);
+      });
+
+      it('returns value if deep path array is specified', function() {
+        obj = { 'a': { b: { c: 'howdy'}}  };
+        expect(Obj.get(obj, ['a', 'b', 'c'])).toBe('howdy');
+      });
+
+      it('returns null if invalid deep path array is specified', function() {
+        obj = { 'a': { b: { c: 'howdy'}}  };
+        expect(Obj.get(obj, ['a', 'x', 'y'])).toBe(null);
+      });
+
+
+    });
+
   });
 
 });

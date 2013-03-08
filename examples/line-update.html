@@ -59,10 +59,7 @@
               id: 'latencyOrd',
               title: 'Time to Connect (ORD)',
               data: latencyData[0].data,
-              dimensions: {
-                x: function (d, i) { return d.time; },
-                y: function (d, i) { return d.latency; }
-              }
+              dimensions: { x: 'time', y: 'latency' }
             },
             { id: 'latencyLon',
                 title: 'Time to Connect (LON)',

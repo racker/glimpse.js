@@ -12,10 +12,11 @@ define([
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
+  'data/functions',
   'data/collection'
 ],
 function(obj, config, array, assetLoader, format, components, layoutManager,
-  d3util, collection) {
+  d3util, dataFns, collection) {
   'use strict';
 
   return function() {
@@ -394,16 +395,17 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           componentData = component.data();
           if (componentData && componentData.data && componentData.dimensions) {
             xExtents = xExtents.concat(
-              d3.extent(componentData.data, componentData.dimensions.x));
+              d3.extent(componentData.data,
+                dataFns.dimension(componentData, 'x')));
 
             yExtents = yExtents.concat(
               d3.extent(componentData.data,
                 function(d, i) {
-                  var value = componentData.dimensions.y(d, i);
+                  var value = dataFns.dimension(componentData, 'y')(d, i);
                   // If Y-baselines are used (stacked),
                   //   use the sum of the baseline and Y.
                   if (componentData.dimensions.y0) {
-                    value += componentData.dimensions.y0(d, i);
+                    value += dataFns.dimension(componentData, 'y0')(d, i);
                   }
                   return value;
                 })

@@ -29,48 +29,32 @@
           { "ts": 1322276021052, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40}
         ];
 
-        var xAccessor = function (d) { return d.ts; };
         var areaGraph = glimpse.graph()
           .data([
             { id: 'cpu-sys',
               title: 'System',
               data: sampleData,
-              dimensions: {
-                x: xAccessor,
-                y: function (d, i) { return d.user; }
-              }
+              dimensions: { x: 'ts', y: 'user' }
             },
             { id: 'cpu-user',
               title: 'User',
               data: sampleData,
-              dimensions: {
-                x: xAccessor,
-                y: function (d, i) { return d.sys; }
-              }
+              dimensions: { x: 'ts', y: 'sys' }
             },
             { id: 'cpu-idle',
               title: 'Idle',
               data: sampleData,
-              dimensions: {
-                x: xAccessor,
-                y: function (d, i) { return d.idle; }
-              }
+              dimensions: { x: 'ts', y: 'idle' }
             },
             { id: 'cpu-wait',
               title: 'Wait',
               data: sampleData,
-              dimensions: {
-                x: xAccessor,
-                y: function (d, i) { return d.wait; }
-              }
+              dimensions: { x: 'ts', y: 'wait' }
             },
             { id: 'cpu-stolen',
               title: 'Stolen',
               data: sampleData,
-              dimensions: {
-                x: xAccessor,
-                y: function (d, i) { return d.stolen; }
-              }
+              dimensions: { x: 'ts', y: 'stolen' }
             }
           ])
           // TODO: allow component() to take an array

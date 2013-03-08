@@ -89,9 +89,6 @@
           })[0].values;
         }
 
-        // Accessor to provide Y-baseline when drawing area components.
-        var y0 = function(d, i) { return d.y0; };
-
         var areaGraph = glimpse.graph()
           .config({
             'forceY': [0],
@@ -101,37 +98,27 @@
             { id: 'cpu-sys',
               title: 'System',
               data: filterData('sys'),
-              dimensions: {
-                y0: y0
-              }
+              dimensions: { y0: 'y0' }
             },
             { id: 'cpu-user',
               title: 'User',
               data: filterData('user'),
-              dimensions: {
-                y0: y0
-              }
+              dimensions: { y0: 'y0' }
             },
             { id: 'cpu-idle',
               title: 'Idle',
               data: filterData('idle'),
-              dimensions: {
-                y0: y0
-              }
+              dimensions: { y0: 'y0' }
             },
             { id: 'cpu-wait',
               title: 'Wait',
               data: filterData('wait'),
-              dimensions: {
-                y0: y0
-              }
+              dimensions: { y0: 'y0' }
             },
             { id: 'cpu-stolen',
               title: 'Stolen',
               data: filterData('stolen'),
-              dimensions: {
-                y0: y0
-              }
+              dimensions: { y0: 'y0' }
             }
           ])
           // TODO: allow component() function to take an array

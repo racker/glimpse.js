@@ -26,6 +26,21 @@ function (array) {
 
     isDef: function(val) {
       return val !== undefined;
+    },
+
+    isDefAndNotNull: function(val) {
+      return val != null;
+    },
+
+    get: function(obj, path) {
+      array.getArray(path).every(function(p) {
+        obj = obj[p];
+        return this.isDefAndNotNull(obj);
+      }, this);
+      if (obj) {
+        return obj;
+      }
+      return null;
     }
 
   };

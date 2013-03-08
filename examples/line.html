@@ -40,24 +40,18 @@
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
                 dimensions: {
-                  x: function (d, i) { return d.time; },
+                  x: 'time',
                   y: function (d, i) { return d.latency + 10; }
                 }
               },
               { id: 'latencyLon',
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
-                dimensions: {
-                  x: function (d, i) { return d.time; },
-                  y: function (d, i) { return d.latency; }
-                }
+                dimensions: { x: 'time', y: 'latency' }
               }, { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
-                dimensions: {
-                  x: function (d, i) { return d.time; },
-                  y: function (d, i) { return d.latency; }
-                }
+                dimensions: { x: 'time', y: 'latency' }
               },
               {
                 id: 'latencyDfwROC',
@@ -98,16 +92,13 @@
               { id: 'latencyDfw',
                 title: 'Time to Connect (DFW)',
                 data: latencyData[0].data,
-                dimensions: {
-                  x: function (d, i) { return d.time; },
-                  y: function (d, i) { return d.latency; }
-                }
+                dimensions: { x: 'time', y: 'latency' }
               },
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
                 dimensions: {
-                  x: function (d, i) { return d.time; },
+                  x: 'time',
                   y: function (d, i) { return d.latency + 10; }
                 }
               },
@@ -115,7 +106,7 @@
                 title: 'Time to Connect (LON)',
                 data: latencyData[0].data,
                 dimensions: {
-                  x: function (d, i) { return d.time; },
+                  x: 'time',
                   y: function (d, i) { return d.latency + Math.random()*50; }
                 }
               },

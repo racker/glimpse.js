@@ -4,8 +4,9 @@
  */
 define([
   'core/object',
+  'data/functions',
   'data/selection/selection'
-], function (obj, selection) {
+], function (obj, dataFns, selection) {
   'use strict';
 
   var selectionPrototype = selection.getSelectionPrototype(),
@@ -33,8 +34,8 @@ define([
       data = source.data;
       mutatedData = [];
       data.forEach(function(d, i) {
-        curX = source.dimensions.x(d);
-        curY = source.dimensions.y(d);
+        curX = dataFns.dimension(source, 'x')(d);
+        curY = dataFns.dimension(source, 'y')(d);
         if (i !== 0) {
           slope = (curY - prevY) / (curX - prevX);
           mutatedData.push({

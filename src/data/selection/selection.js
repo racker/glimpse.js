@@ -4,8 +4,9 @@
  */
 define([
   'data/dimension/dimension',
-  'core/array'
-], function (dimension, array) {
+  'core/array',
+  'data/functions'
+], function (dimension, array, dataFns) {
   'use strict';
 
   var Selection;
@@ -46,7 +47,7 @@ define([
 
   Selection.prototype.dim = function(dim) {
     return this.dimMap(function(dataSource) {
-      return dataSource.data.map(dataSource.dimensions[dim]);
+      return dataSource.data.map(dataFns.dimension(dataSource, dim));
     });
   };
 
