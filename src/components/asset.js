@@ -45,8 +45,8 @@ function(obj, config, mixins, d3util) {
       mixins.toggle);
 
     /*
-     * @public
      * Gets the root selection of this component.
+     * @public
      * @return {d3.selection}
      */
     asset.root = function() {
@@ -54,9 +54,9 @@ function(obj, config, mixins, d3util) {
     };
 
     /**
-     * @public
      * Renders the component to the specified selection,
      * or to the configured target.
+     * @public
      * @param {d3.selection|Node|String}
      * @return {components.overlay}
      */
@@ -69,9 +69,9 @@ function(obj, config, mixins, d3util) {
     };
 
     /**
-     * @public
      * Triggers an update of the component reapplying all specified config
      * updates.
+     * @public
      * @return {componnets.update}
      */
     asset.update = function() {
@@ -102,8 +102,8 @@ function(obj, config, mixins, d3util) {
     };
 
     /**
-     * @public
      * Destroys this component and cleans up after itself.
+     * @public
      */
     asset.destroy = function() {
       if(root_) {

@@ -32,8 +32,8 @@ function(obj, config, label, mixins, d3util) {
     };
 
     /**
-     * @private
      * Append background rect, all child components, and apply the layout.
+     * @private
      */
     updateChildren_ = function() {
       var parentNode,
@@ -81,8 +81,8 @@ function(obj, config, label, mixins, d3util) {
       mixins.toggle);
 
     /*
-     * @public
      * Gets the root selection of this component.
+     * @public
      * @return {d3.selection}
      */
     overlay.root = function () {
@@ -90,9 +90,9 @@ function(obj, config, label, mixins, d3util) {
     };
 
     /**
-     * @public
      * Renders the component to the specified selection,
      * or to the configured target.
+     * @public
      * @param {d3.selection|Node|String}
      * @return {components.overlay}
      */
@@ -107,9 +107,9 @@ function(obj, config, label, mixins, d3util) {
     };
 
     /**
-     * @public
      * Triggers an update of the component reapplying all specified config
      * updates.
+     * @public
      * @return {componnets.update}
      */
     overlay.update = function() {
@@ -130,8 +130,8 @@ function(obj, config, label, mixins, d3util) {
     };
 
     /**
-     * @public
      * Destroys this component and cleans up after itself.
+     * @public
      */
     overlay.destroy = function() {
       // TODO: Need a more generalized way of removing sub-components.

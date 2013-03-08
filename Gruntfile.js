@@ -12,6 +12,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
+  grunt.loadNpmTasks('grunt-lexicon');
   grunt.loadTasks('grunt/tasks/');
 
   // Project configuration.
@@ -23,7 +24,8 @@ module.exports = function(grunt) {
      */
     clean: {
       build: ['build/*'],
-      assets: ['src/assets/assets.js']
+      assets: ['src/assets/assets.js'],
+      docs: ['docs/*'],
     },
 
     /**
@@ -151,13 +153,26 @@ module.exports = function(grunt) {
           src: ['test/*.js', 'test/unit/**/*.js', '!test/testacular.conf.js']
         }
       }
+    },
+
+    lexicon: {
+      all: {
+        src: ['src/**/*js'],
+        dest: 'docs',
+        options: {
+          title: 'glimpse.js Docs',
+          format: 'markdown'
+        }
+      }
     }
+
   });
 
   grunt.registerTask('test', 'exec:test');
   grunt.registerTask('testwatch', 'exec:testWatch');
   grunt.registerTask('testphantom', 'exec:testPhantomOnly');
   grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
+  grunt.registerTask('docs', ['clean:docs', 'lexicon']);
   grunt.registerTask('compile-static', [
     'assets',
     'clean:build',
@@ -171,4 +186,3 @@ module.exports = function(grunt) {
     'copy:release']);
   grunt.registerTask('default', ['jshint', 'assets', 'exec:testPhantomOnly']);
 };
-

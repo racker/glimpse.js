@@ -6,10 +6,10 @@ function() {
   return {
 
     /**
-     * @private
      * Default formatter for a date/time domain.
      * Text is in the format:
      *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM UTC
+     * @private
      * @param {Array} domain Contains min and max of the domain.
      * @return {String}
      * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format

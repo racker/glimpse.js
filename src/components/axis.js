@@ -37,8 +37,8 @@ function(obj, config, string, mixins, d3util) {
     };
 
     /**
-     * @private
      * Changes the default formatting of the d3 axis.
+     * @private
      */
     formatAxis_ = function() {
       // remove boldness from default axis path

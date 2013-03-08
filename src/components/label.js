@@ -68,8 +68,8 @@ function(obj, config, string, array, util, mixins) {
       mixins.toggle);
 
     /**
-     * @description Gets/Sets the data source to be used with the label.
-     *    Uses the configurable "text" accessor function to retrieve text.
+     * Gets/Sets the data source to be used with the label.
+     * Uses the configurable "text" accessor function to retrieve text.
      * @param {Object} data Any data source.
      * @return {Object|components.label}
      */

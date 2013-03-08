@@ -110,9 +110,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * adds component to the components array
      * sets scales and data on the components
+     * @private
      * @param {component} component [description]
      */
     addComponent_ = function(component) {
@@ -130,8 +130,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Adds axes to the components array
+     * @private
      */
     addAxes_ = function() {
       addComponent_(xAxis_);
@@ -139,8 +139,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Adds legend to the components array
+     * @private
      */
     addLegend_ = function() {
       if (config_.showLegend) {
@@ -149,8 +149,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Default x accessor for data
+     * @private
      * @param  {Object} d
      * @return {Object}
      */
@@ -159,8 +159,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Default x accessor for data
+     * @private
      * @param  {Object} d
      * @return {Object}
      */
@@ -187,8 +187,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Calculates the frame height
+     * @private
      * @return {number}
      */
     getFrameHeight_ = function() {
@@ -196,8 +196,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Calculates the frame width
+     * @private
      * @return {number}
      */
     getFrameWidth_ = function() {
@@ -205,8 +205,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Sets default color for on component if color not set
+     * @private
      * @param {Object} component [description]
      */
     function setDefaultColor(component) {
@@ -223,8 +223,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     }
 
     /**
-     * @private
      * Sets the target selection and calls render on each component
+     * @private
      * @param  {d3.selection} selection
      */
     renderComponents_ = function(selection) {
@@ -244,8 +244,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Appends defs
+     * @private
      * @param  {d3.selection} selection
      */
     renderDefs_ = function(selection) {
@@ -253,8 +253,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Appends svg node to the selection
+     * @private
      * @param  {d3.selection} selection
      */
     renderSvg_ = function(selection) {
@@ -273,8 +273,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Sets up the panel(svg)
+     * @private
      * @param  {d3.selection} selection
      */
     renderPanel_ = function(selection) {
@@ -316,8 +316,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Formats the keys for the legend and calls update on it
+     * @private
      */
     updateLegend_ = function() {
       var legendConfig = [];
@@ -381,8 +381,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Updates the domain on the scales
+     * @private
      */
     updateScales_ = function() {
       var xExtents = [],
@@ -430,9 +430,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Updates the text in the label showing the date range.
      * TODO: position this with layout manager
+     * @private
      */
     updateXDomainLabel_ = function() {
       xDomainLabel_
@@ -441,8 +441,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Updates scales and legend
+     * @private
      */
     update_ = function() {
       dataCollection_.updateDerivations();
@@ -474,8 +474,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Displays the empty message over the framed area.
+     * @private
      */
     showEmptyOverlay_ = function() {
       var labelTexts,
@@ -514,8 +514,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Displays the loading spinner and message over the framed area.
+     * @private
      */
     showLoadingOverlay_ = function() {
       var label,
@@ -541,8 +541,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * @private
      * Displays the error icon and message over the framed area.
+     * @private
      */
     showErrorOverlay_ = function() {
       var label,
