@@ -28,7 +28,8 @@ function(obj, config, label, mixins, d3util) {
       components: [],
       layoutConfig: { type: 'horizontal', position: 'center', gap: 6 },
       opacity: 1,
-      backgroundColor: '#fff'
+      backgroundColor: '#fff',
+      type: 'overlay'
     };
 
     /**

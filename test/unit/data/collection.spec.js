@@ -406,6 +406,20 @@ define([
 
       });
 
+    });
+
+    describe('isEmpty', function() {
+      it('returns true if dataCollection is empty', function(){
+        expect(dataCollection.isEmpty()).toBe(true);
+      });
+
+      it('returns false if dataCollection is not empty', function(){
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B'
+        }]);
+        expect(dataCollection.isEmpty()).toBe(false);
+      });
 
     });
 

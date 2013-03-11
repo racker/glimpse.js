@@ -31,11 +31,7 @@
             {"time":1322276021052.6316,"latency":100.65460556652397}]
           }];
 
-          var lineGraph = glimpse.graph()
-            .config({
-              forceY: [0]
-            })
-            .data([
+        var data = [
               { id: 'latencyOrd',
                 title: 'Time to Connect (ORD)',
                 data: latencyData[0].data,
@@ -73,7 +69,12 @@
                   };
                 }
               }
-            ])
+            ];
+
+          var lineGraph = glimpse.graph()
+            .config({
+              forceY: [0]
+            })
             .component({ type: 'line', dataId: 'latencyDfw', color: '#e65b1f' })
             .component({ type: 'line', dataId: 'latencyDfwROC', color: '#206ec2' })
             .component({ type: 'label', dataId: 'stats',
@@ -81,7 +82,14 @@
                 return 'Min/Max/Avg: ' + d.min + '/' + d.max + '/' + d.avg
               },
               position: 'center-left', target: '.gl-footer' })
+            .state('loading')
             .render('#container');
+
+          window.setTimeout(function() {
+            lineGraph.data(data)
+              .state('normal')
+              .update();
+          }, 500);
 
           var lineGraph2 = glimpse.graph()
             .config({

@@ -67,6 +67,17 @@ function(graph, assetLoader, dc, compUtil) {
         .legend({ cid: 'legend' });
     }
 
+    function setNoDataGraph() {
+      testGraph
+        .config({colorPalette: ['green']})
+        .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
+        .component({ cid: 'testComponentWithColor',
+          type: 'line', dataId: 'fakeData', color: 'red' })
+        .xAxis({ cid: 'xAxis' })
+        .yAxis({ cid: 'yAxis' })
+        .legend({ cid: 'legend' });
+    }
+
     function setSpies() {
       testComponent = testGraph.component('testComponent');
       xAxis =  testGraph.xAxis();
@@ -578,6 +589,7 @@ function(graph, assetLoader, dc, compUtil) {
       beforeEach(function() {
         domain = [new Date(0), new Date(34347661000)];
         formatter = testGraph.config('xDomainLabelFormatter');
+        testGraph.data(fakeData);
         testGraph.render(jasmine.htmlFixture());
         label = testGraph.component('xDomainLabel');
         xScale = testGraph.config('xScale');
@@ -766,6 +778,77 @@ function(graph, assetLoader, dc, compUtil) {
         expect(c1.destroy).toHaveBeenCalledOnce();
         expect(c2.destroy).not.toHaveBeenCalled();
         expect(c3.destroy).not.toHaveBeenCalled();
+      });
+
+    });
+
+    describe('no data set', function() {
+      var selection, exThrown;
+
+      beforeEach(function() {
+        selection = jasmine.htmlFixture();
+        setNoDataGraph();
+        setSpies();
+      });
+
+      it('does not throw an error if no data is set', function () {
+        exThrown = false;
+
+        try {
+          testGraph.render(selection.node());
+        }
+        catch (e) {
+          exThrown = true;
+        }
+        expect(exThrown).toBe(false);
+      });
+
+      it('does not call render on test component', function() {
+        testGraph.render(selection.node());
+        expect(testComponent.render).not.toHaveBeenCalled();
+      });
+
+      it('does not call render on legend component', function() {
+        testGraph.render(selection.node());
+        expect(legend.render).not.toHaveBeenCalled();
+      });
+
+      it('does not call render on x-axis component', function() {
+        testGraph.render(selection.node());
+        expect(xAxis.render).not.toHaveBeenCalled();
+      });
+
+      it('does not call render on y-axis component', function() {
+        testGraph.render(selection.node());
+        expect(yAxis.render).not.toHaveBeenCalled();
+      });
+
+      it('does not call render on components if no data is set',
+        function () {
+          testGraph.render(selection.node());
+          expect(xAxis.render).not.toHaveBeenCalled();
+      });
+
+      it('does not call update on components if no data is set',
+        function () {
+          testGraph.render(selection.node());
+          testGraph.update();
+          expect(testComponent.update).not.toHaveBeenCalled();
+      });
+
+      it('calls render on components after data is set',
+        function () {
+          testGraph.render(selection.node());
+          testGraph.data(fakeData).update();
+          expect(testComponent.render).toHaveBeenCalled();
+      });
+
+      it('sets data on component after data is set(post render)',
+        function () {
+          testGraph.render(selection.node());
+          expect(testComponent.data()).not.toBeDefined();
+          testGraph.data(fakeData).update();
+          expect(testComponent.data()).toBeDefinedAndNotNull();
       });
 
     });

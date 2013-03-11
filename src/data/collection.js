@@ -176,6 +176,14 @@ define([
         }, this);
         dataSelection.add(dataList);
         return dataSelection;
+      },
+
+      /**
+       * Checks whether dataCollection is empty
+       * @return {Boolean}
+       */
+      isEmpty: function() {
+        return Object.keys(dataCollection).length === 0;
       }
     };
   }
