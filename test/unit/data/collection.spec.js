@@ -356,6 +356,38 @@ define([
         }]);
       }
 
+      function setupData5() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources: ['C', 'D'],
+          derivation: genDerivation('B')
+        }, {
+          id: 'C',
+          sources: 'E',
+          derivation: genDerivation('C')
+        }, {
+          id: 'D',
+          sources: '*',
+          derivation: genDerivation('D')
+        }, {
+          id: 'E',
+          sources: 'F',
+          derivation: genDerivation('E')
+        }, {
+          id: 'F',
+          sources: 'D',
+          derivation: genDerivation('F')
+        }, {
+          id: 'G',
+          sources: '*',
+          derivation: genDerivation('G')
+        }]);
+      }
+
       function get(id) {
         return dataCollection.get(id);
       }
@@ -406,6 +438,19 @@ define([
 
       });
 
+      it('evaluates derivided data in order for mul selections', function() {
+        setupData5();
+        dataCollection.updateDerivations();
+
+        expect(order).toEqual(['D', 'F', 'E', 'C', 'B', 'A', 'G']);
+        expect(get('A')).toBe('A');
+        expect(get('B')).toBe('B');
+        expect(get('C')).toBe('C');
+        expect(get('D')).toBe('D');
+        expect(get('E')).toBe('E');
+        expect(get('F')).toBe('F');
+      });
+
     });
 
     describe('isEmpty', function() {
@@ -419,6 +464,101 @@ define([
           sources: 'B'
         }]);
         expect(dataCollection.isEmpty()).toBe(false);
+      });
+
+    });
+
+    describe('evaluation of multiple selections', function() {
+
+      var input;
+
+      function genDerivation(str) {
+        return function() {
+          input[str] = arguments;
+          return str;
+        };
+      }
+
+      function setupData1() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'B',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources: ['C', 'A'],
+          derivation: genDerivation('B')
+        }, {
+          id: 'C',
+          sources: '*',
+          derivation: genDerivation('C')
+        }]);
+      }
+
+      function setupData2() {
+        dataCollection.add([{
+          id: 'A',
+          sources: 'nonDerived',
+          derivation: genDerivation('A')
+        }, {
+          id: 'B',
+          sources: 'nonDerived',
+          derivation: genDerivation('B')
+        }, {
+          id: 'C',
+          sources: '*',
+          derivation: genDerivation('C')
+        }, {
+          id: 'D',
+          sources: ['A', 'B', 'C'],
+          derivation: genDerivation('D')
+        }
+        ]);
+      }
+
+
+      beforeEach(function() {
+        dataCollection.add({
+          id: 'nonDerived',
+          data: [1,2,3]
+        });
+        input = {};
+      });
+
+      it('passes right no of selections into deriv fn for data 1', function() {
+        setupData1();
+        dataCollection.updateDerivations();
+        expect(input.A.length).toBe(1);
+        expect(input.B.length).toBe(2);
+        expect(input.C.length).toBe(1);
+      });
+
+     it('passes right values into deriv fn for data 1', function() {
+        setupData1();
+        dataCollection.updateDerivations();
+        expect(input.A[0].get()).toBe('B');
+        expect(input.B[0].get()).toBe('C');
+        expect(input.C[0].get().id).toBe('nonDerived');
+      });
+
+      it('passes right no of selections into deriv fn for data 2', function() {
+        setupData2();
+        dataCollection.updateDerivations();
+        expect(input.A.length).toBe(1);
+        expect(input.B.length).toBe(1);
+        expect(input.C.length).toBe(1);
+        expect(input.D.length).toBe(3);
+      });
+
+     it('passes right values into deriv fn for data 2', function() {
+        setupData2();
+        dataCollection.updateDerivations();
+        expect(input.A[0].get().id).toBe('nonDerived');
+        expect(input.B[0].get().id).toBe('nonDerived');
+        expect(input.C[0].get().id).toBe('nonDerived');
+        expect(input.D[0].get()).toBe('A');
+        expect(input.D[1].get()).toBe('B');
+        expect(input.D[2].get()).toBe('C');
       });
 
     });

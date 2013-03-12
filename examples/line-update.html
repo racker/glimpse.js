@@ -71,9 +71,10 @@
               },
               {
                 id: 'stats',
-                sources: '*',
-                derivation: function(sources) {
-                  var points = sources.dim('y').concat();
+                sources: ['*', '$domain'],
+                derivation: function(sources, domain) {
+                  var xDomain = domain.get()['x'],
+                      points = sources.filter('x', xDomain).dim('y').concat();
                   return {
                     min: points.min().round().get(),
                     max: points.max().round().get(),
@@ -87,7 +88,7 @@
           .component({ cid: 'lineLon', type: 'line', dataId: 'latencyLon', color: '#c40022', opacity: '0.7'  })
           .component({ type: 'label', dataId: 'stats',
               text: function(d) {
-                return 'Min/Max/Avg: ' + d.min + '/' + d.max + '/' + d.avg
+                return 'Min: ' + d.min + ' Max: ' + d.max + ' Avg: ' + d.avg;
               },
               position: 'center-left', target: '.gl-footer' })
           .render('#container');

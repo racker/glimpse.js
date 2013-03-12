@@ -59,9 +59,10 @@
               },
               {
                 id: 'stats',
-                sources: '*',
-                derivation: function(sources) {
-                  var points = sources.dim('y').concat();
+                sources: ['*', '$domain'],
+                derivation: function(sources, domain) {
+                  var xDomain = domain.get()['x'],
+                      points = sources.filter('x', xDomain).dim('y').concat();
                   return {
                     min: points.min().round().get(),
                     max: points.max().round().get(),
@@ -79,7 +80,7 @@
             .component({ type: 'line', dataId: 'latencyDfwROC', color: '#206ec2' })
             .component({ type: 'label', dataId: 'stats',
               text: function(d) {
-                return 'Min/Max/Avg: ' + d.min + '/' + d.max + '/' + d.avg
+                return 'Min: ' + d.min + ' Max: ' + d.max + ' Avg: ' + d.avg;
               },
               position: 'center-left', target: '.gl-footer' })
             .state('loading')
@@ -116,13 +117,6 @@
                 dimensions: {
                   x: 'time',
                   y: function (d, i) { return d.latency + Math.random()*50; }
-                }
-              },
-              {
-                id: 'domain',
-                sources: 'latencyDfw',
-                derivation: function(sources) {
-                  return sources.dim('x').concat().extent().get();
                 }
               },
               {

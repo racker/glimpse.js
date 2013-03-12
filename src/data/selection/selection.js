@@ -4,9 +4,10 @@
  */
 define([
   'data/dimension/dimension',
+  'core/object',
   'core/array',
   'data/functions'
-], function (dimension, array, dataFns) {
+], function (dimension, obj, array, dataFns) {
   'use strict';
 
   var Selection;
@@ -26,6 +27,29 @@ define([
       this.dataSources_.push(data);
     }
     return this;
+  };
+
+  /**
+   * Applies filter using dimensions on data sources.
+   * This will eventually be a more versatile function.
+   * Assumes when two inputs are given, that the first is a dimension and
+   * second is a range if it is an array.
+   * TODO: If second arg is simple value, filter if equal to that value.
+   *       If second arg is a function, use that function.
+   */
+  Selection.prototype.filter = function(dim, range) {
+    return this.map(function(dataSource) {
+      var filteredDataSource = {}, accessor;
+      obj.extend(filteredDataSource, dataSource);
+      accessor = dataFns.dimension(dataSource, dim);
+      filteredDataSource.data =  filteredDataSource.data.filter(
+        function(d) {
+          var e = accessor(d);
+          return e >= range[0] && e<= range[1];
+        }
+      );
+      return filteredDataSource;
+    });
   };
 
   Selection.prototype.map = function(fn) {

@@ -11,8 +11,11 @@ define([
   'use strict';
 
   function applyDerivation(dc, data) {
-    var dataSelection = dc.select(data.sources),
-        derivedData = data.derivation(dataSelection);
+    var dataSelections, derivedData;
+    dataSelections = array.getArray(data.sources).map(function(d) {
+      return dc.select(d);
+    });
+    derivedData = data.derivation.apply(null, dataSelections);
     if (typeof derivedData === 'object' &&
          !Array.isArray(derivedData)) {
       obj.extend(derivedData, data);
@@ -55,8 +58,11 @@ define([
       d.glDerivation = 'gl-error-circular-dependency';
     }
     visited.push(id);
-    sources = d.glDerive.sources.split(',')
-               .filter(function(id) { return !isWildCard(id); });
+    sources = [];
+    array.getArray(d.glDerive.sources).forEach(function(s) {
+      sources = sources.concat(
+        s.split(',').filter(function(id) { return !isWildCard(id); }));
+    });
     sources.forEach(function(id) {
       deriveDataById(id.trim(), data, deps, dataCollection, visited);
     });
@@ -158,8 +164,10 @@ define([
        */
       select: function(sources) {
         var dataSelection = selection.create(),
-            dataList = [], ids;
-        ids = sources.split(',');
+            dataList = [], ids = [];
+        array.getArray(sources).forEach(function(s) {
+          ids = ids.concat(s.split(','));
+        });
         ids.forEach(function(id) {
           if(isWildCard(id)) {
             Object.keys(dataCollection).forEach(function(k) {

@@ -143,6 +143,63 @@ function (selection) {
 
     });
 
+    describe('.filter()', function() {
+
+      beforeEach(function() {
+        sel.add({
+          id: 'chicagoSales',
+          data: [
+            { year: 1991, carSales: 240 },
+            { year: 1992, carSales: 300 },
+            { year: 1993, carSales: 400 },
+            { year: 1994, carSales: 320 },
+            { year: 1995, carSales: 360 }],
+          dimensions: {
+            year: function(d) { return d.year; },
+            carSales: function(d) { return d.carSales; }
+          }
+        });
+        sel.add({
+          id: 'bostonSales',
+          data: [
+            { year: 1993, carSales: 620 },
+            { year: 1994, carSales: 520 },
+            { year: 1995, carSales: 400 },
+            { year: 1996, carSales: 480 },
+            { year: 1997, carSales: 540 }],
+          dimensions: {
+            year: function(d) { return d.year; },
+            carSales: function(d) { return d.carSales; }
+          }
+        });
+      });
+
+      describe('filter by range', function() {
+
+        it('filters selection by year range', function() {
+          expect(sel.filter('year', [1991, 1994]).dim('year').all())
+            .toEqual([[ 1991, 1992, 1993, 1994 ], [ 1993, 1994 ]]);
+        });
+
+        it('filters years with carsales between 350 and 600', function() {
+          expect(sel.filter('carSales', [350, 600]).dim('year').all())
+            .toEqual([[ 1993, 1995 ], [ 1994, 1995, 1996, 1997 ]]);
+        });
+
+        it('total sales in the 1990-1993 (inclusive)', function() {
+          expect(sel.filter('year', [1991, 1993]).dim('carSales')
+            .concat().sum().get()).toBe(1560);
+        });
+
+       it('total sales in the 1996-1997 (inclusive)', function() {
+          expect(sel.filter('year', [1996, 1997]).dim('carSales')
+            .concat().sum().get()).toBe(1020);
+        });
+
+      });
+
+    });
+
   });
 
 });

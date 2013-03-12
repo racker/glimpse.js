@@ -363,8 +363,10 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         }
       }
 
+      xExtents = [min, max];
       config_.xScale.rangeRound([0, getFrameWidth_()])
-        .domain([min, max]);
+        .domain(xExtents);
+      return xExtents;
     };
 
     /**
@@ -378,8 +380,10 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         yExtents = yExtents.concat(config_.forceY);
       }
 
+      yExtents = d3.extent(yExtents);
       config_.yScale.rangeRound([getFrameHeight_(), 0])
-        .domain(d3.extent(yExtents));
+        .domain(yExtents);
+      return yExtents;
     };
 
     /**
@@ -414,8 +418,18 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           }
         }
       });
-      configureXScale_(xExtents);
-      configureYScale_(yExtents);
+      xExtents = configureXScale_(xExtents);
+      yExtents = configureYScale_(yExtents);
+      dataCollection_.add({
+        id: '$domain',
+        sources: '',
+        derivation: function() {
+          return {
+            x: xExtents,
+            y: yExtents
+          };
+        }
+      });
     };
 
     /**
@@ -448,8 +462,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * @private
      */
     update_ = function() {
-      dataCollection_.updateDerivations();
       updateScales_();
+      dataCollection_.updateDerivations();
       updateAxes_();
       updateLegend_();
       updateXDomainLabel_();
