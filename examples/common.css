@@ -2,3 +2,7 @@ body {
   background-color: #ddd;
   font-family: arial;
 }
+
+hr {
+  border: 1px dotted #333;
+}

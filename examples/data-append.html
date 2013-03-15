@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Append Data</h1>
+    <h3>This example illustrates how append data to an existing graph</h3>
+    <div id="box">
+      <button id="update">Update</button>
+      <div id="container"></div>
+    </div>
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+        var epochBaseMs,
+          oneDayMs,
+          latencyData,
+          lineGraph,
+          currentDay,
+          dataConfig,
+          update;
+
+        epochBaseMs = new Date().getTime();
+        oneDayMs = 1000 * 60 * 60 * 24;
+        latencyData = [
+          {
+            data: [
+              {"time":epochBaseMs + 0 * oneDayMs,"latency": 80},
+              {"time":epochBaseMs + 1 * oneDayMs,"latency": 120},
+              {"time":epochBaseMs + 2 * oneDayMs,"latency": 60},
+              {"time":epochBaseMs + 3 * oneDayMs,"latency": 90},
+              {"time":epochBaseMs + 4 * oneDayMs,"latency": 100}
+            ]
+          }
+        ];
+        currentDay = latencyData[0].data.length;
+
+        dataConfig = [
+          {
+            id: 'latencyOrd',
+            title: 'Time to Connect (ORD)',
+            data: latencyData[0].data,
+            dimensions: { x: 'time', y: 'latency' }
+          },
+          {
+            id: 'latencyLon',
+            title: 'Time to Connect (LON)',
+            data: latencyData[0].data,
+            dimensions: {
+              x: function (d, i) { return d.time; },
+              y: function (d, i) { return d.latency + Math.random()*10; }
+            }
+          }
+        ];
+
+        lineGraph = glimpse.graphBuilder.create('line')
+          .config({
+            domainIntervalUnit: d3.time.week,
+          })
+          .data(dataConfig)
+          .render('#container');
+
+
+        update = function () {
+          lineGraph
+            .data()
+              .append('latencyOrd', {
+                time: epochBaseMs + currentDay++ * oneDayMs, 
+                latency: (Math.random() * 150)
+              });
+          lineGraph
+            .update()
+            .hide('lineOrd');
+        };
+
+        document.getElementById('update')
+          .addEventListener('click', update, false);
+
+
+        //for debugging
+        window.graph = lineGraph;
+      });
+    </script>
+  </body>
+</html>

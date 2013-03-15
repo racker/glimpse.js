@@ -252,42 +252,6 @@ function(graph, assetLoader, dc, compUtil) {
 
     });
 
-    describe('appendData()', function() {
-      var someData;
-
-      beforeEach(function() {
-        var selection = jasmine.htmlFixture();
-
-        someData = {
-          id:'someData',
-          data: [
-            { x: 13, y: 106},
-            { x: 15, y: 56},
-            { x: 17, y: 100}
-          ]
-        };
-
-        testGraph.data(someData);
-        testGraph.render(selection.node());
-
-      });
-
-      it('pushes data for a given id', function() {
-        expect(testGraph.data('someData').data.length).toBe(3);
-        testGraph.appendData('someData', { x: 14, y: 106});
-        testGraph.update();
-        expect(testGraph.data('someData').data.length).toBe(4);
-      });
-
-      it('concats array of data for a given id', function() {
-        expect(testGraph.data('someData').data.length).toBe(3);
-        testGraph.appendData('someData', [{ x: 18, y: 156}, { x: 15, y: 196}])
-          .update();
-        expect(testGraph.data('someData').data.length).toBe(5);
-      });
-
-    });
-
     describe('component()', function() {
       it('adds component', function() {
         testGraph.component({
@@ -702,44 +666,6 @@ function(graph, assetLoader, dc, compUtil) {
 
       it('returns graceully when rendered with no data', function() {
         expect(exceptionCaught).toBe(false);
-      });
-
-    });
-
-    describe('removeData()', function() {
-      var idMapper;
-      idMapper = function(d) {
-        return d.id;
-      };
-
-      beforeEach(function() {
-        testGraph.data([
-          { id: 'one', data: [] },
-          { id: 'two', data: [] },
-          { id: 'three', data: [] }
-        ]);
-      });
-
-      it('removes a single data item from the collection', function() {
-        testGraph.removeData('one');
-        expect(testGraph.data().get().map(idMapper)).toEqual(['two', 'three']);
-      });
-
-      it('removes multiple data items from the collection', function() {
-        testGraph.removeData(['one', 'two']);
-        expect(testGraph.data().get().map(idMapper)).toEqual(['three']);
-      });
-
-      it('does nothing if data id doesnt exist', function() {
-        var exThrown = false;
-        try {
-          testGraph.removeData('nonsense');
-        }
-        catch (e) {
-          exThrown = true;
-        }
-        expect(exThrown).toBe(false);
-        expect(testGraph.data().get().length).toBe(3);
       });
 
     });

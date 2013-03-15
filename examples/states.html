@@ -18,7 +18,7 @@
     <input type="checkbox" id="toggle-loading" value="loading" checked/> toggle loading state
     <div id="loading-container"></div>
 
-    <script src="../components/require/require.js"></script>
+    <script src="../components/requirejs/require.js"></script>
     <script src="../requirejs.conf.js"></script>
     <script>
       require(['glimpse'], function (glimpse) {
@@ -41,7 +41,7 @@
             {"x":1322276021052.6316,"y":100.65460556652397}]
           }];
 
-        var emptyGraph = glimpse.graph()
+        var emptyGraph = glimpse.graphBuilder.create('line')
           .config({
             emptyMessage: [
             'There is no data for the selected period.',
@@ -49,36 +49,35 @@
             ]
           })
           .data([
-            { id: 'sampleData1',
+            {
+              id: 'sampleData1',
               title: 'My Sample Data',
               data: sampleData[0].data
             }
           ])
-          .component({ type: 'line', dataId: 'sampleData1', color: '#e65b1f' })
-          .render('#empty-container')
-          .state('empty');
+          .state('empty')
+          .render('#empty-container');
 
-        var errorGraph = glimpse.graph()
+        var errorGraph = glimpse.graphBuilder.create('line')
           .data([
-            { id: 'sampleData1',
+            {
+              id: 'sampleData1',
               title: 'My Sample Data',
               data: sampleData[0].data
             }
           ])
-          .component({ type: 'line', dataId: 'sampleData1', color: '#e65b1f' })
+          .state('error')
           .render('#error-container')
-          .state('error');
 
-        var loadingGraph = glimpse.graph()
+        var loadingGraph = glimpse.graphBuilder.create('line')
           .data([
             { id: 'sampleData1',
               title: 'My Sample Data',
               data: sampleData[0].data
             }
           ])
-          .component({ type: 'line', dataId: 'sampleData1', color: '#e65b1f' })
-          .render('#loading-container')
-          .state('loading');
+          .state('loading')
+          .render('#loading-container');
 
         function toggleEmpty() {
           emptyGraph.state(this.checked ? this.value : 'normal');

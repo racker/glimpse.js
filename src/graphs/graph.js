@@ -735,28 +735,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * Removes any specified data sets from the data collection.
-     * @public
-     * @param {String|Array} id Single id or array of ids.
-     * @return {graphs.graph}
-     */
-    graph.removeData = function(id) {
-      dataCollection_.remove(id);
-      return graph;
-    };
-
-    /**
-     * Append data to an existing data object
-     * @param  {string} id
-     * @param  {Array|Object} dataToAppend
-     * @return {graphs.graph}
-     */
-    graph.appendData = function (id, dataToAppend) {
-      dataCollection_.append(id, dataToAppend);
-      return graph;
-    };
-
-    /**
      * Creates and adds a component to the graph based on the type
      * or returns the component based on the cid.
      * @param  {string|Object} componentConfig
@@ -838,6 +816,10 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
 
     graph.destroy = function() {
       config_.state = STATES.DESTROYED;
+      graph.root().remove();
+      config_ = null;
+      defaults_ = null;
+      // TODO: destroy all internal components too
     };
 
     /**

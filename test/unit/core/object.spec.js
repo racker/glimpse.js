@@ -154,6 +154,56 @@ function (Obj) {
         expect(Obj.get(obj, ['a', 'x', 'y'])).toBe(null);
       });
 
+    });
+
+    describe('override()', function() {
+      var baseObj, overrides, suprSpy;
+
+      beforeEach(function() {
+        suprSpy = jasmine.createSpy();
+        baseObj = {
+          bar: 100,
+          foo: function(arg) {
+            var val = arg + 1;
+            this.bar += val;
+            suprSpy();
+            return val;
+          }
+        };
+        overrides = {
+          nonSuprFoo:  function(supr, arg) {
+            return arg + 2;
+          },
+          suprFoo: function(supr, arg) {
+            var val = supr(arg + 3);
+            this.bar += 1;
+            return val;
+          }
+        };
+        spyOn(overrides, 'nonSuprFoo').andCallThrough();
+        spyOn(overrides, 'suprFoo').andCallThrough();
+      });
+
+      it('does a simple override of the original method', function() {
+        Obj.override(baseObj, 'foo', overrides.nonSuprFoo);
+        expect(baseObj.foo(1)).toBe(3);
+        expect(suprSpy).not.toHaveBeenCalled();
+        expect(overrides.nonSuprFoo).toHaveBeenCalled();
+        expect(baseObj.bar).toBe(100);
+      });
+
+      it('overrides the original method and provides a supr()', function() {
+        Obj.override(baseObj, 'foo', overrides.suprFoo);
+        expect(baseObj.foo(1)).toBe(5);
+        expect(suprSpy).toHaveBeenCalledOnce();
+        expect(overrides.suprFoo).toHaveBeenCalledOnce();
+      });
+
+      it('provides the correct "this" context', function() {
+        Obj.override(baseObj, 'foo', overrides.suprFoo);
+        baseObj.foo(1);
+        expect(baseObj.bar).toBe(106);
+      });
 
     });
 

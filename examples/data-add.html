@@ -6,9 +6,12 @@
     <link rel="stylesheet" href="common.css">
   </head>
   <body>
-    <h1>Simple Line Graph</h1>
-    <h3>This example illustrates how to render a simple time-series line graph</h3>
-    <div id="container"></div>
+    <h1>Add Data Sets</h1>
+    <h3>This example illustrates how add more data sets to a graph</h3>
+    <div id="box">
+      <button id="add">Add Data Set</button>
+      <div id="container"></div>
+    </div>
     <script src="../components/requirejs/require.js"></script>
     <script src="../requirejs.conf.js"></script>
     <script>
@@ -33,8 +36,29 @@
             {"time":1322276021052.6316,"latency":100.65460556652397}]
           }];
 
+        // Generate more semi-random test data.
+        function generateDataset() {
+          var cnt = generateDataset.cnt = generateDataset.cnt ? generateDataset.cnt + 1 : 1;
+          return {
+            id: 'more' + cnt,
+            title: 'More Data ' + cnt,
+            dimensions: {
+              x: 'time',
+              y: function(d) {
+                return d.latency + cnt * 20;
+              }
+            },
+            data: latencyData[0].data
+          };
+        }
 
-        // Configure which data to show.
+        // attach click handler
+        document.getElementById('add')
+          .addEventListener('click', addDataset, false);
+
+        ///////////////////////////////////////////////////////////////////////
+
+        // Configure initial data to show.
         var dataConfig = [
           {
             id: 'latencyDfw',
@@ -44,18 +68,6 @@
               x: 'time',
               y: 'latency'
             }
-          },
-          {
-            id: 'latencyOrd',
-            title: 'Time to Connect (ORD)',
-            data: latencyData[0].data,
-            dimensions: {
-              x: 'time',
-              // This is how to change the value with a funciton.
-              y: function(d, i) {
-                return d.latency + 10;
-              }
-            }
           }
         ];
 
@@ -63,6 +75,15 @@
         var lineGraph = glimpse.graphBuilder().create('line')
           .data(dataConfig)
           .render('#container');
+
+        function addDataset() {
+          var dataCollection;
+          dataCollection = lineGraph.data();
+          dataCollection.add(generateDataset());
+          lineGraph.update();
+        };
+
+        ///////////////////////////////////////////////////////////////////////
 
         // for debugging
         window.graph = lineGraph;

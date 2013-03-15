@@ -42,6 +42,43 @@ function (string) {
 
     });
 
+    describe('startsWith()', function() {
+
+      it('returns true if the string starts with given char', function() {
+        expect(string.startsWith('abc', 'a')).toBe(true);
+      });
+
+      it('returns false if string doesnt start with given char', function() {
+        expect(string.startsWith('abc', 'z')).toBe(false);
+      });
+
+      it('returns false if the string is empty', function() {
+        expect(string.startsWith('', 'z')).toBe(false);
+      });
+
+      it('returns true if the prefix is empty string', function() {
+        expect(string.startsWith('abc', '')).toBe(true);
+      });
+
+      it('returns false if the prefix is null', function() {
+        expect(string.startsWith('abc', null)).toBe(false);
+      });
+
+      it('returns false if the prefix is undefined', function() {
+        expect(string.startsWith('abc', undefined)).toBe(false);
+      });
+
+      it('returns false if the string is undefined', function() {
+        expect(string.startsWith(undefined, 'a')).toBe(false);
+      });
+
+      it('returns false if the string is null', function() {
+        expect(string.startsWith(null, 'a')).toBe(false);
+      });
+
+    });
+
+
   });
 
 });

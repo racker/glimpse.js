@@ -41,6 +41,29 @@ function (array) {
         return obj;
       }
       return null;
+    },
+
+    /**
+     * Overrides a method on an object. Passes a reference to the original
+     *  "super" method as the first argument to the new method. The "super"
+     *  will be bound to the original o object.
+     *
+     * @param {Object} o The object.
+     * @param {String} methodName The name of the method to override.
+     * @param {function} newFn The new function to replace it with.
+     */
+    override: function(o, methodName, newFn) {
+      var supr;
+
+      // supr method is the original method.
+      supr = o[methodName].bind(o);
+      // Replace the original method with the new one.
+      o[methodName] = function() {
+        var args = array.convertArgs(arguments, 0);
+        // Pass reference to super method as 1st arg.
+        args.unshift(supr);
+        return newFn.apply(o, args);
+      };
     }
 
   };

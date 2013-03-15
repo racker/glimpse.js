@@ -25,6 +25,19 @@ function () {
     classes: function () {
       var r = Array.prototype.join.call(arguments, ' gl-');
       return r ? 'gl-' + r : '';
+    },
+
+    /**
+     * Determins if a string starts with a prefix or not.
+     *
+     * @param {String} str The string to check.
+     * @param {String} prefix The prefix to search for.
+     * @return {Boolean}
+     */
+    startsWith: function(str, prefix) {
+      return typeof str === 'string' &&
+        typeof prefix === 'string' &&
+        str.slice(0, prefix.length) === prefix;
     }
 
   };

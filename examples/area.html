@@ -6,8 +6,10 @@
     <link rel="stylesheet" href="common.css">
   </head>
   <body>
+    <h1>Simple Area Graph</h1>
+    <h3>This example illustrates how to make a simple area graph</h3>
     <div id="container"></div>
-    <script src="../components/require/require.js"></script>
+    <script src="../components/requirejs/require.js"></script>
     <script src="../requirejs.conf.js"></script>
     <script>
       require(['glimpse'], function (glimpse) {
@@ -29,47 +31,43 @@
           { "ts": 1322276021052, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40}
         ];
 
-        var areaGraph = glimpse.graph()
-          .data([
-            { id: 'cpu-sys',
-              title: 'System',
-              data: sampleData,
-              dimensions: { x: 'ts', y: 'user' }
-            },
-            { id: 'cpu-user',
-              title: 'User',
-              data: sampleData,
-              dimensions: { x: 'ts', y: 'sys' }
-            },
-            { id: 'cpu-idle',
-              title: 'Idle',
-              data: sampleData,
-              dimensions: { x: 'ts', y: 'idle' }
-            },
-            { id: 'cpu-wait',
-              title: 'Wait',
-              data: sampleData,
-              dimensions: { x: 'ts', y: 'wait' }
-            },
-            { id: 'cpu-stolen',
-              title: 'Stolen',
-              data: sampleData,
-              dimensions: { x: 'ts', y: 'stolen' }
-            }
-          ])
-          // TODO: allow component() to take an array
-          .component({ type: 'area', dataId: 'cpu-idle', color: '#EFEFEF' })
-          .component({ type: 'area', dataId: 'cpu-user', color: '#89D6FF' })
-          .component({ type: 'area', dataId: 'cpu-sys', color: '#FFB578' })
-          .component({ type: 'area', dataId: 'cpu-wait', color: '#F5F692' })
-          .component({ type: 'area', dataId: 'cpu-stolen', color: '#FF5A86' })
+        var dataConfig = [
+          { id: 'cpu-idle',
+            title: 'Idle',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'idle' }
+          },
+          { id: 'cpu-sys',
+            title: 'System',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'sys' }
+          },
+          { id: 'cpu-user',
+            title: 'User',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'user' }
+          },
+          { id: 'cpu-wait',
+            title: 'Wait',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'wait' }
+          },
+          { id: 'cpu-stolen',
+            title: 'Stolen',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'stolen' }
+          }
+        ];
+
+        var areaGraph = glimpse.graphBuilder.create('area')
+          .data(dataConfig)
           .render('#container');
 
 
-          // for debugging
-          window.graph = areaGraph;
-          window.gl = glimpse;
-        });
+        // for debugging
+        window.graph = areaGraph;
+        window.gl = glimpse;
+      });
     </script>
   </body>
 </html>

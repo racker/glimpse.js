@@ -6,7 +6,7 @@ var tests = Object.keys(window.__testacular__.files).filter(function (file) {
 require({
   baseUrl: '/base/src',
   paths: {
-    require: '../components/require/require',
+    require: '../components/requirejs/require',
     d3:   '../components/d3/d3',
     'test-util': '../test/util'
   },

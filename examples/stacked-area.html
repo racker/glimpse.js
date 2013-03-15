@@ -10,7 +10,7 @@
     <h3>This example illustrates how to stack data series</h3>
     <hr>
     <div id="container"></div>
-    <script src="../components/require/require.js"></script>
+    <script src="../components/requirejs/require.js"></script>
     <script src="../requirejs.conf.js"></script>
     <script>
       require(['glimpse'], function (glimpse) {
@@ -79,7 +79,9 @@
 
         // d3 stack function to calculate Y-baselines and Y-offsets.
         var stack = d3.layout.stack()
-          .values(function(d) { return d.values; });
+          .values(function(d) {
+            return d.values;
+          });
         stack(mappedData);
 
         // Utility for accessing individual data series.
@@ -91,7 +93,7 @@
 
         var areaGraph = glimpse.graph()
           .config({
-            'forceY': [0],
+            'forceY': [0, 100],
             'yDomainModifier': 1
           })
           .data([

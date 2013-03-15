@@ -97,13 +97,19 @@ module.exports = function(grunt) {
       },
       test: {
         command: 'testacular start test/testacular.conf.js ' +
-                 '--browsers="Chrome,Firefox,PhantomJS,Safari" ' +
+                 '--browsers="Chrome,Firefox,Safari" ' +
                  '--singleRun=true',
         stdout: true
       },
-      testPhantomOnly: {
+      testHeadless: {
         command: 'testacular start test/testacular.conf.js ' +
                  '--browsers="PhantomJS" ' +
+                 '--singleRun=true',
+        stdout: true
+      },
+      testTravis: {
+        command: 'testacular start test/testacular.conf.js ' +
+                 '--browsers="Firefox" ' +
                  '--singleRun=true',
         stdout: true
       }
@@ -170,7 +176,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', 'exec:test');
   grunt.registerTask('testwatch', 'exec:testWatch');
-  grunt.registerTask('testphantom', 'exec:testPhantomOnly');
+  grunt.registerTask('testheadless', 'exec:testHeadless');
   grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
   grunt.registerTask('docs', ['clean:docs', 'lexicon']);
   grunt.registerTask('compile-static', [
@@ -184,5 +190,6 @@ module.exports = function(grunt) {
   grunt.registerTask('compile', 'compile-static');
   grunt.registerTask('release', ['jshint', 'assets', 'test', 'compile',
     'copy:release']);
-  grunt.registerTask('default', ['jshint', 'assets', 'exec:testPhantomOnly']);
+  grunt.registerTask('travis', ['jshint', 'assets', 'exec:testTravis']);
+  grunt.registerTask('default', ['jshint', 'assets', 'exec:test']);
 };
