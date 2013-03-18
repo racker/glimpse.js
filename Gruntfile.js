@@ -13,6 +13,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-lexicon');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadTasks('grunt/tasks/');
 
   // Project configuration.
@@ -25,7 +26,7 @@ module.exports = function(grunt) {
     clean: {
       build: ['build/*'],
       assets: ['src/assets/assets.js'],
-      docs: ['docs/*'],
+      docs: ['docs/'],
     },
 
     /**
@@ -164,10 +165,20 @@ module.exports = function(grunt) {
     lexicon: {
       all: {
         src: ['src/**/*js'],
-        dest: 'docs',
+        dest: 'docs/',
         options: {
-          title: 'glimpse.js Docs',
+          title: ' ',
           format: 'markdown'
+        }
+      }
+    },
+
+    concat: {
+      docs: {
+        src: ['docs/**/*.md'],
+        dest: '../glimpse.js.wiki/api-reference.md',
+        options: {
+          separator: '\n\n* * *  \n\n'
         }
       }
     }
@@ -178,7 +189,8 @@ module.exports = function(grunt) {
   grunt.registerTask('testwatch', 'exec:testWatch');
   grunt.registerTask('testheadless', 'exec:testHeadless');
   grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
-  grunt.registerTask('docs', ['clean:docs', 'lexicon']);
+  grunt.registerTask('docs',
+    ['clean:docs', 'lexicon', 'concat:docs', 'clean:docs']);
   grunt.registerTask('compile-static', [
     'assets',
     'clean:build',

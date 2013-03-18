@@ -132,7 +132,7 @@ function(obj, array, string, graph) {
      * Overrides the removeData() funciton on the graph.
      * Additionally removes any corresponding components when called.
      *
-     * TOOD: remove this in favor of data collection events?
+     * TODO: remove this in favor of data collection events
      *
      * @private
      * @param {graphs.graph} g
@@ -150,7 +150,7 @@ function(obj, array, string, graph) {
      * Overrides the add() function on the graph's data collection. Anytime
      * add() is called a new component of the specified type will be added too.
      *
-     * TOOD: remove this in favor of data collection events?
+     * TODO: remove this in favor of data collection events
      *
      * @private
      * @param {String} componentType
