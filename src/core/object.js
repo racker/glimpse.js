@@ -32,13 +32,23 @@ function (array) {
       return val != null;
     },
 
+    /**
+     * Gets a property from an object by its path.
+     *
+     * @public
+     * @prarm {Object} obj The object to retrieve from.
+     * @param {String|Array} path The path to the property.
+     * @return {Object}
+     */
     get: function(obj, path) {
+      var currentObj;
+      currentObj = obj;
       array.getArray(path).every(function(p) {
-        obj = obj[p];
-        return this.isDefAndNotNull(obj);
+        currentObj = currentObj[p];
+        return this.isDefAndNotNull(currentObj);
       }, this);
-      if (obj) {
-        return obj;
+      if (this.isDefAndNotNull(currentObj)) {
+        return currentObj;
       }
       return null;
     },
