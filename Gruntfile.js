@@ -98,6 +98,12 @@ module.exports = function(grunt) {
       },
       test: {
         command: 'testacular start test/testacular.conf.js ' +
+                 '--browsers="Chrome" ' +
+                 '--singleRun=true',
+        stdout: true
+      },
+      testAll: {
+        command: 'testacular start test/testacular.conf.js ' +
                  '--browsers="Chrome,Firefox,Safari" ' +
                  '--singleRun=true',
         stdout: true
@@ -200,7 +206,7 @@ module.exports = function(grunt) {
     'clean:build',
     'requirejs:amdBuild']);
   grunt.registerTask('compile', 'compile-static');
-  grunt.registerTask('release', ['jshint', 'assets', 'test', 'compile',
+  grunt.registerTask('release', ['jshint', 'assets', 'exec:testAll', 'compile',
     'copy:release']);
   grunt.registerTask('travis', ['jshint', 'assets', 'exec:testTravis']);
   grunt.registerTask('default', ['jshint', 'assets', 'exec:test']);
