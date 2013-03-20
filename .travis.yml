@@ -15,3 +15,4 @@ script:
 
 notifications:
   irc: "irc.freenode.net#glimpse-dev"
+  email: false
