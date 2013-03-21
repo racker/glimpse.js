@@ -189,6 +189,20 @@ function(axisComponent) {
 
     });
 
+    describe('.update()', function() {
+
+      beforeEach(function() {
+        axis.render(container);
+      });
+
+      it('repositions itself to the bottom of its parents DOM', function() {
+        container.append('g');
+        axis.update();
+        expect(axis.root().node()).toBe(container.node().lastElementChild);
+      });
+
+    });
+
     describe('destroy()', function() {
 
       beforeEach(function() {

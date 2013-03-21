@@ -625,7 +625,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       yAxis_ = components.axis()
         .config({
           'type': 'y',
-          'orient': 'right'
+          'orient': 'right',
+          'tickPadding': 5
         });
       legend_ = components.legend();
       xDomainLabel_ = components.label()
