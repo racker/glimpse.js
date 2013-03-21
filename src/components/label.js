@@ -109,7 +109,10 @@ function(obj, config, string, array, util, mixins) {
      */
     label.render = function(selection) {
       root_ = util.select(selection || config_.target).append('g');
-      root_.append('text');
+      //With  xml:space = preserve setting, SVG will simply convert
+      //all newline and tab characters to blanks, and then display the result,
+      //including leading and trailing blanks. the same text.
+      root_.append('text').attr('xml:space', 'preserve');
       label.update();
       return label;
     };

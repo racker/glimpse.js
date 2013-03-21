@@ -17,8 +17,7 @@ function(obj, config, string, mixins, d3util) {
     var config_,
       defaults_,
       root_,
-      d3axis_,
-      formatAxis_;
+      d3axis_;
 
     config_ = {};
 
@@ -40,7 +39,7 @@ function(obj, config, string, mixins, d3util) {
      * Changes the default formatting of the d3 axis.
      * @private
      */
-    formatAxis_ = function() {
+    function formatAxis() {
       // remove boldness from default axis path
       root_.selectAll('path')
         .attr({
@@ -56,10 +55,13 @@ function(obj, config, string, mixins, d3util) {
 
       //Apply padding to the first tick on Y axis
       if (config_.type === 'y') {
-        var zeroTick, transform;
+        var zeroTick, transform, zeroTickLabel;
 
         zeroTick = root_.select('g');
         if (zeroTick.node()) {
+          zeroTickLabel = zeroTick.text() +
+            (config_.unit ? ' ' + config_.unit : '');
+          zeroTick.select('text').text(zeroTickLabel);
           transform = d3.transform(zeroTick.attr('transform'));
           transform.translate[1] -= 10;
           zeroTick.attr('transform', transform.toString());
@@ -82,7 +84,7 @@ function(obj, config, string, mixins, d3util) {
         .attr({
           'stroke': 'none'
         });
-    };
+    }
 
     /**
      * Repositions the root node within the parent DOM to ensure it's always
@@ -151,7 +153,8 @@ function(obj, config, string, mixins, d3util) {
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-      formatAxis_();
+
+      formatAxis();
       repositionDOM();
       return axis;
     };

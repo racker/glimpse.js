@@ -61,6 +61,7 @@
 
         // Create and render a line graph.
         var lineGraph = glimpse.graphBuilder().create('line')
+          .config('yAxisUnit', 'ms')
           .data(dataConfig)
           .render('#container');
 

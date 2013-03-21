@@ -108,7 +108,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       errorMessage: 'Error loading graph data',
       state: 'normal',
       yDomainModifier: 1.2,
-      colorPalette: d3.scale.category20().range()
+      colorPalette: d3.scale.category20().range(),
+      xAxisUnit: null,
+      yAxisUnit: null
     };
 
     /**
@@ -438,11 +440,13 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     updateAxes_ = function() {
       xAxis_.config({
         scale: config_.xScale,
-        ticks: config_.xTicks
+        ticks: config_.xTicks,
+        unit: config_.xAxisUnit
       });
       yAxis_.config({
         scale: config_.yScale,
-        ticks: config_.yTicks
+        ticks: config_.yTicks,
+        unit: config_.yAxisUnit
       });
     };
 
@@ -620,13 +624,15 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         .config({
           'type': 'x',
           'orient': 'bottom',
-          'target': '.gl-xaxis'
+          'target': '.gl-xaxis',
+          'unit': config_.xAxisUnit
         });
       yAxis_ = components.axis()
         .config({
           'type': 'y',
           'orient': 'right',
-          'tickPadding': 5
+          'tickPadding': 5,
+          'unit': config_.yAxisUnit
         });
       legend_ = components.legend();
       xDomainLabel_ = components.label()
