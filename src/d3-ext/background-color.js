@@ -14,10 +14,10 @@ define(['d3'], function(d3) {
     var rect;
 
     if (this.node().tagName === 'g') {
-      rect = this.select('.gl-layout-size');
+      rect = this.select('.gl-layout');
       if (rect.empty()) {
         this.size(this.width(), this.height());
-        rect = this.select('.gl-layout-size');
+        rect = this.select('.gl-layout');
       }
       rect.attr('fill', color);
       this.attr('gl-background-color', color);

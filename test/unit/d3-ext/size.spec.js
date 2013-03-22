@@ -19,7 +19,7 @@ function() {
         g.size(400, 200);
         expect(g.node()).toHaveXML([
           '<g gl-width="400" gl-height="200">',
-            '<rect class="gl-layout-size" ',
+            '<rect class="gl-layout" ',
                     'width="400" height="200" fill="none"/>',
           '</g>'].join(''));
       });

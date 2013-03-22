@@ -26,7 +26,7 @@ function () {
           };
           node.size(w, h);
           node.border(borderInfo.style, borderInfo.color, borderInfo.width);
-          rect = node.select('.gl-layout-size').node();
+          rect = node.select('.gl-layout').node();
         });
 
         it('sets stroke-dasharray', function() {
@@ -59,7 +59,7 @@ function () {
           };
           node.size(w, h);
           node.border(borderInfo.style, borderInfo.color, borderInfo.width);
-          rect = node.select('.gl-layout-size').node();
+          rect = node.select('.gl-layout').node();
           expectedValue = [w,h,0,w,0,h];
           expect(rect).toHaveAttr(
             'stroke-dasharray', expectedValue.toString()
@@ -74,7 +74,7 @@ function () {
           };
           node.size(w, h);
           node.border(borderInfo.style, borderInfo.color, borderInfo.width);
-          rect = node.select('.gl-layout-size').node();
+          rect = node.select('.gl-layout').node();
           expectedValue = [0,w,h,w,0,h];
           expect(rect).toHaveAttr(
             'stroke-dasharray', expectedValue.toString()
@@ -89,7 +89,7 @@ function () {
           };
           node.size(w, h);
           node.border(borderInfo.style, borderInfo.color, borderInfo.width);
-          rect = node.select('.gl-layout-size').node();
+          rect = node.select('.gl-layout').node();
           expectedValue = [0,w,0,h,w,h];
           expect(rect).toHaveAttr(
             'stroke-dasharray', expectedValue.toString()
@@ -104,7 +104,7 @@ function () {
           };
           node.size(w, h);
           node.border(borderInfo.style, borderInfo.color, borderInfo.width);
-          rect = node.select('.gl-layout-size').node();
+          rect = node.select('.gl-layout').node();
           expectedValue = [0,w,0,h,0,w,h];
           expect(rect).toHaveAttr(
             'stroke-dasharray', expectedValue.toString()

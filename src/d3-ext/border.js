@@ -16,7 +16,7 @@ define([
     dasharrayDotted: [1,1],
     dasharrayDashed: [5,5],
     lineBorderClassName: 'gl-line-border',
-    sizingRectClassName: 'gl-layout-size'
+    layoutRectClassName: 'gl-layout'
   };
 
   /**
@@ -271,7 +271,7 @@ define([
     node.selectAll('.' + DEFAULTS.lineBorderClassName)
       .remove();
 
-    node.select('.' + DEFAULTS.sizingRectClassName)
+    node.select('.' + DEFAULTS.layoutRectClassName)
       .attr('stroke-dasharray', null);
   }
 
@@ -288,7 +288,7 @@ define([
   d3.selection.prototype.border = function border(style, color, width) {
     var rect, borderInfo;
 
-    rect = this.select('.' + DEFAULTS.sizingRectClassName);
+    rect = this.select('.' + DEFAULTS.layoutRectClassName);
 
     if (!rect.empty()) {
       borderInfo = {

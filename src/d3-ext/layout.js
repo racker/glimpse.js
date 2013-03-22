@@ -16,7 +16,7 @@ define([
     settings = settings || {};
     var type = settings.type || 'horizontal',
         gap = settings.gap || 0,
-        ignore = settings.ignore || 'gl-layout-size',
+        ignore = settings.ignore || 'gl-layout',
         position = settings.position;
 
     this.each(function() {

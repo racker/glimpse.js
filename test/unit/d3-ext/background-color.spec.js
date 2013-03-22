@@ -19,7 +19,7 @@ function () {
     describe('backgroundColor', function() {
       it('sets background color on the rectangle in node', function() {
         g.backgroundColor('red');
-        expect(g.select('.gl-layout-size').node()).toHaveAttr('fill', 'red');
+        expect(g.select('.gl-layout').node()).toHaveAttr('fill', 'red');
       });
 
       it('does not set the color if node is not g', function() {

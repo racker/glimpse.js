@@ -45,14 +45,14 @@ define(['d3'], function(d3) {
     var rect;
 
     if (this.node().tagName === 'g') {
-      rect = this.select('.gl-layout-size');
+      rect = this.select('.gl-layout');
 
       if (rect.empty()) {
         rect = this.append('rect');
       }
 
       rect.attr({
-        'class': 'gl-layout-size',
+        'class': 'gl-layout',
         width: width,
         height: height,
         fill: 'none'

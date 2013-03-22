@@ -122,14 +122,13 @@ function (layouts, array) {
      * Takes the root svg element, width and height.
      */
     setLayout: function(layout, root, width, height) {
-      /*jshint loopfunc: true */
-      var i, node, nodeInfo, dim, borderParams;
-      if (typeof layout === 'string') {
-        layout = layouts.getLayout(layout);
-      }
-      layout = array.getArray(layout);
-      for (i = 0; i < layout.length; i += 1) {
-        nodeInfo = layout[i];
+      var layoutConfig, node, dim, borderParams;
+
+      layoutConfig = (typeof layout === 'string') ?
+        layouts.getLayout(layout) :
+        layout;
+
+      array.getArray(layoutConfig).forEach(function(nodeInfo) {
         node = root.append('g');
         node.size(width, height);
         borderParams = getBorderParams(nodeInfo);
@@ -143,10 +142,13 @@ function (layouts, array) {
         if (nodeInfo.backgroundColor) {
           node.backgroundColor(nodeInfo.backgroundColor);
         }
+        if (nodeInfo.clip === true) {
+          node.clip();
+        }
         node = getPaddingContainer(node, nodeInfo);
         node.attr({
           'class': nodeInfo['class'],
-          'split': nodeInfo.split
+          'gl-split': nodeInfo.split
         });
         if (node.classed('gl-vgroup')) {
           dim = calculateDim(nodeInfo.split, height);
@@ -167,7 +169,8 @@ function (layouts, array) {
           }
         }, this);
         applyLayout(node);
-      }
+      }, this);
+
     }
 
   };
