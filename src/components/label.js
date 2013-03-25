@@ -10,7 +10,7 @@ define([
   'd3-ext/util',
   'components/mixins'
 ],
-function(obj, config, string, array, util, mixins) {
+function(obj, config, string, array, d3util, mixins) {
   'use strict';
 
   return function() {
@@ -108,11 +108,20 @@ function(obj, config, string, array, util, mixins) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      root_ = util.select(selection || config_.target).append('g');
-      //With  xml:space = preserve setting, SVG will simply convert
-      //all newline and tab characters to blanks, and then display the result,
-      //including leading and trailing blanks. the same text.
-      root_.append('text').attr('xml:space', 'preserve');
+      if (!root_) {
+        root_ = d3util.applyTarget(label, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'label')
+            });
+          // With  xml:space = preserve setting, SVG will simply convert all
+          // newline and tab characters to blanks, and then display the result,
+          // including leading and trailing blanks. the same text.
+          root.append('text')
+            .attr('xml:space', 'preserve');
+          return root;
+        });
+      }
       label.update();
       return label;
     };
@@ -127,11 +136,8 @@ function(obj, config, string, array, util, mixins) {
       text = label.text();
       // Return early if no data or render() hasn't been called yet.
       if (!root_ || !text) {
-        return;
+        return label;
       }
-      root_.attr({
-        'class': 'gl-component gl-label'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }

@@ -5,10 +5,11 @@
 define([
   'core/object',
   'core/config',
+  'core/string',
   'components/mixins',
   'd3-ext/util'
 ],
-function(obj, config, mixins, d3util) {
+function(obj, config, string, mixins, d3util) {
   'use strict';
 
   return function() {
@@ -62,9 +63,14 @@ function(obj, config, mixins, d3util) {
      */
     asset.render = function(selection) {
       if (!root_) {
-        root_ = d3util.select(selection || config_.target).append('g');
-        asset.update();
+        root_ = d3util.applyTarget(asset, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'class': string.classes('component', 'asset')
+            });
+        });
       }
+      asset.update();
       return asset;
     };
 
@@ -80,9 +86,6 @@ function(obj, config, mixins, d3util) {
       if (!root_) {
         return asset;
       }
-      root_.attr({
-        'class': 'gl-component gl-asset'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }

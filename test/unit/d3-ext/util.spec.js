@@ -1,30 +1,87 @@
 define([
   'd3-ext/util'
 ],
-function(selection) {
+function(d3util) {
   'use strict';
 
-  describe('d3-ext.selection', function() {
+  describe('d3-ext.util', function() {
 
-    beforeEach(function() {
+    var fixture;
+
+    describe('.select()', function() {
+
+      var sel;
+
+      it('selects with a text selector', function() {
+        fixture = jasmine.htmlFixture();
+        sel = d3util.select('#html-fixture');
+        expect(sel.node()).toBe(fixture.node());
+      });
+
+      it('selects with a d3 selection', function() {
+        fixture = jasmine.htmlFixture();
+        sel = d3util.select(d3.select('#html-fixture'));
+        expect(sel.node()).toBe(fixture.node());
+      });
+
+      it('selects with an DOM node', function() {
+        fixture = jasmine.htmlFixture();
+        sel = d3util.select(fixture.node());
+        expect(sel.node()).toBe(fixture.node());
+      });
+
     });
 
-    it('selects with a text selector', function() {
-      var fixture = jasmine.htmlFixture(),
-        sel = selection.select('#html-fixture');
-      expect(sel.node()).toBe(fixture.node());
-    });
+    describe('.applyTarget()', function() {
+      var componentMock, applyFn, noop;
 
-    it('selects with a d3 selection', function() {
-      var fixture = jasmine.htmlFixture(),
-        sel = selection.select(d3.select('#html-fixture'));
-      expect(sel.node()).toBe(fixture.node());
-    });
+      function getComponentMock(target) {
+        return {
+          config: function() {
+            return target;
+          }
+        };
+      }
 
-    it('selects with an DOM node', function() {
-      var fixture = jasmine.htmlFixture(),
-        sel = selection.select(fixture.node());
-      expect(sel.node()).toBe(fixture.node());
+      beforeEach(function() {
+        applyFn = function(target) {
+          return target;
+        };
+        noop = function() {};
+        fixture = jasmine.svgFixture();
+      });
+
+      it('returns null if there is no selection or target', function() {
+        componentMock = getComponentMock(null);
+        expect(
+          d3util.applyTarget(componentMock, null, noop)
+        ).toBe(null);
+      });
+
+      it('passes the selection as the target if present',
+      function() {
+        componentMock = getComponentMock(null);
+        expect(
+          d3util.applyTarget(componentMock, fixture, applyFn)
+        ).toBe(fixture);
+      });
+
+      it('passes config.target selection as the target if selection is null',
+      function() {
+        componentMock = getComponentMock('#svg-fixture');
+        expect(
+          d3util.applyTarget(componentMock, null, applyFn).node()
+        ).toBe(d3.select('#svg-fixture').node());
+      });
+
+      it('passes the selection as the target if both are present',
+      function() {
+        componentMock = getComponentMock('#svg-fixture');
+        expect(
+          d3util.applyTarget(componentMock, fixture, applyFn)
+        ).toBe(fixture);
+      });
+
     });
 
   });

@@ -5,6 +5,7 @@ function (array) {
   'use strict';
 
   return {
+
     partial: function (fn) {
       var args = array.convertArgs(arguments, 1);
       return function() {
@@ -13,6 +14,7 @@ function (array) {
         return fn.apply(this, newArgs);
       };
     }
+
   };
 
 });

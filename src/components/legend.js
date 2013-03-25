@@ -10,7 +10,7 @@ define([
   'd3-ext/util',
   'components/mixins'
 ],
-function(obj, config, string, util, mixins) {
+function(obj, config, string, d3util, mixins) {
   'use strict';
 
   return function() {
@@ -155,20 +155,17 @@ function(obj, config, string, util, mixins) {
 
       // Return early if no data or render() hasn't been called yet.
       if (!config_.keys || !root_) {
-        return;
+        return legend;
       }
-
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-
       // The selection of legend keys.
       selection = root_
         .selectAll('.gl-legend-key')
         .data(config_.keys, function(d) {
           return d3.functor(d.color)();
         });
-
       remove_(selection);
       enter_(selection);
       update_(selection);
@@ -184,10 +181,14 @@ function(obj, config, string, util, mixins) {
      *    or a selector string.
      */
     legend.render = function(selection) {
-      root_ = util.select(selection).append('g')
-        .attr({
-          'class': 'gl-component gl-legend'
+      if (!root_) {
+        root_ = d3util.applyTarget(legend, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'class': string.classes('component', 'legend')
+            });
         });
+      }
       legend.update();
       return legend;
     };

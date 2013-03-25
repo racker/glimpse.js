@@ -11,7 +11,7 @@ define([
   'components/mixins',
   'data/functions'
 ],
-function(array, config, obj, string, d3Util, mixins, dataFns) {
+function(array, config, obj, string, d3util, mixins, dataFns) {
   'use strict';
 
   return function() {
@@ -105,6 +105,9 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
     line.update = function() {
       var dataConfig, selection;
 
+      if (!root_) {
+        return line;
+      }
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
@@ -140,17 +143,21 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
      * @return {components.line}
      */
     line.render = function(selection) {
-      root_ = d3Util.select(selection).append('g')
-        .attr({
-          'class': 'gl-component gl-line'
+      if (!root_) {
+        root_ = d3util.applyTarget(line, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'line')
+            });
+          root.append('path')
+            .attr({
+              'class': 'gl-path',
+              'fill': 'none'
+            });
+          return root;
         });
-      root_.append('path')
-        .attr({
-          'class': 'gl-path',
-          'fill': 'none'
-        });
+      }
       line.update();
-
       return line;
     };
 

@@ -124,6 +124,9 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.update = function() {
+      if (!root_) {
+        return area;
+      }
       updateAreaGenerator_();
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
@@ -144,14 +147,19 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.render = function(selection) {
-      root_ = d3util.select(selection || config_.target).append('g')
-        .attr({
-          'class': 'gl-component gl-area'
+      if (!root_) {
+        root_ = d3util.applyTarget(area, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'area')
+            });
+          root.append('path')
+            .attr({
+              'class': string.classes('path'),
+            });
+          return root;
         });
-      root_.append('path')
-        .attr({
-          'class': 'gl-path',
-        });
+      }
       area.update();
       return area;
     };

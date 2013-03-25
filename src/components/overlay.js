@@ -6,11 +6,12 @@
 define([
   'core/object',
   'core/config',
+  'core/string',
   'components/label',
   'components/mixins',
   'd3-ext/util'
 ],
-function(obj, config, label, mixins, d3util) {
+function(obj, config, string, label, mixins, d3util) {
   'use strict';
 
   return function() {
@@ -99,11 +100,17 @@ function(obj, config, label, mixins, d3util) {
      */
     overlay.render = function(selection) {
       if (!root_) {
-        root_ = d3util.select(selection || config_.target).append('g');
-        root_.append('rect');
-        root_.append('g');
-        overlay.update();
+        root_ = d3util.applyTarget(overlay, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'overlay')
+            });
+          root.append('rect');
+          root.append('g');
+          return root;
+        });
       }
+      overlay.update();
       return overlay;
     };
 
@@ -117,9 +124,6 @@ function(obj, config, label, mixins, d3util) {
       if (!root_) {
         return overlay;
       }
-      root_.attr({
-        'class': 'gl-component gl-overlay'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }

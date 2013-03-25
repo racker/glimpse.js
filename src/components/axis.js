@@ -140,6 +140,9 @@ function(obj, config, string, mixins, d3util) {
      * Apply updates to the axis.
      */
     axis.update = function() {
+      if (!root_) {
+        return axis;
+      }
       root_.selectAll('g').remove();
       axis.reapply();
       root_.call(d3axis_);
@@ -165,12 +168,16 @@ function(obj, config, string, mixins, d3util) {
      * @return {component.axis}
      */
     axis.render = function(selection) {
-      root_ = d3util.select(selection).append('g')
-        .attr({
-          'fill': 'none',
-          'shape-rendering': 'crispEdges',
-          'stroke-width': 1
+      if (!root_) {
+        root_ = d3util.applyTarget(axis, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'fill': 'none',
+              'shape-rendering': 'crispEdges',
+              'stroke-width': 1
+            });
         });
+      }
       axis.update();
       return axis;
     };
