@@ -82,29 +82,6 @@ define([
   }
 
   /**
-   * Computes the stroke-width attribute
-   * @param {Array} 4 element array corresponding to
-   *      border width of each edge top, right, bottom and left
-   *      Value : <percentage> | <length> | inherit | 0
-   *      0 represents no border
-   */
-  function getStrokeWidth(width) {
-    var strokeWidth = 1;
-
-    if (!!width[0]) {
-      strokeWidth = parseInt(width[0], 10);
-    } else if (!!width[1])  {
-      strokeWidth = parseInt(width[1], 10);
-    } else if (!!width[2]) {
-      strokeWidth = parseInt(width[2], 10);
-    } else if (!!width[3]) {
-      strokeWidth = parseInt(width[3], 10);
-    }
-
-    return strokeWidth;
-  }
-
-  /**
    * Computes the class name for border
    * @param  {string} style  Style of the border <'solid'|'dashed'|'dotted'>
    * @param  {string} subClass Subclass to append class name
@@ -137,7 +114,8 @@ define([
     var  className, dasharray, line;
 
     className = getBorderClass(lineInfo.style, lineInfo.subClass);
-    dasharray = getStrokeDashArray(node, lineInfo);
+    dasharray = lineInfo.style !== 'solid' ?
+      getStrokeDashArray(node, lineInfo) : '';
     line = node.select('.' + className);
 
     if (line.empty()) {
@@ -153,34 +131,6 @@ define([
       'stroke': lineInfo.color,
       'stroke-width': lineInfo.width,
       'stroke-dasharray': dasharray.toString()
-    });
-  }
-
-  /**
-   * Applies solid border node by setting the
-   * stroke-dasharray attribute on the rect inside
-   * the node.
-   * @param  {d3.selection} node
-   * @param  {Object} borderInfo Contains
-   *  {
-   *    style: border style <'solid'|'dotted'|'dashed'>,
-   *    color: border color <paint>,
-   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
-   *    width: {Array} 4 element array corresponding to
-   *      border width of each edge top, right, bottom and left
-   *      Value : <percentage> | <length> | inherit | 0
-   *      0 represents no border
-   *  }
-   */
-  function applyRectBorder(node, borderInfo) {
-    var strokeDashArray;
-
-    strokeDashArray = getStrokeDashArray(node, borderInfo);
-
-    node.attr({
-      'stroke': borderInfo.color,
-      'stroke-width': getStrokeWidth(borderInfo.width),
-      'stroke-dasharray': strokeDashArray.toString()
     });
   }
 
@@ -201,17 +151,19 @@ define([
    */
   function applyBorder(node, borderInfo) {
     //TODO: append this to the object
-    var lineInfo = {
+    var width = 0, lineInfo;
+    lineInfo = {
       color: borderInfo.color,
       style: borderInfo.style
     };
 
     if (!!borderInfo.width[0]) {
+      width = borderInfo.width[0];
       lineInfo = {
         x1: 0,
-        y1: 0,
+        y1: width/2,
         x2: node.width(),
-        y2: 0,
+        y2: width/2,
         subClass: 'top',
         width: borderInfo.width[0],
         color: borderInfo.color,
@@ -221,10 +173,11 @@ define([
     }
 
     if (!!borderInfo.width[1]) {
+      width = borderInfo.width[1];
       lineInfo = {
-        x1: node.width(),
+        x1: node.width() - width/2,
         y1: 0,
-        x2: node.width(),
+        x2: node.width() - width/2,
         y2: node.height(),
         subClass: 'right',
         width: borderInfo.width[1],
@@ -235,11 +188,12 @@ define([
     }
 
     if (!!borderInfo.width[2]) {
+      width = borderInfo.width[2];
       lineInfo = {
         x1: 0,
-        y1: node.height(),
+        y1: node.height() - width/2,
         x2: node.width(),
-        y2: node.height(),
+        y2: node.height() - width/2,
         subClass: 'bottom',
         width: borderInfo.width[2],
         color: borderInfo.color,
@@ -249,10 +203,11 @@ define([
     }
 
     if (!!borderInfo.width[3]) {
+      width = borderInfo.width[3];
       lineInfo = {
-        x1: 0,
+        x1: width/2,
         y1: 0,
-        x2: 0,
+        x2: width/2,
         y2: node.height(),
         subClass: 'left',
         width: borderInfo.width[3],
@@ -298,12 +253,7 @@ define([
       };
 
       removeExistingBorders(this);
-
-      if (style === 'solid') {
-        applyRectBorder(rect, borderInfo);
-      } else {
-        applyBorder(this, borderInfo);
-      }
+      applyBorder(this, borderInfo);
 
       this.attr({
         'gl-border-color': borderInfo.color,

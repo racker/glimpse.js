@@ -59,10 +59,52 @@ function (layouts, array) {
   }
 
   /**
+   * Sizes the node based on the border parameters
+   * @param  {d3 selection} node
+   * @param  {Object} borderParams
+   * {
+   *    style: border style <'solid'|'dotted'|'dashed'>,
+   *    color: border color <paint>,
+   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+   *    width: {Array} 4 element array corresponding to
+   *      border width of each edge top, right, bottom and left
+   *      Value : <percentage> | <length> | inherit | 0
+   *      0 represents no border
+   *  }
+   * @return {d3 selection}
+   */
+  function resizeBorderedContainer(node, borderParams) {
+    var child;
+
+    if (!borderParams.hasBorder) {
+      return node;
+    }
+
+    child = node.append('g');
+    child.size(
+      node.width() - (borderParams.width[1] + borderParams.width[3]),
+      node.height() - (borderParams.width[0] + borderParams.width[2]));
+    child.position('top-left',
+      borderParams.width[3], borderParams.width[0]);
+    child.attr({
+      'gl-bordered': 'true'
+    });
+    return child;
+  }
+
+  /**
    * Computes border parameters required to set borders
    * @param  {Object} nodeInfo
-   * @return {Object}
-   *  {style: borderStyle, color: borderColor, width: [t, r, b, l]}
+   * @return {Object} borderParams
+   * borderParams = {
+   *    style: border style <'solid'|'dotted'|'dashed'>,
+   *    color: border color <paint>,
+   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+   *    width: {Array} 4 element array corresponding to
+   *      border width of each edge top, right, bottom and left
+   *      Value : <percentage> | <length> | inherit | 0
+   *      0 represents no border
+   *  }
    */
   function getBorderParams(nodeInfo) {
     var borderParams = {},
@@ -130,7 +172,14 @@ function (layouts, array) {
 
       array.getArray(layoutConfig).forEach(function(nodeInfo) {
         node = root.append('g');
+
         node.size(width, height);
+        if (nodeInfo.backgroundColor) {
+          node.backgroundColor(nodeInfo.backgroundColor);
+        }
+        if (nodeInfo.clip === true) {
+          node.clip();
+        }
         borderParams = getBorderParams(nodeInfo);
         if (borderParams.hasBorder) {
           node.border(
@@ -138,14 +187,11 @@ function (layouts, array) {
             borderParams.color,
             borderParams.width
           );
-        }
-        if (nodeInfo.backgroundColor) {
-          node.backgroundColor(nodeInfo.backgroundColor);
-        }
-        if (nodeInfo.clip === true) {
-          node.clip();
+          node = resizeBorderedContainer(node, borderParams);
+
         }
         node = getPaddingContainer(node, nodeInfo);
+
         node.attr({
           'class': nodeInfo['class'],
           'gl-split': nodeInfo.split

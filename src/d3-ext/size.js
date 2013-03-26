@@ -15,7 +15,7 @@ define(['d3'], function(d3) {
   d3.selection.prototype.width = function() {
     var width = this.attr('gl-width');
     if (width) {
-      return parseInt(width, 10);
+      return parseFloat(width);
     }
     return this.node().getBBox().width;
   };
@@ -30,7 +30,7 @@ define(['d3'], function(d3) {
   d3.selection.prototype.height = function() {
     var height = this.attr('gl-height');
     if (height) {
-      return parseInt(height, 10);
+      return parseFloat(height);
     }
     return this.node().getBBox().height;
   };

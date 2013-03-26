@@ -209,6 +209,40 @@ function (lm) {
 
     });
 
+    describe('border', function() {
+
+      it('applies border', function() {
+        var lines;
+        applyLayout({
+          'class': 'gl-hgroup someclass',
+          'split': [100],
+          children: [{
+            border: 2,
+            'class': 'box1'
+          }]
+        });
+        lines = jasmine.svgFixture().selectAll('line');
+        expect(lines[0].length).toBe(4);
+      });
+
+      it('readjusts the height and width after applying border',
+        function() {
+        applyLayout({
+          'class': 'gl-hgroup someclass',
+          'split': [100],
+          children: [{
+            border: 2,
+            'class': 'box1'
+          }]
+        });
+        expect(jasmine.svgFixture().select('.box1').height())
+          .toBe(196);
+        expect(jasmine.svgFixture().select('.box1').width())
+          .toBe(196);
+      });
+
+    });
+
   });
 
 });
