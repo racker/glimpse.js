@@ -20,16 +20,14 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_,
-      remove_,
-      update_;
+      root_;
 
     defaults_ = {
       type: 'line',
       target: '.gl-framed',
-      cid: undefined,
+      cid: null,
       strokeWidth: 2,
-      color: undefined,
+      color: null,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
@@ -42,7 +40,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * Updates the line component
      * @param  {d3.selection} selection
      */
-    update_ = function(selection) {
+    function update(selection) {
       selection
         .datum(line.data().data)
         .attr({
@@ -51,17 +49,34 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           'opacity': config_.opacity,
           'd': config_.lineGenerator
       });
-    };
+    }
 
     /**
      * Removes elements from the exit selection
      * @param  {d3.selection|Node|string} selection
      */
-    remove_ = function(selection) {
+    function remove(selection) {
       if (selection && selection.exit) {
         selection.exit().remove();
       }
-    };
+    }
+
+    /**
+     * Gets value of X for a data object
+     * Converts into UTC data for time series.
+     * @param  {Object} data
+     * @param  {number} index
+     * @return {string|number}
+     */
+    function getX(data, index) {
+      var x, dataConfig;
+      dataConfig = line.data();
+      x = dataFns.dimension(dataConfig, 'x')(data, index);
+      if (d3util.isTimeScale(config_.xScale)) {
+        return dataFns.toUTCDate(x);
+      }
+      return x;
+    }
 
     /**
      * Main function for line component
@@ -119,21 +134,21 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       // Configure the lineGenerator function
       config_.lineGenerator
         .x(function(d, i) {
-          return config_.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+          return config_.xScale(getX(d, i));
         })
         .y(function(d, i) {
           return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
         })
         .defined(function(d, i) {
-          var minX = config_.xScale.range()[0];
-          return (config_.xScale(
-            dataFns.dimension(dataConfig, 'x')(d, i)) >= minX);
+          var minX;
+          minX = config_.xScale.range()[0];
+          return config_.xScale(getX(d, i))  >= minX;
         })
         .interpolate(config_.interpolate);
       selection = root_.select('.gl-path')
         .data(dataConfig.data);
-      update_(selection);
-      remove_(selection);
+      update(selection);
+      remove(selection);
       return line;
     };
 

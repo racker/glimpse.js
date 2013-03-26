@@ -29,6 +29,7 @@ function(graphBuilder, graph) {
 
       beforeEach(function() {
         testGraph = graphBuilder.create('line');
+        testGraph.config('xScale', d3.scale.linear());
         testGraph.data().add(testData);
       });
 

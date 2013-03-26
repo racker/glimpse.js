@@ -20,8 +20,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_,
-      updateAreaGenerator_;
+      root_;
 
     defaults_ = {
       type: 'area',
@@ -36,7 +35,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       opacity: 1
     };
 
-    updateAreaGenerator_ = function() {
+    /**
+     * Updates the area generator function
+     */
+    function updateAreaGenerator() {
       var dataConfig,
           y0,
           y1;
@@ -67,7 +69,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       // Configure the areaGenerator function
       config_.areaGenerator
         .x(function(d, i) {
-          return config_.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+          var value;
+          value = dataFns.dimension(dataConfig, 'x')(d, i);
+          return d3util.isTimeScale(config_.xScale) ?
+            config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -77,11 +82,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           value = dataFns.dimension(dataConfig, 'x')(d, i);
           if (config_.xScale) {
             minX = config_.xScale.range()[0];
-            value = config_.xScale(value);
+            value = d3util.isTimeScale(config_.xScale) ?
+              config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
           }
           return value >= minX;
         });
-    };
+    }
 
     /**
      * Main function for area component
@@ -127,7 +133,9 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       if (!root_) {
         return area;
       }
-      updateAreaGenerator_();
+
+      updateAreaGenerator();
+
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }
@@ -172,6 +180,9 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       return root_;
     };
 
+    /**
+     * Destroys the area and removes everything from the DOM.
+     */
     area.destroy = function() {
       if(root_) {
         root_.remove();

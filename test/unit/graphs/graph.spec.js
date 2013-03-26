@@ -2,9 +2,10 @@ define([
   'graphs/graph',
   'core/asset-loader',
   'data/collection',
-  'test-util/component'
+  'test-util/component',
+  'data/functions'
 ],
-function(graph, assetLoader, dc, compUtil) {
+function(graph, assetLoader, dc, compUtil, dataFns) {
   'use strict';
 
   describe('graphs.graph', function() {
@@ -127,6 +128,12 @@ function(graph, assetLoader, dc, compUtil) {
       setGraph();
       testGraph.render(jasmine.htmlFixture());
       expect(testGraph.yAxis().config('unit')).toBe('ms');
+    });
+
+    it('does not add the X domain label for non-time xScale', function() {
+      testGraph.config('xScale', d3.scale.linear());
+      testGraph.render(jasmine.htmlFixture());
+      expect(testGraph.component('xDomainLabel')).toBeUndefined();
     });
 
     describe('config()', function() {
@@ -311,10 +318,10 @@ function(graph, assetLoader, dc, compUtil) {
 
       it('updates domain for xScale', function () {
         var start, end;
-        start = new Date(xScale.domain()[0]).getTime();
-        end = new Date(xScale.domain()[1]).getTime();
-        expect(start).toBe(0);
-        expect(end).toBe(fakeData[0].data[6].x);
+        start = dataFns.toUTCDate(epochBaseMs + 0 * oneDayMs);
+        end = dataFns.toUTCDate(epochBaseMs + 6 * oneDayMs);
+        expect(xScale.domain()[0]).toEqual(start);
+        expect(xScale.domain()[1]).toEqual(end);
       });
 
       it('updates domain for xScale based on domain interval period(days)',
@@ -326,10 +333,10 @@ function(graph, assetLoader, dc, compUtil) {
             domainIntervalPeriod: 2
           });
           testGraph.update();
-          start = new Date(xScale.domain()[0]).getTime();
-          end = new Date(xScale.domain()[1]).getTime();
-          expect(start).toBe(fakeData[0].data[4].x);
-          expect(end).toBe(fakeData[0].data[6].x);
+          start = dataFns.toUTCDate(epochBaseMs + 4 * oneDayMs);
+          end = dataFns.toUTCDate(epochBaseMs + 6 * oneDayMs);
+          expect(xScale.domain()[0]).toEqual(start);
+          expect(xScale.domain()[1]).toEqual(end);
         }
       );
 
@@ -342,10 +349,10 @@ function(graph, assetLoader, dc, compUtil) {
             domainIntervalPeriod: 1
           });
           testGraph.update();
-          start = new Date(xScale.domain()[0]).getTime();
-          end = new Date(xScale.domain()[1]).getTime();
-          expect(start).toBe(fakeData[0].data[0].x);
-          expect(end).toBe(fakeData[0].data[6].x);
+          start = dataFns.toUTCDate(epochBaseMs + 0 * oneDayMs);
+          end = dataFns.toUTCDate(epochBaseMs + 6 * oneDayMs);
+          expect(xScale.domain()[0]).toEqual(start);
+          expect(xScale.domain()[1]).toEqual(end);
         }
       );
 
@@ -557,7 +564,7 @@ function(graph, assetLoader, dc, compUtil) {
       var domain, formatter, label, xScale;
 
       beforeEach(function() {
-        domain = [new Date(0), new Date(34347661000)];
+        domain = dataFns.toUTCDate([new Date(0), new Date(34347661000)]);
         formatter = testGraph.config('xDomainLabelFormatter');
         testGraph.data(fakeData);
         testGraph.render(jasmine.htmlFixture());
@@ -578,7 +585,7 @@ function(graph, assetLoader, dc, compUtil) {
       });
 
       it('updates the text when the domain changes', function() {
-        xScale.domain([0, 44715661000]);
+        xScale.domain(dataFns.toUTCDate([0, 44715661000]));
         testGraph.update();
         expect(label.text()).toBe('Jan 1, 12:00 AM - Jun 2, 01:01 PM UTC');
       });

@@ -65,7 +65,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
-      areComponentsRendered_;
+      areComponentsRendered_,
+      hasTimeScale_;
     /**
      * @enum
      * The possible states a graph can be in.
@@ -97,7 +98,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       marginRight: 0,
       marginBottom: 30,
       marginLeft: 0,
-      xScale: d3.time.scale(),
+      xScale: d3.time.scale.utc(),
       yScale: d3.scale.linear(),
       showLegend: true,
       xDomainLabelFormatter: format.timeDomain,
@@ -112,6 +113,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxisUnit: null,
       yAxisUnit: null
     };
+
+    hasTimeScale_ = null;
 
     /**
      * adds component to the components array
@@ -224,6 +227,23 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
             component.config().color : colors[coloredComponentsCount++ % len];
         }
       }
+    }
+
+    /**
+     * Get X-extents for provided data
+     * @param  {Object} componentData
+     * @return {Array}
+     */
+    function getXExtents(componentData) {
+      var extents = [];
+      extents = d3.extent(
+        componentData.data,
+        dataFns.dimension(componentData, 'x')
+      );
+      if (hasTimeScale()) {
+        return dataFns.toUTCDate(extents);
+      }
+      return extents;
     }
 
     /**
@@ -352,9 +372,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       max = d3.max(xExtents) || config_.xScale.domain()[1];
       min = d3.min(xExtents) || config_.xScale.domain()[0];
 
-      //TODO: find a better way to check if the scale is a time scale
-      if (config_.xScale.toString() === d3.time.scale().toString()) {
-
+      if (hasTimeScale()) {
         if (config_.domainIntervalUnit) {
           offset = config_.domainIntervalUnit.offset(
             max,
@@ -401,10 +419,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         if (component.data) {
           componentData = component.data();
           if (componentData && componentData.data && componentData.dimensions) {
-            xExtents = xExtents.concat(
-              d3.extent(componentData.data,
-                dataFns.dimension(componentData, 'x')));
-
+            xExtents = xExtents.concat(getXExtents(componentData));
             yExtents = yExtents.concat(
               d3.extent(componentData.data,
                 function(d, i) {
@@ -470,7 +485,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_.updateDerivations();
       updateAxes_();
       updateLegend_();
-      updateXDomainLabel_();
+      if (hasTimeScale()) {
+        updateXDomainLabel_();
+      }
       if (isRendered_) {
         updateStateDisplay();
       }
@@ -596,7 +613,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     function initGraphComponents() {
       addLegend_();
       addAxes_();
-      addComponent_(xDomainLabel_);
+      if (hasTimeScale()) {
+        addComponent_(xDomainLabel_);
+      }
       update_();
       renderComponents_(root_);
     }
@@ -610,6 +629,18 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           }
         });
       }
+    }
+
+    /**
+     * Determines if X scale is a time scale or not
+     * @return {Boolean}
+     */
+    function hasTimeScale() {
+      //TODO: Maybe determine this based on some config value directly
+      if (hasTimeScale_ === null) {
+        hasTimeScale_ = d3util.isTimeScale(config_.xScale);
+      }
+      return hasTimeScale_;
     }
 
     /**

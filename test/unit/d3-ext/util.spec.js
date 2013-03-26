@@ -1,6 +1,7 @@
 define([
   'd3-ext/util'
 ],
+
 function(d3util) {
   'use strict';
 
@@ -33,7 +34,7 @@ function(d3util) {
     });
 
     describe('.applyTarget()', function() {
-      var componentMock, applyFn, noop;
+       var componentMock, applyFn, noop;
 
       function getComponentMock(target) {
         return {
@@ -80,6 +81,25 @@ function(d3util) {
         expect(
           d3util.applyTarget(componentMock, fixture, applyFn)
         ).toBe(fixture);
+      });
+
+    });
+
+    describe('isTimeScale', function() {
+      it('returns true for time scale', function() {
+        expect(d3util.isTimeScale(d3.time.scale())).toBe(true);
+      });
+
+      it('returns false for linear scale', function() {
+        expect(d3util.isTimeScale(d3.scale.linear())).toBe(false);
+      });
+
+      it('returns false for null', function() {
+         expect(d3util.isTimeScale(null)).toBe(false);
+      });
+
+      it('returns false for undefined', function() {
+         expect(d3util.isTimeScale(undefined)).toBe(false);
       });
 
     });
