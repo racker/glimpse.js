@@ -24,7 +24,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
 
     defaults_ = {
       type: 'area',
-      target: '.gl-framed',
+      target: null,
       cid: null,
       xScale: null,
       yScale: null,

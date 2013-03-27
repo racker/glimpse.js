@@ -2,7 +2,9 @@
  * @fileOverview
  * Utility functions related to d3 selections.
  */
-define(
+define([
+  'd3-ext/select-attr'
+],
 function() {
   'use strict';
 
@@ -30,9 +32,15 @@ function() {
      *   otherwise whatever fn returns.
      */
     applyTarget: function(component, selection, fn) {
-      var target;
+      var target, componentTarget;
 
-      target = this.select(selection || component.config('target'));
+      target = this.select(selection);
+      componentTarget = component.config('target');
+      if (componentTarget) {
+        target = target.selectAttr('gl-container-name',
+          componentTarget);
+      }
+
       if (!target || target.empty()) {
         return null;
       }

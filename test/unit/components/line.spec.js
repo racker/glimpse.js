@@ -62,7 +62,7 @@ function(d3, object, line, dc) {
       var config, defaults;
 
       defaults = {
-        strokeWidth: 2,
+        strokeWidth: 1.5,
         color: 'steelBlue',
         inLegend: true,
         lineGenerator: d3.svg.line(),

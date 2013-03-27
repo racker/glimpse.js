@@ -24,7 +24,7 @@ function(obj, config, string, mixins, d3util) {
     defaults_ = {
       type: 'x',
       gap: 0,
-      target: '.gl-framed',
+      target: null,
       color: '#333',
       opacity: 0.8,
       fontFamily: 'arial',

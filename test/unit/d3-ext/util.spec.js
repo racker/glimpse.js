@@ -34,7 +34,7 @@ function(d3util) {
     });
 
     describe('.applyTarget()', function() {
-       var componentMock, applyFn, noop;
+      var componentMock, applyFn, noop, mockTarget;
 
       function getComponentMock(target) {
         return {
@@ -50,9 +50,11 @@ function(d3util) {
         };
         noop = function() {};
         fixture = jasmine.svgFixture();
+        mockTarget = fixture.append('g')
+          .attr('gl-container-name', 'foo-container');
       });
 
-      it('returns null if there is no selection or target', function() {
+      it('returns null if there is no selection', function() {
         componentMock = getComponentMock(null);
         expect(
           d3util.applyTarget(componentMock, null, noop)
@@ -67,20 +69,12 @@ function(d3util) {
         ).toBe(fixture);
       });
 
-      it('passes config.target selection as the target if selection is null',
+      it('subselects the target within the selection if both are present',
       function() {
-        componentMock = getComponentMock('#svg-fixture');
+        componentMock = getComponentMock('foo-container');
         expect(
-          d3util.applyTarget(componentMock, null, applyFn).node()
-        ).toBe(d3.select('#svg-fixture').node());
-      });
-
-      it('passes the selection as the target if both are present',
-      function() {
-        componentMock = getComponentMock('#svg-fixture');
-        expect(
-          d3util.applyTarget(componentMock, fixture, applyFn)
-        ).toBe(fixture);
+          d3util.applyTarget(componentMock, fixture, applyFn).node()
+        ).toBe(mockTarget.node());
       });
 
     });

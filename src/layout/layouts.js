@@ -9,48 +9,53 @@ define(function () {
   var layouts = {
 
     'default': {
-      'class': 'gl-vgroup',
-      'split': [10, 65, 10, 15],
-      children: [{
-        padding: 0,
-        'class': 'gl-info'
-      }, {
-        'class': 'gl-framed',
-        clip: true,
-        border: 1,
-        borderColor: '#999',
-        backgroundColor: '#fff'
-      }, {
-        'class': 'gl-xaxis',
-        padding: 1,
-        paddingTop: 20
-      }, {
-        'class': 'gl-footer',
-        paddingTop: 1,
-        paddingBottom: 1,
-        padding: 1,
-        borderStyle: 'dotted',
-        borderTop: 1
-      }]
+      name: 'gl-vgroup',
+      split: [10, 65, 10, 15],
+      children: [
+        {
+          name: 'gl-info'
+        },
+        {
+          name: 'gl-main',
+          clip: true,
+          border: 1,
+          borderColor: '#999',
+          backgroundColor: '#fff'
+        },
+        {
+          name: 'gl-xaxis',
+          padding: 1,
+          paddingTop: 20
+        },
+        {
+          name: 'gl-footer',
+          paddingTop: 1,
+          paddingBottom: 1,
+          padding: 1,
+          borderStyle: 'dotted',
+          borderTop: 1
+        }
+      ]
     },
 
    'threepane': {
-      'class': 'gl-vgroup',
-      'split': [15, 70, 15],
-      children: [{
-        padding: 1,
-        'class': 'gl-stat'
-      },{
-        'class': 'gl-unframed',
-        padding: 1,
-        paddingBottom: 10,
-        children: {
-          'class': 'gl-framed'
+      name: 'gl-vgroup',
+      split: [15, 70, 15],
+      children: [
+        {
+          name: 'gl-stat',
+          padding: 1
+        },
+        {
+          name: 'gl-main',
+          padding: 1,
+          paddingBottom: 10
+        },
+        {
+          name: 'gl-info',
+          padding: 1
         }
-      },{
-        padding: 1,
-        'class': 'gl-info'
-      }]
+      ]
     }
 
   };

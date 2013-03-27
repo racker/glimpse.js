@@ -149,9 +149,9 @@ function (layouts, array) {
   }
 
   function applyLayout(node) {
-    if (node.classed('gl-vgroup')) {
+    if (node.attr('gl-container-name') === 'gl-vgroup') {
       node.layout({type: 'vertical'});
-    } else if (node.classed('gl-hgroup')) {
+    } else if (node.attr('gl-container-name') === 'gl-hgroup') {
       node.layout({type: 'horizontal'});
     }
   }
@@ -193,15 +193,18 @@ function (layouts, array) {
         node = getPaddingContainer(node, nodeInfo);
 
         node.attr({
-          'class': nodeInfo['class'],
+          'gl-container-name': nodeInfo.name,
           'gl-split': nodeInfo.split
         });
-        if (node.classed('gl-vgroup')) {
+        if (nodeInfo.class) {
+          node.classed(nodeInfo.class, true);
+        }
+        if (node.attr('gl-container-name') === 'gl-vgroup') {
           dim = calculateDim(nodeInfo.split, height);
           dim = dim.map(function(d) {
             return [width, d];
           });
-        } else if (node.classed('gl-hgroup')) {
+        } else if (node.attr('gl-container-name') === 'gl-hgroup') {
           dim = calculateDim(nodeInfo.split, width);
           dim = dim.map(function(d) {
             return [d, height];

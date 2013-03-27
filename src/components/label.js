@@ -26,11 +26,12 @@ function(obj, config, string, array, d3util, mixins) {
 
     defaults_ = {
       type: 'label',
-      cid: undefined,
-      dataId: undefined,
-      cssClass: undefined,
-      text: undefined,
-      gap: undefined,
+      cid: null,
+      target: null,
+      dataId: null,
+      cssClass: null,
+      text: null,
+      gap: null,
       layout: 'horizontal',
       position: 'center-right',
       color: '#333',

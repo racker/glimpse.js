@@ -18,8 +18,6 @@ function (lm) {
       fixture = jasmine.svgFixture().node();
     }
 
-    describe('render layout template', function () {
-
       // TODO: fix this rediculous test.
 
       //it('renders default layout template', function () {
@@ -62,16 +60,49 @@ function (lm) {
         //]));
       //});
 
-      it('renders layout 1', function () {
+    describe('render simple layout', function () {
+      var gNode, rectNode;
+
+      beforeEach(function() {
         applyLayout({
           'class': 'someclass'
         });
-        expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="200" gl-height="200" class="someclass">',
-            '<rect class="gl-layout" width="200" height="200" fill="none"/>',
-          '</g>'
-        ]));
+        gNode = fixture.childNodes[0];
+        rectNode = gNode.childNodes[0];
       });
+
+      it('renders a <g>', function() {
+        expect(gNode.tagName).toBe('g');
+      });
+
+      it('has the correct <g> node attrs', function() {
+        expect(gNode).toHaveAttr({
+          'gl-width': 200,
+          'gl-height': 200,
+          'class': 'someclass'
+        });
+      });
+
+      it('only renders 1 child node under <g>', function() {
+        expect(gNode.childNodes.length).toBe(1);
+      });
+
+      it('renders the <rect> node', function() {
+        expect(rectNode.tagName).toBe('rect');
+      });
+
+      it('renders correct <rect> node attrs', function() {
+        expect(rectNode).toHaveAttr({
+          class: 'gl-layout',
+          fill: 'none',
+          width: 200,
+          height: 200
+        });
+      });
+
+    });
+
+    describe('renders complex layouts', function() {
 
       it('renders layout 2', function () {
         applyLayout({
@@ -80,9 +111,9 @@ function (lm) {
         });
         expect(fixture).toHaveXML(xmlString([
           '<g gl-width="200" gl-height="200" class="someclass">',
-          '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+          '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '<g gl-width="200" gl-height="200" class="someotherclass">',
-              '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '</g>',
           '</g>'
         ]));
@@ -90,7 +121,8 @@ function (lm) {
 
       it('renders layout 3 - vgroup', function() {
         applyLayout({
-          'class': 'gl-vgroup someclass',
+          name: 'gl-vgroup',
+          'class': 'someclass',
           'split': [50, 50],
           children: [{
             'class': 'box1'
@@ -99,21 +131,22 @@ function (lm) {
           }]
         });
         expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="200" gl-height="200" class="gl-vgroup someclass" gl-split="50,50">',
-            '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+          '<g gl-width="200" gl-height="200" gl-container-name="gl-vgroup" gl-split="50,50" class="someclass">',
+            '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '<g gl-width="200" gl-height="100" class="box1" transform="translate(0,0)">',
-              '<rect class="gl-layout" width="200" height="100" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="200" height="100"/>',
             '</g>',
             '<g gl-width="200" gl-height="100" class="box2" transform="translate(0,100)">',
-              '<rect class="gl-layout" width="200" height="100" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="200" height="100"/>',
             '</g>',
           '</g>']));
       });
 
       it('renders layout 4 - hgroup', function() {
         applyLayout({
-          'class': 'gl-hgroup someclass',
-          'split': [50, 50],
+          'class': 'someclass',
+          name: 'gl-hgroup',
+          split: [50, 50],
           children: [{
             'class': 'box1'
           },{
@@ -121,13 +154,13 @@ function (lm) {
           }]
         });
         expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="200" gl-height="200" class="gl-hgroup someclass" gl-split="50,50">',
-            '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+          '<g gl-width="200" gl-height="200" gl-container-name="gl-hgroup" gl-split="50,50" class="someclass">',
+            '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '<g gl-width="100" gl-height="200" class="box1" transform="translate(0,0)">',
-              '<rect class="gl-layout" width="100" height="200" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="100" height="200"/>',
             '</g>',
             '<g gl-width="100" gl-height="200" class="box2" transform="translate(100,0)">',
-              '<rect class="gl-layout" width="100" height="200" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="100" height="200"/>',
             '</g>',
           '</g>']));
       });
@@ -138,7 +171,8 @@ function (lm) {
 
       it('hgroup - padding', function() {
         applyLayout({
-          'class': 'gl-hgroup someclass',
+          name: 'gl-hgroup',
+          'class': 'someclass',
           'split': [50, 50],
           children: [{
             padding: 2,
@@ -149,18 +183,18 @@ function (lm) {
           }]
         });
         expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="200" gl-height="200" class="gl-hgroup someclass" gl-split="50,50">',
-            '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+          '<g gl-width="200" gl-height="200" gl-container-name="gl-hgroup" gl-split="50,50" class="someclass">',
+            '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '<g gl-width="100" gl-height="200" transform="translate(0,0)">',
-              '<rect class="gl-layout" width="100" height="200" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="100" height="200"/>',
               '<g gl-padding="2" gl-width="96" gl-height="192" transform="translate(2,4)" class="box1">',
-                '<rect class="gl-layout" width="96" height="192" fill="none"/>',
+                '<rect class="gl-layout" fill="none" width="96" height="192"/>',
               '</g>',
             '</g>',
             '<g gl-width="100" gl-height="200" transform="translate(100,0)">',
-              '<rect class="gl-layout" width="100" height="200" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="100" height="200"/>',
               '<g gl-padding="4" gl-width="92" gl-height="184" transform="translate(4,8)" class="box2">',
-                '<rect class="gl-layout" width="92" height="184" fill="none"/>',
+                '<rect class="gl-layout" fill="none" width="92" height="184"/>',
               '</g>',
             '</g>',
           '</g>'
@@ -169,29 +203,30 @@ function (lm) {
 
       it('vgroup - padding', function() {
         applyLayout({
-          'class': 'gl-vgroup someclass',
+          'class': 'someclass',
+          name: 'gl-vgroup',
           'split': [50, 50],
           children: [{
             padding: 2,
-            'class': 'box1'
+            name: 'box1'
           },{
             padding: 4,
-            'class': 'box2'
+            name: 'box2'
           }]
         });
         expect(fixture).toHaveXML(xmlString([
-          '<g gl-width="200" gl-height="200" class="gl-vgroup someclass" gl-split="50,50">',
-            '<rect class="gl-layout" width="200" height="200" fill="none"/>',
+          '<g gl-width="200" gl-height="200" gl-container-name="gl-vgroup" gl-split="50,50" class="someclass">',
+            '<rect class="gl-layout" fill="none" width="200" height="200"/>',
             '<g gl-width="200" gl-height="100" transform="translate(0,0)">',
-              '<rect class="gl-layout" width="200" height="100" fill="none"/>',
-              '<g gl-padding="2" gl-width="192" gl-height="96" transform="translate(4,2)" class="box1">',
-                '<rect class="gl-layout" width="192" height="96" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="200" height="100"/>',
+              '<g gl-padding="2" gl-width="192" gl-height="96" transform="translate(4,2)" gl-container-name="box1">',
+                '<rect class="gl-layout" fill="none" width="192" height="96"/>',
               '</g>',
             '</g>',
             '<g gl-width="200" gl-height="100" transform="translate(0,100)">',
-              '<rect class="gl-layout" width="200" height="100" fill="none"/>',
-                '<g gl-padding="4" gl-width="184" gl-height="92" transform="translate(8,4)" class="box2">',
-                  '<rect class="gl-layout" width="184" height="92" fill="none"/>',
+              '<rect class="gl-layout" fill="none" width="200" height="100"/>',
+                '<g gl-padding="4" gl-width="184" gl-height="92" transform="translate(8,4)" gl-container-name="box2">',
+                  '<rect class="gl-layout" fill="none" width="184" height="92"/>',
                 '</g>',
               '</g>',
             '</g>'

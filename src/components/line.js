@@ -24,15 +24,13 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
 
     defaults_ = {
       type: 'line',
-      target: '.gl-framed',
+      target: null,
       cid: null,
-      strokeWidth: 2,
       color: null,
+      strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
-      ease: 'linear',
-      duration: 500,
       opacity: 1
     };
 

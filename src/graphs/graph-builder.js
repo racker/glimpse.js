@@ -66,7 +66,7 @@ function(obj, array, string, graph) {
       type: 'label',
       dataId: 'gl-stats',
       position: 'center-left',
-      target: '.gl-footer'
+      target: 'gl-footer'
     }];
 
     /**

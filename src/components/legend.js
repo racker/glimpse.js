@@ -29,8 +29,8 @@ function(obj, config, string, d3util, mixins) {
     defaults_ = {
       type: 'legend',
       position: 'center-left',
-      target: '.gl-info',
-      cid: undefined,
+      target: null,
+      cid: null,
       indicatorWidth: 10,
       indicatorHeight: 10,
       indicatorSpacing: 4,

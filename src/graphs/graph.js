@@ -40,9 +40,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       defaultXaccessor_,
       defaultYaccessor_,
       getComponent_,
-      getFrameHeight_,
-      getFrameWidth_,
-      renderComponent_,
       renderComponents_,
       renderDefs_,
       renderPanel_,
@@ -67,6 +64,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       coloredComponentsCount,
       areComponentsRendered_,
       hasTimeScale_;
+
     /**
      * @enum
      * The possible states a graph can be in.
@@ -94,10 +92,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       viewBoxHeight: 230,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
-      marginTop: 10,
-      marginRight: 0,
-      marginBottom: 30,
-      marginLeft: 0,
       xScale: d3.time.scale.utc(),
       yScale: d3.scale.linear(),
       showLegend: true,
@@ -111,7 +105,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       yDomainModifier: 1.2,
       colorPalette: d3.scale.category20().range(),
       xAxisUnit: null,
-      yAxisUnit: null
+      yAxisUnit: null,
+      primaryContainer: 'gl-main'
     };
 
     hasTimeScale_ = null;
@@ -131,6 +126,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
       if (component.yScale) {
         component.yScale(config_.yScale);
+      }
+      if (!component.config('target')) {
+        component.config('target', config_.primaryContainer);
       }
       setDefaultColor(component);
       components_.push(component);
@@ -194,22 +192,22 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * Calculates the frame height
+     * Gets the main container selection.
      * @private
-     * @return {number}
+     * @return {d3.selection}
      */
-    getFrameHeight_ = function() {
-      return root_.select('.gl-framed').height();
-    };
+    function getPrimaryContainer() {
+      return root_.selectAttr('gl-container-name', config_.primaryContainer);
+    }
 
     /**
-     * Calculates the frame width
+     * Calculates the main container width/height
      * @private
-     * @return {number}
+     * @return {Array} Array of numbers [width, height]
      */
-    getFrameWidth_ = function() {
-      return root_.select('.gl-framed').width();
-    };
+    function getPrimaryContainerSize() {
+      return getPrimaryContainer().size();
+    }
 
     /**
      * Sets default color for on component if color not set
@@ -223,8 +221,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         colors = d3.functor(config_.colorPalette)();
         len = colors.length;
         if (component.hasOwnProperty('color')) {
-          component.config().color = component.config().color ?
-            component.config().color : colors[coloredComponentsCount++ % len];
+          component.config().color = component.config().color ||
+            colors[(coloredComponentsCount += 1) % len];
         }
       }
     }
@@ -249,22 +247,15 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     /**
      * Sets the target selection and calls render on each component
      * @private
-     * @param  {d3.selection} selection
      */
-    renderComponents_ = function(selection) {
+    renderComponents_ = function() {
       if (!components_) {
         return;
       }
       components_.forEach(function(component) {
-        renderComponent_(component, selection);
+        component.render(root_);
       });
       areComponentsRendered_ = true;
-    };
-
-    renderComponent_ = function(component, selection) {
-      var renderTarget;
-      renderTarget = selection.select(component.config('target')) || root_;
-      component.render(renderTarget);
     };
 
     /**
@@ -384,7 +375,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
 
       xExtents = [min, max];
-      config_.xScale.rangeRound([0, getFrameWidth_()])
+      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
         .domain(xExtents);
       return xExtents;
     };
@@ -401,7 +392,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
 
       yExtents = d3.extent(yExtents);
-      config_.yScale.rangeRound([getFrameHeight_(), 0])
+      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
         .domain(yExtents);
       return yExtents;
     };
@@ -512,7 +503,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * Displays the empty message over the framed area.
+     * Displays the empty message over the main container.
      * @private
      */
     showEmptyOverlay_ = function() {
@@ -548,11 +539,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: labels
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
-     * Displays the loading spinner and message over the framed area.
+     * Displays the loading spinner and message over the main container.
      * @private
      */
     showLoadingOverlay_ = function() {
@@ -575,11 +566,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: [spinner, label]
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
-     * Displays the error icon and message over the framed area.
+     * Displays the error icon and message over the main container.
      * @private
      */
     showErrorOverlay_ = function() {
@@ -602,7 +593,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: [icon, label]
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
@@ -617,7 +608,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         addComponent_(xDomainLabel_);
       }
       update_();
-      renderComponents_(root_);
+      renderComponents_();
     }
 
     /** Sets data on each component if data is set  */
@@ -653,23 +644,26 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_ = collection.create();
       xAxis_ = components.axis()
         .config({
-          'type': 'x',
-          'orient': 'bottom',
-          'target': '.gl-xaxis',
-          'unit': config_.xAxisUnit
+          type: 'x',
+          orient: 'bottom',
+          target: 'gl-xaxis',
+          unit: config_.xAxisUnit
         });
       yAxis_ = components.axis()
         .config({
-          'type': 'y',
-          'orient': 'right',
-          'tickPadding': 5,
-          'unit': config_.yAxisUnit
+          type: 'y',
+          orient: 'right',
+          tickPadding: 5,
+          unit: config_.yAxisUnit
         });
-      legend_ = components.legend();
+      legend_ = components.legend()
+        .config({
+          target: 'gl-info'
+        });
       xDomainLabel_ = components.label()
         .config({
           cid: 'xDomainLabel',
-          target: '.gl-footer',
+          target: 'gl-footer',
           position: 'center-right'
         });
       coloredComponentsCount = 0;
@@ -760,7 +754,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         }
         if (Array.isArray(data)) {
           var i, len = data.length;
-          for (i = 0; i < len; i++) {
+          for (i = 0; i < len; i += 1) {
             upsertData_(data[i]);
           }
         } else {
@@ -794,11 +788,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       component = components[componentConfig.type]();
       component.config(componentConfig);
       addComponent_(component);
-
       if (isRendered_) {
-        renderComponent_(component, root_);
+        component.render(root_);
       }
-
       return graph;
     };
 

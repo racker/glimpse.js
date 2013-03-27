@@ -23,10 +23,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
       dataCollection;
 
     defaults = {
-      marginTop: 10,
-      marginRight: 0,
-      marginBottom: 30,
-      marginLeft: 0
     };
 
     epochBaseMs = 0;
@@ -141,22 +137,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
 
       beforeEach(function(){
         config = testGraph.config();
-      });
-
-      it('has default marginTop', function() {
-        expect(config.marginTop).toBe(defaults.marginTop);
-      });
-
-      it('has default marginRight', function() {
-        expect(config.marginRight).toBe(defaults.marginRight);
-      });
-
-      it('has default marginBottom', function() {
-        expect(config.marginBottom).toBe(defaults.marginBottom);
-      });
-
-      it('has default marginLeft', function() {
-        expect(config.marginLeft).toBe(defaults.marginLeft);
       });
 
       it('has default xScale set', function() {
@@ -427,8 +407,9 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
         expect(defs.node().nodeName.toLowerCase()).toBe('defs');
       });
 
-      it('renders framed components group', function() {
-        var group = panel.select('.gl-framed');
+      it('renders the primary container', function() {
+        var group = panel.selectAttr('gl-container-name',
+          testGraph.config('primaryContainer'));
         expect(group.node().nodeName.toLowerCase()).toBe('g');
       });
 
