@@ -81,7 +81,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * Components that do not require a default color
      * @type {Array}
      */
-    NO_COLORED_COMPONENTS = ['x', 'y', 'legend', 'label'];
+    NO_COLORED_COMPONENTS = ['axis', 'legend', 'label'];
 
     config_ = {};
 
@@ -447,12 +447,14 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxis_.config({
         scale: config_.xScale,
         ticks: config_.xTicks,
-        unit: config_.xAxisUnit
+        unit: config_.xAxisUnit,
+        axisType: 'x'
       });
       yAxis_.config({
         scale: config_.yScale,
         ticks: config_.yTicks,
-        unit: config_.yAxisUnit
+        unit: config_.yAxisUnit,
+        axisType: 'y'
       });
     };
 

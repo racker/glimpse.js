@@ -35,7 +35,7 @@ function(axisComponent) {
 
       it('handles defaults', function() {
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.time.scale(),
           orient: 'bottom'
         });
@@ -57,7 +57,7 @@ function(axisComponent) {
 
       it('renders x axis', function() {
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.time.scale(),
           orient: 'bottom'
         });
@@ -76,7 +76,7 @@ function(axisComponent) {
 
       it('sets tickSize to 0 by default', function() {
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.time.scale(),
           orient: 'bottom'
         });
@@ -86,7 +86,7 @@ function(axisComponent) {
 
       it('sets tickSize to configured value', function() {
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.time.scale(),
           orient: 'bottom',
           tickSize: 5
@@ -97,7 +97,7 @@ function(axisComponent) {
 
       it('sets ticks if configured axis', function() {
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.scale.linear().domain([5,10]),
           orient: 'left',
           ticks: 3
@@ -108,7 +108,7 @@ function(axisComponent) {
 
       it('renders y axis', function() {
         axis.config({
-          type: 'y',
+          axisType: 'y',
           scale: d3.scale.linear(),
           orient: 'right'
         });
@@ -118,7 +118,7 @@ function(axisComponent) {
 
       it('does not position y axis', function() {
         axis.config({
-          type: 'y',
+          axisType: 'y',
           scale: d3.scale.linear(),
           orient: 'right',
           height: 200
@@ -130,7 +130,7 @@ function(axisComponent) {
       it('it applies padding 0 tick', function() {
         var zeroTick, transform;
         axis.config({
-          type: 'y',
+          axisType: 'y',
           scale: d3.scale.linear()
         });
         axis.render(container);
@@ -142,7 +142,7 @@ function(axisComponent) {
       it('it applies unit to 0 tick', function() {
         var zeroTick;
         axis.config({
-          type: 'y',
+          axisType: 'y',
           scale: d3.scale.linear(),
           unit: 'ms'
         });
@@ -156,7 +156,7 @@ function(axisComponent) {
         it('is inserted into the d3 svg axis component', function() {
           var axisGroups;
           axis.config({
-            type: 'x',
+            axisType: 'x',
             scale: d3.scale.linear().domain([0, 100]).range([0,100]),
             orient: 'right'
           });
@@ -177,7 +177,7 @@ function(axisComponent) {
         it('has the right defaults applied in the dom', function() {
           var axisGroups;
           axis.config({
-            type: 'x',
+            axisType: 'x',
             scale: d3.scale.linear(),
             orient: 'right',
             textBgColor: 'green',
@@ -220,7 +220,7 @@ function(axisComponent) {
       beforeEach(function() {
         container.selectAll('*').remove();
         axis.config({
-          type: 'x',
+          axisType: 'x',
           scale: d3.time.scale(),
           orient: 'bottom'
         });

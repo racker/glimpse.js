@@ -22,7 +22,8 @@ function(obj, config, string, mixins, d3util) {
     config_ = {};
 
     defaults_ = {
-      type: 'x',
+      type: 'axis',
+      axisType: 'x',
       gap: 0,
       target: null,
       color: '#333',
@@ -54,7 +55,7 @@ function(obj, config, string, mixins, d3util) {
         });
 
       //Apply padding to the first tick on Y axis
-      if (config_.type === 'y') {
+      if (config_.axisType === 'y') {
         var zeroTick, transform, zeroTickLabel;
 
         zeroTick = root_.select('g');
@@ -149,7 +150,8 @@ function(obj, config, string, mixins, d3util) {
       root_.attr({
         'font-family': config_.fontFamily,
         'font-size': config_.fontSize,
-        'class': string.classes('component', 'axis', config_.type + '-axis '),
+        'class': string.classes('component',
+            'axis', config_.axisType + '-axis '),
         'stroke': config_.color,
         'opacity': config_.opacity
       });
