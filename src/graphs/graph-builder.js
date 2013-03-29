@@ -9,9 +9,10 @@ define([
   'core/object',
   'core/array',
   'core/string',
+  'd3-ext/util',
   'graphs/graph'
 ],
-function(obj, array, string, graph) {
+function(obj, array, string, d3util, graph) {
   'use strict';
 
     var defaults,
@@ -61,13 +62,22 @@ function(obj, array, string, graph) {
      *
      * TODO: Externalize this once a component manager is available.
      */
-    INTERNAL_COMPONENTS_CONFIG = [{
-      cid: 'gl-stats',
-      type: 'label',
-      dataId: 'gl-stats',
-      position: 'center-left',
-      target: 'gl-footer'
-    }];
+    INTERNAL_COMPONENTS_CONFIG = [
+      {
+        cid: 'gl-stats',
+        type: 'label',
+        dataId: 'gl-stats',
+        position: 'center-left',
+        target: 'gl-footer'
+      },
+      {
+        cid: 'gl-domain-label',
+        type: 'domainLabel',
+        target: 'gl-footer',
+        position: 'center-right',
+        suffix: 'UTC'
+      }
+    ];
 
     /**
      * Determines if a data set corresponding to the data id is an internal
@@ -187,10 +197,10 @@ function(obj, array, string, graph) {
       INTERNAL_COMPONENTS_CONFIG.forEach(function(componentConfig) {
         g.component(componentConfig);
       });
-      unit = g.config('yAxisUnit') ? g.config('yAxisUnit') : '';
+      unit = g.config('yAxisUnit') || '';
       g.component('gl-stats').text(function(d) {
         return 'Avg: ' + d.avg + unit +
-               '      Min: ' +  d.min + unit +
+               '    Min: ' +  d.min + unit +
                '    Max: ' + d.max + unit;
       });
     }

@@ -38,7 +38,7 @@ function(obj, config, string, array, d3util, mixins) {
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'normal',
       fontSize: 13,
-
+      hiddenStates: null
     };
 
     // PUBLIC

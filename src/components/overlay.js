@@ -30,7 +30,8 @@ function(obj, config, string, label, mixins, d3util) {
       layoutConfig: { type: 'horizontal', position: 'center', gap: 6 },
       opacity: 1,
       backgroundColor: '#fff',
-      type: 'overlay'
+      type: 'overlay',
+      hiddenStates: null
     };
 
     /**

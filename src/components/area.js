@@ -32,7 +32,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       color: 'steelBlue',
       inLegend: true,
       areaGenerator: d3.svg.area(),
-      opacity: 1
+      opacity: 1,
+      hiddenStates: null
     };
 
     /**

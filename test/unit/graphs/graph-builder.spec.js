@@ -1,8 +1,9 @@
 define([
   'graphs/graph-builder',
-  'graphs/graph'
+  'graphs/graph',
+  'core/format'
 ],
-function(graphBuilder, graph) {
+function(graphBuilder, graph, format) {
   'use strict';
 
   function filterComponents(g, type) {
@@ -30,7 +31,15 @@ function(graphBuilder, graph) {
       beforeEach(function() {
         testGraph = graphBuilder.create('line');
         testGraph.config('xScale', d3.scale.linear());
+        testGraph.component('gl-domain-label')
+          .config('formatter', format.standardDomain);
         testGraph.data().add(testData);
+      });
+
+      it('adds the domain label', function() {
+        var selection = jasmine.htmlFixture();
+        testGraph.render(selection);
+        expect(selection.selectAll('.gl-domain-label')).toBeSelectionLength(1);
       });
 
       it('reports the available buildable types', function() {

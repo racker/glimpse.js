@@ -24,7 +24,8 @@ function(obj, config, string, mixins, d3util) {
       cid: null,
       assetId: null,
       target: null,
-      cssClass: null
+      cssClass: null,
+      hiddenStates: null
     };
 
     function asset() {

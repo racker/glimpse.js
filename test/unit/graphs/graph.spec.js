@@ -126,12 +126,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
       expect(testGraph.yAxis().config('unit')).toBe('ms');
     });
 
-    it('does not add the X domain label for non-time xScale', function() {
-      testGraph.config('xScale', d3.scale.linear());
-      testGraph.render(jasmine.htmlFixture());
-      expect(testGraph.component('xDomainLabel')).toBeUndefined();
-    });
-
     describe('config()', function() {
       var config;
 
@@ -537,38 +531,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
         anotherGraph.render(selection);
         expect(compUtil.getByCid('emptyOverlay').node())
           .not.toBeNull();
-      });
-
-    });
-
-    describe('x domain label', function() {
-      var domain, formatter, label, xScale;
-
-      beforeEach(function() {
-        domain = dataFns.toUTCDate([new Date(0), new Date(34347661000)]);
-        formatter = testGraph.config('xDomainLabelFormatter');
-        testGraph.data(fakeData);
-        testGraph.render(jasmine.htmlFixture());
-        label = testGraph.component('xDomainLabel');
-        xScale = testGraph.config('xScale');
-      });
-
-      it('formats dates correctly using default formatter', function() {
-        expect(formatter(domain)).toBe('Jan 1, 12:00 AM - Feb 2, 01:01 PM UTC');
-      });
-
-      it('renders the label', function() {
-        expect(compUtil.getByCid('xDomainLabel').node()).toBeDefined();
-      });
-
-      it('has an xDomainLabel component', function() {
-        expect(label).toBeDefined();
-      });
-
-      it('updates the text when the domain changes', function() {
-        xScale.domain(dataFns.toUTCDate([0, 44715661000]));
-        testGraph.update();
-        expect(label.text()).toBe('Jan 1, 12:00 AM - Jun 2, 01:01 PM UTC');
       });
 
     });

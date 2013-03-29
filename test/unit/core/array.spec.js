@@ -132,6 +132,10 @@ function (array) {
         expect(array.contains([], 'z')).toBe(false);
       });
 
+      it('returns false for a non-array', function() {
+        expect(array.contains(null, 'z')).toBe(false);
+      });
+
       it('returns true if item is in the array', function() {
         expect(array.contains(testArray, 'a')).toBe(true);
       });

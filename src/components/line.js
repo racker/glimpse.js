@@ -31,7 +31,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
-      opacity: 1
+      opacity: 1,
+      hiddenStates: null
     };
 
     /**

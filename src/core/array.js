@@ -95,9 +95,10 @@ function () {
      * @return {Boolean}
      */
     contains: function(arr, item) {
-      if (item) {
-        return !!arr.length && arr.indexOf(item) !== -1;
+      if (item && Array.isArray(arr) && arr.length) {
+        return arr.indexOf(item) !== -1;
       }
+      return false;
     }
 
   };

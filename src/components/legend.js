@@ -40,7 +40,8 @@ function(obj, config, string, d3util, mixins) {
       fontSize: 13,
       layout: 'horizontal',
       gap: 20,
-      keys: []
+      keys: [],
+      hiddenStates: ['loading']
     };
 
     /**

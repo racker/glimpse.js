@@ -8,14 +8,13 @@ define([
   'core/config',
   'core/array',
   'core/asset-loader',
-  'core/format',
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
   'data/functions',
   'data/collection'
 ],
-function(obj, config, array, assetLoader, format, components, layoutManager,
+function(obj, config, array, assetLoader, components, layoutManager,
   d3util, dataFns, collection) {
   'use strict';
 
@@ -31,7 +30,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxis_,
       yAxis_,
       legend_,
-      xDomainLabel_,
       addComponent_,
       addAxes_,
       addLegend_,
@@ -49,7 +47,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       updateScales_,
       updateLegend_,
       upsertData_,
-      updateXDomainLabel_,
       updateAxes_,
       showLoadingOverlay_,
       showEmptyOverlay_,
@@ -62,8 +59,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
-      areComponentsRendered_,
-      hasTimeScale_;
+      areComponentsRendered_;
 
     /**
      * @enum
@@ -95,7 +91,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xScale: d3.time.scale.utc(),
       yScale: d3.scale.linear(),
       showLegend: true,
-      xDomainLabelFormatter: format.timeDomain,
       xTicks: 7,
       yTicks: 3,
       emptyMessage: 'No data to display',
@@ -108,8 +103,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       yAxisUnit: null,
       primaryContainer: 'gl-main'
     };
-
-    hasTimeScale_ = null;
 
     /**
      * adds component to the components array
@@ -238,7 +231,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         componentData.data,
         dataFns.dimension(componentData, 'x')
       );
-      if (hasTimeScale()) {
+      if (d3util.isTimeScale(config_.xScale)) {
         return dataFns.toUTCDate(extents);
       }
       return extents;
@@ -363,7 +356,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       max = d3.max(xExtents) || config_.xScale.domain()[1];
       min = d3.min(xExtents) || config_.xScale.domain()[0];
 
-      if (hasTimeScale()) {
+      if (d3util.isTimeScale(config_.xScale)) {
         if (config_.domainIntervalUnit) {
           offset = config_.domainIntervalUnit.offset(
             max,
@@ -447,26 +440,13 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxis_.config({
         scale: config_.xScale,
         ticks: config_.xTicks,
-        unit: config_.xAxisUnit,
-        axisType: 'x'
+        unit: config_.xAxisUnit
       });
       yAxis_.config({
         scale: config_.yScale,
         ticks: config_.yTicks,
-        unit: config_.yAxisUnit,
-        axisType: 'y'
+        unit: config_.yAxisUnit
       });
-    };
-
-    /**
-     * Updates the text in the label showing the date range.
-     * TODO: position this with layout manager
-     * @private
-     */
-    updateXDomainLabel_ = function() {
-      xDomainLabel_
-        .data(config_.xScale.domain())
-        .text(config_.xDomainLabelFormatter);
     };
 
     /**
@@ -478,9 +458,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_.updateDerivations();
       updateAxes_();
       updateLegend_();
-      if (hasTimeScale()) {
-        updateXDomainLabel_();
-      }
       if (isRendered_) {
         updateStateDisplay();
       }
@@ -606,9 +583,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     function initGraphComponents() {
       addLegend_();
       addAxes_();
-      if (hasTimeScale()) {
-        addComponent_(xDomainLabel_);
-      }
       update_();
       renderComponents_();
     }
@@ -625,18 +599,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     }
 
     /**
-     * Determines if X scale is a time scale or not
-     * @return {Boolean}
-     */
-    function hasTimeScale() {
-      //TODO: Maybe determine this based on some config value directly
-      if (hasTimeScale_ === null) {
-        hasTimeScale_ = d3util.isTimeScale(config_.xScale);
-      }
-      return hasTimeScale_;
-    }
-
-    /**
      * Main function, sets defaults, scales and axes
      * @return {graphs.graph}
      */
@@ -646,27 +608,20 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_ = collection.create();
       xAxis_ = components.axis()
         .config({
-          type: 'x',
+          axisType: 'x',
           orient: 'bottom',
           target: 'gl-xaxis',
-          unit: config_.xAxisUnit
+          hiddenStates: ['empty', 'error', 'loading']
         });
       yAxis_ = components.axis()
         .config({
-          type: 'y',
+          axisType: 'y',
           orient: 'right',
-          tickPadding: 5,
-          unit: config_.yAxisUnit
+          tickPadding: 5
         });
       legend_ = components.legend()
         .config({
           target: 'gl-info'
-        });
-      xDomainLabel_ = components.label()
-        .config({
-          cid: 'xDomainLabel',
-          target: 'gl-footer',
-          position: 'center-right'
         });
       coloredComponentsCount = 0;
       return graph;
@@ -704,22 +659,22 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       graph.removeComponent('emptyOverlay');
       graph.removeComponent('loadingOverlay');
       graph.removeComponent('errorOverlay');
-      showComponent(legend_);
-      showComponent(xAxis_);
-      showComponent(xDomainLabel_);
+      components_.forEach(function(c) {
+        var hiddenStates = c.config('hiddenStates');
+        if (array.contains(hiddenStates, config_.state)) {
+          hideComponent(c);
+        } else {
+          showComponent(c);
+        }
+      });
       switch (config_.state) {
         case STATES.EMPTY:
           showEmptyOverlay_();
-          hideComponent(xAxis_);
           break;
         case STATES.LOADING:
-          hideComponent(xAxis_);
-          hideComponent(legend_);
-          hideComponent(xDomainLabel_);
           showLoadingOverlay_();
           break;
         case STATES.ERROR:
-          hideComponent(xAxis_);
           showErrorOverlay_();
           break;
       }

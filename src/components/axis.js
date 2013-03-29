@@ -33,7 +33,8 @@ function(obj, config, string, mixins, d3util) {
       textBgColor: '#fff',
       textBgSize: 3,
       tickSize: 0,
-      ticks: 3
+      ticks: 3,
+      hiddenStates: null
     };
 
     /**

@@ -62,9 +62,8 @@ define([
       if (obj.isDefAndNotNull(data)) {
         if (Array.isArray(data)) {
           return data.map(convertToUTCDate);
-        } else {
-          return convertToUTCDate(data);
         }
+        return convertToUTCDate(data);
       }
       return data;
     }
