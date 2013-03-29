@@ -8,6 +8,10 @@ function(format) {
 
     var epoch, dayAfterEpoch, domain;
 
+    function formatLocalDate(d) {
+      return d3.time.format('%b %-e, %I:%M %p')(d);
+    }
+
     beforeEach(function() {
       epoch = new Date(0);
       dayAfterEpoch = new Date(24 * 60 * 60 * 1000);
@@ -29,15 +33,20 @@ function(format) {
     });
 
     describe('.timeDomain()', function() {
+      var expected;
 
       it('formats the date', function() {
+        expected = formatLocalDate(domain[0]) + ' - ' +
+          formatLocalDate(domain[1]);
         expect(format.timeDomain(domain))
-          .toBe('Dec 31, 04:00 PM - Jan 1, 04:00 PM');
+          .toBe(expected);
       });
 
       it('appends the optional suffix', function() {
+        expected = formatLocalDate(domain[0]) + ' - ' +
+          formatLocalDate(domain[1]) + ' (local)';
         expect(format.timeDomain(domain, '(local)'))
-          .toBe('Dec 31, 04:00 PM - Jan 1, 04:00 PM (local)');
+          .toBe(expected);
       });
 
     });
