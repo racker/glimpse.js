@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>API Sequence</h1>
+    <h3>This illustrates how the graph methods can be called in any sequence and all yield the same results without errors.</h3>
+    <div id="container"></div>
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var sampleData = [
+            { "time":1317279600000, "value":106 },
+            { "time":1317695968421, "value":56 },
+            { "time":1318112336842, "value":126 },
+            { "time":1318528705263, "value":197 },
+            { "time":1318945073684, "value":134 },
+            { "time":1319361442105, "value":114 },
+            { "time":1319777810526, "value":77 },
+            { "time":1320194178947, "value":74 }
+          ];
+
+
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'sampleData',
+            title: 'Sample Data',
+            data: sampleData,
+            dimensions: {
+              x: 'time',
+              y: 'value'
+            }
+          }
+        ];
+
+        // Create and render a line graph.
+        var g1 = glimpse.graphBuilder().create('line')
+          .data(dataConfig)
+          .render('#container');
+
+        var g2 = glimpse.graphBuilder().create('line')
+          .render('#container')
+          .data(dataConfig)
+          .update();
+
+        var g3 = glimpse.graphBuilder().create('line')
+          .render('#container');
+
+        setTimeout(function() {
+          g3.data(dataConfig);
+          g3.update();
+        }, 0);
+
+        // for debugging
+        window.gl = glimpse;
+        window.g1 = g1;
+        window.g2 = g2;
+      });
+    </script>
+  </body>
+</html>

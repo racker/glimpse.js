@@ -73,9 +73,7 @@
                 time: epochBaseMs + currentDay++ * oneDayMs, 
                 latency: (Math.random() * 150)
               });
-          lineGraph
-            .update()
-            .hide('lineOrd');
+          lineGraph.update();
         };
 
         document.getElementById('update')

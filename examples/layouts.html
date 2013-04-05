@@ -60,7 +60,9 @@
             .data(dataConfig)
             .render('#container');
 
+
           var lineGraph2 = glimpse.graph()
+            .data(dataConfig)
             .config({
               layout: {
                 name: 'gl-vgroup',
@@ -80,10 +82,14 @@
                 ]
               }
             })
-            .legend({layout: 'horizontal', position: 'center'})
-            .data(dataConfig)
-            .component({ type: 'line', dataId: 'latencyDfw'  })
+            .component({ cid: 'line1', type: 'line', dataId: 'latencyDfw'  })
             .render('#container2');
+
+          // Update legend layout/position.
+          lineGraph2
+            .component('gl-legend').config({ layout: 'horizontal', position: 'center' })
+            .update();
+
 
           var lineGraph3 = glimpse.graph()
             .config({
@@ -106,11 +112,15 @@
                 ]
               }
             })
-            .legend({layout: 'vertical', position: 'center'})
             .data(dataConfig)
-            .component({ type: 'line', dataId: 'latencyDfw'  })
+            .component({ cid: 'line1', type: 'line', dataId: 'latencyDfw'  })
             .render('#container3');
 
+          // Update legend layout/position.
+          lineGraph3
+            .component('gl-legend')
+            .config({ layout: 'vertical', position: 'center' })
+            .update();
 
           // for debugging
           window.graph = lineGraph;

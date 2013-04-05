@@ -123,12 +123,13 @@
               dimensions: { y0: 'y0' }
             }
           ])
-          // TODO: allow component() function to take an array
-          .component({ type: 'area', dataId: 'cpu-idle', color: '#EFEFEF' })
-          .component({ type: 'area', dataId: 'cpu-user', color: '#89D6FF' })
-          .component({ type: 'area', dataId: 'cpu-sys', color: '#FFB578' })
-          .component({ type: 'area', dataId: 'cpu-wait', color: '#F5F692' })
-          .component({ type: 'area', dataId: 'cpu-stolen', color: '#FF5A86' })
+          .component([
+            { cid: 'idle', type: 'area', dataId: 'cpu-idle', color: '#EFEFEF' },
+            { cid: 'user', type: 'area', dataId: 'cpu-user', color: '#89D6FF' },
+            { cid: 'sys', type: 'area', dataId: 'cpu-sys', color: '#FFB578' },
+            { cid: 'wait', type: 'area', dataId: 'cpu-wait', color: '#F5F692' },
+            { cid: 'stolen', type: 'area', dataId: 'cpu-stolen', color: '#FF5A86' }
+          ])
           .render('#container');
 
 

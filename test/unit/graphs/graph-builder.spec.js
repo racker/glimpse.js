@@ -33,7 +33,7 @@ function(graphBuilder, graph, format) {
         testGraph.config('xScale', d3.scale.linear());
         testGraph.component('gl-domain-label')
           .config('formatter', format.standardDomain);
-        testGraph.data().add(testData);
+        testGraph.data(testData);
       });
 
       it('adds the domain label', function() {
@@ -50,7 +50,7 @@ function(graphBuilder, graph, format) {
         expect(testGraph.toString()).toBe(graph().toString());
       });
 
-      // TODO: Remove this once we have a comopnent manager.
+      // TODO: Remove this once we have total config-based comopnents.
       it('automatically adds a stats data source', function() {
         var statsData;
         testGraph.render(jasmine.htmlFixture());
@@ -60,7 +60,7 @@ function(graphBuilder, graph, format) {
         expect(statsData.max).toBe(100);
       });
 
-      // TODO: Remove this once we have a comopnent manager.
+      // TODO: Remove this once we have total config-based comopnents.
       it('automatically adds a stats label component', function() {
         var statsComponent;
         statsComponent = testGraph.component('gl-stats');

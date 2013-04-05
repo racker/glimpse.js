@@ -56,32 +56,30 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
             }
           }
         ])
-        .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
-        .component({ cid: 'testComponentWithColor',
-          type: 'line', dataId: 'fakeData', color: 'red' })
-        .xAxis({ cid: 'xAxis' })
-        .yAxis({ cid: 'yAxis' })
-        .legend({ cid: 'legend' });
+        .component([
+          { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
+          { cid: 'testComponentWithColor', type: 'line',
+            dataId: 'fakeData', color: 'red' },
+        ]);
     }
 
     function setNoDataGraph() {
       testGraph
         .config({colorPalette: ['green']})
-        .component({ cid: 'testComponent', type: 'line', dataId: 'fakeData' })
-        .component({ cid: 'testComponentWithColor',
-          type: 'line', dataId: 'fakeData', color: 'red' })
-        .xAxis({ cid: 'xAxis' })
-        .yAxis({ cid: 'yAxis' })
-        .legend({ cid: 'legend' });
+        .component([
+          { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
+          { cid: 'testComponentWithColor',
+              type: 'line', dataId: 'fakeData', color: 'red' }
+        ]);
     }
 
     function setSpies() {
       testComponent = testGraph.component('testComponent');
-      xAxis =  testGraph.xAxis();
-      yAxis =  testGraph.yAxis();
-      legend = testGraph.legend();
-      xScale = testGraph.config().xScale;
-      yScale = testGraph.config().yScale;
+      xAxis =  testGraph.component('gl-xaxis');
+      yAxis =  testGraph.component('gl-yaxis');
+      legend = testGraph.component('gl-legend');
+      xScale = testGraph.config('xScale');
+      yScale = testGraph.config('yScale');
       spyOn(assetLoader, 'loadAll');
       spyOn(testComponent, 'render');
       spyOn(xAxis, 'render').andCallThrough();
@@ -113,17 +111,17 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
     });
 
     it('sets default X-Axis', function() {
-      expect(testGraph.xAxis()).toBeDefinedAndNotNull();
+      expect(testGraph.component('gl-xaxis')).toBeDefinedAndNotNull();
     });
 
     it('sets default Y-Axis', function() {
-      expect(testGraph.yAxis()).toBeDefinedAndNotNull();
+      expect(testGraph.component('gl-yaxis')).toBeDefinedAndNotNull();
     });
 
     it('sets unit on Y-Axis', function() {
       setGraph();
       testGraph.render(jasmine.htmlFixture());
-      expect(testGraph.yAxis().config('unit')).toBe('ms');
+      expect(testGraph.component('gl-yaxis').config('unit')).toBe('ms');
     });
 
     describe('config()', function() {
@@ -246,7 +244,7 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
           type: 'line',
           dataId: 'fakeData'
         });
-        expect(testGraph.component().length).toBe(1);
+        expect(testGraph.component('testComponent')).toBeDefinedAndNotNull();
       });
 
       it('returns a component when id is passed', function() {
@@ -389,7 +387,7 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
       });
 
       it('adds legend', function() {
-         expect(testGraph.legend()).toBeDefinedAndNotNull();
+         expect(testGraph.component('gl-legend')).toBeDefinedAndNotNull();
       });
 
       it('renders svg node', function() {
@@ -477,19 +475,19 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
 
       it('shows loading state', function() {
         testGraph.state('loading');
-        expect(compUtil.getByCid('loadingOverlay').node())
+        expect(compUtil.getByCid('gl-loading-overlay').node())
           .not.toBeNull();
       });
 
       it('shows error state', function() {
         testGraph.state('error');
-        expect(compUtil.getByCid('errorOverlay').node())
+        expect(compUtil.getByCid('gl-error-overlay').node())
           .not.toBeNull();
       });
 
       it('shows empty state', function() {
         testGraph.state('empty');
-        expect(compUtil.getByCid('emptyOverlay').node())
+        expect(compUtil.getByCid('gl-empty-overlay').node())
           .not.toBeNull();
       });
 
@@ -529,7 +527,7 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
         var anotherGraph = graph();
         anotherGraph.state('empty');
         anotherGraph.render(selection);
-        expect(compUtil.getByCid('emptyOverlay').node())
+        expect(compUtil.getByCid('gl-empty-overlay').node())
           .not.toBeNull();
       });
 
@@ -549,23 +547,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
         expect(testGraph.root().node()).toHaveAttr('display', 'none');
       });
 
-      it('hides component', function() {
-        var c = testGraph.component('testComponent');
-
-        testGraph.hide('testComponent');
-        expect(c.root().node()).toHaveAttr('display', 'none');
-      });
-
-      it('hides components', function() {
-        var c, yAxis;
-        c = testGraph.component('testComponent');
-        yAxis = testGraph.component('yAxis');
-
-        testGraph.hide(['testComponent', 'yAxis']);
-        expect(c.root().node()).toHaveAttr('display', 'none');
-        expect(yAxis.root().node()).toHaveAttr('display', 'none');
-      });
-
     });
 
     describe('show()', function() {
@@ -581,26 +562,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
       it('shows graph', function() {
         testGraph.show();
         expect(testGraph.root().node()).not.toHaveAttr('display');
-      });
-
-      it('shows component', function() {
-        var c = testGraph.component('testComponent');
-
-        testGraph.show('testComponent');
-        expect(c.root().node()).not.toHaveAttr('display');
-      });
-
-      it('shows components', function() {
-        var c, yAxis;
-        c = testGraph.component('testComponent');
-        yAxis = testGraph.component('yAxis');
-
-        testGraph.show(['testComponent', 'yAxis']);
-        expect(c.root().node())
-          .not.toHaveAttr('display');
-
-        expect(yAxis.root().node())
-          .not.toHaveAttr('display');
       });
 
     });
@@ -626,44 +587,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
 
     });
 
-    describe('removeComponent', function() {
-      var c1, c2, c3, cidMapper;
-
-      cidMapper = function(c) {
-        return c.cid();
-      };
-
-      beforeEach(function() {
-        testGraph.component({ cid: 'c1', type: 'line' });
-        testGraph.component({ cid: 'c2', type: 'line' });
-        testGraph.component({ cid: 'c3', type: 'line' });
-        c1 = testGraph.component('c1');
-        c2 = testGraph.component('c2');
-        c3 = testGraph.component('c3');
-        spyOn(c1, 'destroy');
-        spyOn(c2, 'destroy');
-        spyOn(c3, 'destroy');
-      });
-
-      it('removes a single component', function() {
-        testGraph.removeComponent('c1');
-        expect(testGraph.component().map(cidMapper)).toEqual(['c2', 'c3']);
-      });
-
-      it('removes multiple components', function() {
-        testGraph.removeComponent(['c1', 'c2']);
-        expect(testGraph.component().map(cidMapper)).toEqual(['c3']);
-      });
-
-      it('calls destroy() when removing a component', function() {
-        testGraph.removeComponent('c1');
-        expect(c1.destroy).toHaveBeenCalledOnce();
-        expect(c2.destroy).not.toHaveBeenCalled();
-        expect(c3.destroy).not.toHaveBeenCalled();
-      });
-
-    });
-
     describe('no data set', function() {
       var selection, exThrown;
 
@@ -683,39 +606,6 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
           exThrown = true;
         }
         expect(exThrown).toBe(false);
-      });
-
-      it('does not call render on test component', function() {
-        testGraph.render(selection.node());
-        expect(testComponent.render).not.toHaveBeenCalled();
-      });
-
-      it('does not call render on legend component', function() {
-        testGraph.render(selection.node());
-        expect(legend.render).not.toHaveBeenCalled();
-      });
-
-      it('does not call render on x-axis component', function() {
-        testGraph.render(selection.node());
-        expect(xAxis.render).not.toHaveBeenCalled();
-      });
-
-      it('does not call render on y-axis component', function() {
-        testGraph.render(selection.node());
-        expect(yAxis.render).not.toHaveBeenCalled();
-      });
-
-      it('does not call render on components if no data is set',
-        function () {
-          testGraph.render(selection.node());
-          expect(xAxis.render).not.toHaveBeenCalled();
-      });
-
-      it('does not call update on components if no data is set',
-        function () {
-          testGraph.render(selection.node());
-          testGraph.update();
-          expect(testComponent.update).not.toHaveBeenCalled();
       });
 
       it('calls render on components after data is set',

@@ -39,7 +39,7 @@ function(obj, array, string, d3util, graph) {
       id: 'gl-stats',
       sources: ['*', '$domain'],
       derivation: function(sources, domain) {
-        var xDomain, points, result;
+        var xDomain, points, pointValues, result;
 
         result = {
           min: 0,
@@ -49,9 +49,12 @@ function(obj, array, string, d3util, graph) {
         if (sources.all().length) {
           xDomain = domain.get().x;
           points = sources.filter('x', xDomain).dim('y').concat();
-          result.min = points.min().round().get();
-          result.max = points.max().round().get();
-          result.avg = points.avg().round().get();
+          pointValues = points.get();
+          if (pointValues && pointValues.length) {
+            result.min = points.min().round().get();
+            result.max = points.max().round().get();
+            result.avg = points.avg().round().get();
+          }
         }
         return result;
       }
@@ -148,7 +151,7 @@ function(obj, array, string, d3util, graph) {
       var dataCollection = g.data();
       obj.override(dataCollection, 'remove', function(supr, dataId) {
         var args = array.convertArgs(arguments, 1);
-        g.removeComponent(dataId);
+        g.component().remove(dataId);
         return supr.apply(g, args);
       });
     }
@@ -199,9 +202,19 @@ function(obj, array, string, d3util, graph) {
       });
       unit = g.config('yAxisUnit') || '';
       g.component('gl-stats').text(function(d) {
-        return 'Avg: ' + d.avg + unit +
-               '    Min: ' +  d.min + unit +
-               '    Max: ' + d.max + unit;
+        var values = {
+          avg: 0,
+          min: 0,
+          max: 0
+        };
+        if (d) {
+          values.avg = d.avg || 0;
+          values.min = d.min || 0;
+          values.max = d.max || 0;
+        }
+        return 'Avg: ' + values.avg + unit +
+               '    Min: ' +  values.min + unit +
+               '    Max: ' + values.max + unit;
       });
     }
 

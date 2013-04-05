@@ -124,12 +124,16 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
         root.attr('gl-cid', config.cid);
       }
       innerLabel
-        .config('dataId', config.dataId)
-        .data(dataCollection)
-        .text(function(domainData) {
-          return config.formatter(domainData[config.dimension], config.suffix);
-        })
-        .update();
+        .config('dataId', config.dataId);
+
+      if (dataCollection) {
+        innerLabel.data(dataCollection)
+          .text(function(domainData) {
+            return config.formatter(domainData[config.dimension],
+              config.suffix);
+          });
+      }
+      innerLabel.update();
       root.position(config.position);
       return domainLabel;
     };

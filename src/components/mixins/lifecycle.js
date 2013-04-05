@@ -13,6 +13,14 @@ define(function () {
       return this;
     },
 
+    root: function() {
+      // noop
+    },
+
+    isRendered: function() {
+      return !!this.root();
+    },
+
     update: function() {
       // noop
       return this;

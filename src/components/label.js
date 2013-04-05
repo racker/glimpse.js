@@ -81,7 +81,7 @@ function(obj, config, string, array, d3util, mixins) {
         return label;
       }
       // Find corresponding data group if dataId is set.
-      if (config_.dataId) {
+      if (dataCollection_ && config_.dataId) {
         return dataCollection_.get(config_.dataId);
       }
       // Otherwise return the entire raw data.
