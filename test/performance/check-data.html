@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h3>
+      Performance test: Simulates a day's worth of 3 checks running at 30 second intervals.
+    </h3>
+    <h4>
+      Tests to perform:
+    </h4>
+    <ol>
+      <li>
+        Observe the console timer to determine the time taken for drawing the graph.
+      </li>
+      <li>
+        Get heap snapshot and check for memory leaks.
+      </li>
+      <li>
+        Take CPU profile.
+      </li>
+      <li>
+        Open Task Manager in Chrome and watch the memory/cpu, reload the page.
+      </li>
+    </ol>
+    <div id="container"></div>
+    <script src="../../components/requirejs/require.js"></script>
+    <script src="../../requirejs.conf.js"></script>
+    <script src="perf-requirejs.conf.js"></script>
+    <script src="console.time.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+       var epochBaseMs,
+          oneDayMs,
+          checkData,
+          lineGraph,
+          currentDay,
+          dataConfig,
+          update;
+
+        epochBaseMs = new Date().getTime();
+        checkData = generateData();
+
+        function generateData() {
+          var i, loop, data, latency;
+
+          loop = parseInt(86400/30);
+          data = [];
+          latency = 80;
+          for(i = 0; i<loop; i++) {
+            epochBaseMs =+ 30000*i
+            data.push({
+              "time": epochBaseMs,
+              "latency": latency + Math.random()*110
+            });
+          }
+          return data;
+        }
+
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'latencyDfw',
+            title: 'Time to Connect (DFW)',
+            data: checkData,
+            dimensions: {
+              x: 'time',
+              y: 'latency'
+            }
+          },
+          {
+            id: 'latencyOrd',
+            title: 'Time to Connect (ORD)',
+            data: checkData,
+            dimensions: {
+              x: 'time',
+              // This is how to change the value with a funciton.
+              y: function(d, i) {
+                return d.latency + 10;
+              }
+            }
+          },
+          {
+            id: 'latencyLon',
+            title: 'Time to Connect (ORD)',
+            data: checkData,
+            dimensions: {
+              x: 'time',
+              // This is how to change the value with a funciton.
+              y: function(d, i) {
+                return d.latency + 20;
+              }
+            }
+          }
+        ];
+        console.time('Graph timer');
+        // Create and render a line graph.
+        var lineGraph = glimpse.graphBuilder().create('line')
+          .config('yAxisUnit', 'ms')
+          .data(dataConfig)
+          .render('#container');
+        console.timeEnd('Graph timer');
+      });
+    </script>
+  </body>
+</html>
+

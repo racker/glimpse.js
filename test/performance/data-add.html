@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+     <h3>
+      Performance test: Graph that adds component every 0.5 ms.
+    </h3>
+    <h4>
+      Tests to perform
+    </h4>
+    <ol>
+      <li>
+        Observe the console timer to determine the time taken for adding components.
+      </li>
+      <li>
+        Take heap snapshot and check for memory leaks.
+      </li>
+      <li>
+        Collect JavaScript CPU profile.
+      </li>
+      <li>
+        Open the Task Manager in Chrome and watch the memory/cpu when component is getting added.
+      </li>
+    </ol>
+    <div id="box">
+      <div id="container"></div>
+    </div>
+    <script src="../../components/requirejs/require.js"></script>
+    <script src="../../requirejs.conf.js"></script>
+    <script src="perf-requirejs.conf.js"></script>
+    <script src="console.time.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var latencyData = [{
+            data: [
+            {"time":1317279600000,"latency":106.19392367079854},
+            {"time":1317695968421.0527,"latency":56.03559841401875},
+            {"time":1318112336842.1052,"latency":126.56398699618876},
+            {"time":1318528705263.158,"latency":197.48531440272927},
+            {"time":1318945073684.2104,"latency":134.64964700397104},
+            {"time":1319361442105.2632,"latency":114.76828635204583},
+            {"time":1319777810526.3157,"latency":77.50583724118769},
+            {"time":1320194178947.3684,"latency":74.262569937855},
+            {"time":1320610547368.4211,"latency":124.86097845248878},
+            {"time":1321026915789.4736,"latency":88.70440365280956},
+            {"time":1321443284210.5264,"latency":126.80981094017625},
+            {"time":1321859652631.5789,"latency":115.363494399935},
+            {"time":1322276021052.6316,"latency":100.65460556652397}]
+          }];
+
+        // Generate more semi-random test data.
+        function generateDataset() {
+          var cnt = generateDataset.cnt = generateDataset.cnt ? generateDataset.cnt + 1 : 1;
+          return {
+            id: 'more' + cnt,
+            title: 'More Data ' + cnt,
+            dimensions: {
+              x: 'time',
+              y: function(d) {
+                return d.latency + cnt * 20;
+              }
+            },
+            data: latencyData[0].data
+          };
+        }
+
+        // Configure initial data to show.
+        var dataConfig = [
+          {
+            id: 'latencyDfw',
+            title: 'Time to Connect (DFW)',
+            data: latencyData[0].data,
+            dimensions: {
+              x: 'time',
+              y: 'latency'
+            }
+          }
+        ];
+
+        // Create and render a line graph.
+        var lineGraph = glimpse.graphBuilder().create('line')
+          .data(dataConfig)
+          .render('#container');
+
+        function addDataset() {
+          var dataCollection;
+          console.time('Add component timer');
+          dataCollection = lineGraph.data();
+          dataCollection.add(generateDataset());
+          lineGraph.update();
+          console.timeEnd('Add component timer');
+        };
+
+        window.setInterval(addDataset, 500);
+      });
+    </script>
+  </body>
+</html>

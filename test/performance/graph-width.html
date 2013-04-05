@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h3>
+      Performance test: Plot a graph where data points > width of the graph.
+    </h3>
+    <p>
+      The following graph simulates test case where the number of data points(800) being plotted are greater than the width(700) of the graph.
+    </p>
+    <h4>
+      Tests to perform:
+    </h4>
+    <ol>
+      <li>
+        Get heap snapshot and check for memory leaks.
+      </li>
+      <li>
+        Take CPU profile.
+      </li>
+      <li>
+        Open Task Manager in Chrome and watch the memory/cpu, reload the page.
+      </li>
+    </ol>
+    <div id="box">
+      <div id="container"></div>
+    </div>
+    <script src="../../components/requirejs/require.js"></script>
+    <script src="../../requirejs.conf.js"></script>
+    <script src="perf-requirejs.conf.js"></script>
+    <script src="console.time.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+        var generateData, data, gtWidth, lineGraph, epochBaseMs;
+        data = [];
+        gtWidth = 800;
+
+        epochBaseMs = new Date().getTime();
+
+        generateData = function(){
+          var i, y;
+          data = [];
+          y = 80;
+          for(i = 0; i < gtWidth; i++) {
+            epochBaseMs =+ 30000*i
+            data.push({
+              "x": epochBaseMs,
+              "y": y + Math.random()*110
+            });
+          }
+          return data;
+        }
+
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'latencyDfw',
+            title: 'Time to Connect (DFW)',
+            data: generateData()
+          }
+        ];
+
+        console.time('Graph timer');
+        lineGraph = glimpse.graph()
+          .config({
+            domainIntervalUnit: d3.time.week,
+          })
+          .data(dataConfig)
+          .component({ type: 'line', dataId: 'latencyDfw'  })
+          .render('#container');
+        console.timeEnd('Graph timer');
+      });
+    </script>
+  </body>
+</html>

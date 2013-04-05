@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h3>
+      Performance test: Plot n graphs with two area components per graph including legend, domain label and min/max/avg label.
+    </h3>
+    <h4>
+      Tests to perform
+    </h4>
+    <ol>
+      <li>
+        Observe the console timer to determine the time taken for adding/destroying components.
+      </li>
+      <li>
+        Get heap snapshot before and after adding graphs, check for memory leaks.
+      </li>
+      <li>
+        Get heap snapshot before and after destroying graphs, check for memory leaks.
+      </li>
+      <li>
+        Take CPU profile.
+      </li>
+      <li>
+        Open the Task Manager in Chrome and watch the memory/cpu when adding/destroying components
+      </li>
+    </ol>
+    <div id="box">
+      <div class="counter">
+        <span>Graph Count: </span><span id="count"></span>
+      </div>
+      <button id="add">Add Graphs</button>
+      <button id="destroy">Destroy Graphs</button>
+      <div id="container"></div>
+    </div>
+    <script src="../../components/requirejs/require.js"></script>
+    <script src="../../requirejs.conf.js"></script>
+    <script src="perf-requirejs.conf.js"></script>
+    <script src="console.time.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+        var graphs, count, addGraphs, destroyGraphs, container,
+          sampleData, dataConfig;
+
+
+        sampleData = [
+          { "ts": 1317279600000, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40},
+          { "ts": 1317695968421, "sys": 31, "user": 19, "stolen": 1, "wait": 9, "idle": 40},
+          { "ts": 1318112336842, "sys": 30, "user": 21, "stolen": 0, "wait": 9, "idle": 40},
+          { "ts": 1318528705263, "sys": 30, "user": 21, "stolen": 0, "wait": 9, "idle": 40},
+          { "ts": 1318945073684, "sys": 40, "user": 21, "stolen": 0, "wait": 9, "idle": 30},
+          { "ts": 1319361442105, "sys": 30, "user": 21, "stolen": 0, "wait": 9, "idle": 40},
+          { "ts": 1319777810526, "sys": 30, "user": 21, "stolen": 0, "wait": 9, "idle": 40},
+          { "ts": 1320194178947, "sys": 30, "user": 21, "stolen": 0, "wait": 9, "idle": 40},
+          { "ts": 1320610547368, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40},
+          { "ts": 1321026915789, "sys": 10, "user": 10, "stolen": 1, "wait": 9, "idle": 70},
+          { "ts": 1321443284210, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40},
+          { "ts": 1321859652631, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40},
+          { "ts": 1322276021052, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40}
+        ];
+
+        dataConfig = [
+          { id: 'cpu-idle',
+            title: 'Idle',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'idle' }
+          },
+          { id: 'cpu-sys',
+            title: 'System',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'sys' }
+          },
+          { id: 'cpu-user',
+            title: 'User',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'user' }
+          },
+          { id: 'cpu-wait',
+            title: 'Wait',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'wait' }
+          },
+          { id: 'cpu-stolen',
+            title: 'Stolen',
+            data: sampleData,
+            dimensions: { x: 'ts', y: 'stolen' }
+          }
+        ];
+
+
+        graphs = [];
+        count = 100;
+
+        container = document.getElementById('container');
+        console.time('Add Graphs timer');
+        for (var i = 0; i < count; i++) {
+          graphs.push(addGraph(i));
+        }
+        console.timeEnd('Add Graphs timer');
+        updateCount();
+
+        function addGraph(index) {
+          var graph;
+          d3.select('#container').append('div').attr('id','graph-' + index);
+          graph = glimpse.graphBuilder.create('area')
+            .data(dataConfig)
+            .render('#graph-' + index);
+          return graph;
+        }
+
+        function destroyGraphs() {
+          var length, div;
+          length = graphs.length;
+          console.time('Destroy graphs timer');
+          if (length > 0) {
+            for (var i = 0; i < length; i++) {
+              var graph;
+              graph = graphs.pop();
+              graph.destroy();
+            }
+          }
+          console.timeEnd('Destroy graphs timer');
+          div = document.getElementById('container');
+          while(div.hasChildNodes()) {
+              div.removeChild(div.firstChild);
+          }
+          graphs = [];
+          updateCount();
+        }
+
+        function addGraphs() {
+          console.time('Add Graphs fn timer');
+          for (var i = 0; i < count; i++) {
+            graphs.push(addGraph(i));
+          }
+          console.timeEnd('Add Graphs fn timer');
+          updateCount();
+        }
+
+        function updateCount() {
+          d3.select('#count').text(graphs.length);
+        }
+
+        document.getElementById('destroy')
+          .addEventListener('click', destroyGraphs, false);
+
+        document.getElementById('add')
+          .addEventListener('click', addGraphs, false);
+
+      });
+    </script>
+  </body>
+</html>
