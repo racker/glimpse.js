@@ -8311,9 +8311,10 @@ function () {
      * @return {Boolean}
      */
     contains: function(arr, item) {
-      if (item) {
-        return !!arr.length && arr.indexOf(item) !== -1;
+      if (item && Array.isArray(arr) && arr.length) {
+        return arr.indexOf(item) !== -1;
       }
+      return false;
     }
 
   };
@@ -8356,13 +8357,23 @@ function (array) {
       return val != null;
     },
 
+    /**
+     * Gets a property from an object by its path.
+     *
+     * @public
+     * @prarm {Object} obj The object to retrieve from.
+     * @param {String|Array} path The path to the property.
+     * @return {Object}
+     */
     get: function(obj, path) {
+      var currentObj;
+      currentObj = obj;
       array.getArray(path).every(function(p) {
-        obj = obj[p];
-        return this.isDefAndNotNull(obj);
+        currentObj = currentObj[p];
+        return this.isDefAndNotNull(currentObj);
       }, this);
-      if (obj) {
-        return obj;
+      if (this.isDefAndNotNull(currentObj)) {
+        return currentObj;
       }
       return null;
     },
@@ -8673,32 +8684,6 @@ function(assets) {
 
 });
 
-define('core/format',[],
-function() {
-  
-
-
-  return {
-
-    /**
-     * Default formatter for a date/time domain.
-     * Text is in the format:
-     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM UTC
-     * @private
-     * @param {Array} domain Contains min and max of the domain.
-     * @return {String}
-     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
-     */
-    timeDomain: function(domain) {
-      var formatter;
-
-      formatter = d3.time.format.utc('%b %-e, %I:%M %p');
-      return formatter(domain[0]) + ' - ' + formatter(domain[1]) + ' UTC';
-    }
-  };
-
-});
-
 /**
  * @fileOverview
  * String utility functions.
@@ -8747,9 +8732,36 @@ function () {
 
 /**
  * @fileOverview
+ * Utility selector to select a single node which has an attr with a
+ *   certain value.
+ */
+define('d3-ext/select-attr',[
+  'd3'
+],
+function(d3) {
+  
+
+  /**
+   * Selects a sub-selection of the current selection which is the first
+   *   node that has a matching attr and value.
+   * @param attr The attribute to check.
+   * @param value The value that attr must have set.
+   * @return {d3.selection}
+   */
+  d3.selection.prototype.selectAttr = function(attr, value) {
+    return this.select('[' + attr + '="' + value + '"]');
+  };
+
+  return d3;
+});
+
+/**
+ * @fileOverview
  * Utility functions related to d3 selections.
  */
-define('d3-ext/util',[],
+define('d3-ext/util',[
+  'd3-ext/select-attr'
+],
 function() {
   
 
@@ -8763,6 +8775,50 @@ function() {
       return (Array.isArray(selection)) ?
         selection :
         d3.select(selection);
+    },
+
+    /**
+     * Applies a function to a component target conditionally if it exists.
+     *
+     * @param {components.component} component
+     * @param {d3.selection|string|null} selection
+     * @param {Function} fn The function to apply if the target exists.
+     *   This function will be passed the target as a single arg,
+     *   and executed in the context of the component.
+     * @return {null|*} Returns null if target is empty,
+     *   otherwise whatever fn returns.
+     */
+    applyTarget: function(component, selection, fn) {
+      var target, componentTarget;
+
+      target = this.select(selection);
+      componentTarget = component.config('target');
+      if (componentTarget) {
+        target = target.selectAttr('gl-container-name',
+          componentTarget);
+      }
+
+      if (!target || target.empty()) {
+        return null;
+      }
+      return fn.call(component, target);
+    },
+
+    /**
+    * Returns the type of scale
+    * @param  {d3.scale|d3.time.scale} scale
+    * @return {string}
+    */
+    isTimeScale: function(scale) {
+      var scaleFn;
+      if (scale) {
+        scaleFn = scale.toString();
+        //TODO: Find a better way of comparing scale types
+        if (scaleFn === d3.time.scale().toString()) {
+          return true;
+        }
+      }
+      return false;
     }
 
   };
@@ -8907,8 +8963,37 @@ define('data/functions',[
 ], function (obj, accessors) {
   
 
-  return {
+  /**
+   * Checks if the provided date is a valid date
+   * @param  {*|Object}  d
+   * @return {Boolean}
+   */
+  function isValidDate(d) {
+    if (!d instanceof Date) {
+      return false;
+    }
+    return !isNaN(d.getTime());
+  }
 
+  /** Converts the given value to utc date */
+  function convertToUTCDate(value) {
+    var date, dateUtc;
+    date = new Date(value);
+    if (isValidDate(date)) {
+      dateUtc = new Date(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds()
+      );
+      return dateUtc;
+    }
+    return value;
+  }
+
+  return {
     /**
      * Gets the data using the dimension accessor.
      */
@@ -8919,6 +9004,23 @@ define('data/functions',[
         return null;
       }
       return accessors.get(dimValue);
+    },
+
+    /**
+     * Converts given data into UTC date
+     * If it cannot be converted into a valid date
+     * then it returns the data
+     * @param  {Array|number|string} data
+     * @return {Array<Date>|Date}
+     */
+    toUTCDate: function(data) {
+      if (obj.isDefAndNotNull(data)) {
+        if (Array.isArray(data)) {
+          return data.map(convertToUTCDate);
+        }
+        return convertToUTCDate(data);
+      }
+      return data;
     }
 
   };
@@ -8938,7 +9040,7 @@ define('components/line',[
   'components/mixins',
   'data/functions'
 ],
-function(array, config, obj, string, d3Util, mixins, dataFns) {
+function(array, config, obj, string, d3util, mixins, dataFns) {
   
 
   return function() {
@@ -8947,29 +9049,26 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_,
-      remove_,
-      update_;
+      root_;
 
     defaults_ = {
       type: 'line',
-      target: '.gl-framed',
-      cid: undefined,
-      strokeWidth: 2,
-      color: undefined,
+      target: null,
+      cid: null,
+      color: null,
+      strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
-      ease: 'linear',
-      duration: 500,
-      opacity: 1
+      opacity: 1,
+      hiddenStates: null
     };
 
     /**
      * Updates the line component
      * @param  {d3.selection} selection
      */
-    update_ = function(selection) {
+    function update(selection) {
       selection
         .datum(line.data().data)
         .attr({
@@ -8978,17 +9077,34 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
           'opacity': config_.opacity,
           'd': config_.lineGenerator
       });
-    };
+    }
 
     /**
      * Removes elements from the exit selection
      * @param  {d3.selection|Node|string} selection
      */
-    remove_ = function(selection) {
+    function remove(selection) {
       if (selection && selection.exit) {
         selection.exit().remove();
       }
-    };
+    }
+
+    /**
+     * Gets value of X for a data object
+     * Converts into UTC data for time series.
+     * @param  {Object} data
+     * @param  {number} index
+     * @return {string|number}
+     */
+    function getX(data, index) {
+      var x, dataConfig;
+      dataConfig = line.data();
+      x = dataFns.dimension(dataConfig, 'x')(data, index);
+      if (d3util.isTimeScale(config_.xScale)) {
+        return dataFns.toUTCDate(x);
+      }
+      return x;
+    }
 
     /**
      * Main function for line component
@@ -9032,6 +9148,9 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
     line.update = function() {
       var dataConfig, selection;
 
+      if (!root_) {
+        return line;
+      }
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
@@ -9043,21 +9162,21 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
       // Configure the lineGenerator function
       config_.lineGenerator
         .x(function(d, i) {
-          return config_.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+          return config_.xScale(getX(d, i));
         })
         .y(function(d, i) {
           return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
         })
         .defined(function(d, i) {
-          var minX = config_.xScale.range()[0];
-          return (config_.xScale(
-            dataFns.dimension(dataConfig, 'x')(d, i)) >= minX);
+          var minX;
+          minX = config_.xScale.range()[0];
+          return config_.xScale(getX(d, i))  >= minX;
         })
         .interpolate(config_.interpolate);
       selection = root_.select('.gl-path')
         .data(dataConfig.data);
-      update_(selection);
-      remove_(selection);
+      update(selection);
+      remove(selection);
       return line;
     };
 
@@ -9067,17 +9186,21 @@ function(array, config, obj, string, d3Util, mixins, dataFns) {
      * @return {components.line}
      */
     line.render = function(selection) {
-      root_ = d3Util.select(selection).append('g')
-        .attr({
-          'class': 'gl-component gl-line'
+      if (!root_) {
+        root_ = d3util.applyTarget(line, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'line')
+            });
+          root.append('path')
+            .attr({
+              'class': 'gl-path',
+              'fill': 'none'
+            });
+          return root;
         });
-      root_.append('path')
-        .attr({
-          'class': 'gl-path',
-          'fill': 'none'
-        });
+      }
       line.update();
-
       return line;
     };
 
@@ -9119,7 +9242,7 @@ define('components/legend',[
   'd3-ext/util',
   'components/mixins'
 ],
-function(obj, config, string, util, mixins) {
+function(obj, config, string, d3util, mixins) {
   
 
   return function() {
@@ -9138,8 +9261,8 @@ function(obj, config, string, util, mixins) {
     defaults_ = {
       type: 'legend',
       position: 'center-left',
-      target: '.gl-info',
-      cid: undefined,
+      target: null,
+      cid: null,
       indicatorWidth: 10,
       indicatorHeight: 10,
       indicatorSpacing: 4,
@@ -9149,7 +9272,8 @@ function(obj, config, string, util, mixins) {
       fontSize: 13,
       layout: 'horizontal',
       gap: 20,
-      keys: []
+      keys: [],
+      hiddenStates: ['loading']
     };
 
     /**
@@ -9264,20 +9388,17 @@ function(obj, config, string, util, mixins) {
 
       // Return early if no data or render() hasn't been called yet.
       if (!config_.keys || !root_) {
-        return;
+        return legend;
       }
-
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-
       // The selection of legend keys.
       selection = root_
         .selectAll('.gl-legend-key')
         .data(config_.keys, function(d) {
           return d3.functor(d.color)();
         });
-
       remove_(selection);
       enter_(selection);
       update_(selection);
@@ -9293,10 +9414,14 @@ function(obj, config, string, util, mixins) {
      *    or a selector string.
      */
     legend.render = function(selection) {
-      root_ = util.select(selection).append('g')
-        .attr({
-          'class': 'gl-component gl-legend'
+      if (!root_) {
+        root_ = d3util.applyTarget(legend, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'class': string.classes('component', 'legend')
+            });
         });
+      }
       legend.update();
       return legend;
     };
@@ -9346,15 +9471,15 @@ function(obj, config, string, mixins, d3util) {
     var config_,
       defaults_,
       root_,
-      d3axis_,
-      formatAxis_;
+      d3axis_;
 
     config_ = {};
 
     defaults_ = {
-      type: 'x',
+      type: 'axis',
+      axisType: 'x',
       gap: 0,
-      target: '.gl-framed',
+      target: null,
       color: '#333',
       opacity: 0.8,
       fontFamily: 'arial',
@@ -9362,14 +9487,15 @@ function(obj, config, string, mixins, d3util) {
       textBgColor: '#fff',
       textBgSize: 3,
       tickSize: 0,
-      ticks: 3
+      ticks: 3,
+      hiddenStates: null
     };
 
     /**
      * Changes the default formatting of the d3 axis.
      * @private
      */
-    formatAxis_ = function() {
+    function formatAxis() {
       // remove boldness from default axis path
       root_.selectAll('path')
         .attr({
@@ -9384,11 +9510,14 @@ function(obj, config, string, mixins, d3util) {
         });
 
       //Apply padding to the first tick on Y axis
-      if (config_.type === 'y') {
-        var zeroTick, transform;
+      if (config_.axisType === 'y') {
+        var zeroTick, transform, zeroTickLabel;
 
         zeroTick = root_.select('g');
         if (zeroTick.node()) {
+          zeroTickLabel = zeroTick.text() +
+            (config_.unit ? ' ' + config_.unit : '');
+          zeroTick.select('text').text(zeroTickLabel);
           transform = d3.transform(zeroTick.attr('transform'));
           transform.translate[1] -= 10;
           zeroTick.attr('transform', transform.toString());
@@ -9411,7 +9540,28 @@ function(obj, config, string, mixins, d3util) {
         .attr({
           'stroke': 'none'
         });
-    };
+    }
+
+    /**
+     * Repositions the root node within the parent DOM to ensure it's always
+     * last and therefore appears above other elements.
+     *
+     * @private
+     */
+    function repositionDOM() {
+      var rootNode, parentNode;
+
+      // Not rendered yet.
+      if (!root_) {
+        return;
+      }
+      rootNode = root_.node();
+      if (rootNode.nextElementSibling) {
+        parentNode = rootNode.parentNode;
+        root_.remove();
+        parentNode.appendChild(rootNode);
+      }
+    }
 
     /**
      * Main function for Axis component.
@@ -9446,20 +9596,26 @@ function(obj, config, string, mixins, d3util) {
      * Apply updates to the axis.
      */
     axis.update = function() {
+      if (!root_) {
+        return axis;
+      }
       root_.selectAll('g').remove();
       axis.reapply();
       root_.call(d3axis_);
       root_.attr({
         'font-family': config_.fontFamily,
         'font-size': config_.fontSize,
-        'class': string.classes('axis', config_.type + '-axis '),
+        'class': string.classes('component',
+            'axis', config_.axisType + '-axis '),
         'stroke': config_.color,
         'opacity': config_.opacity
       });
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
-      formatAxis_();
+
+      formatAxis();
+      repositionDOM();
       return axis;
     };
 
@@ -9469,12 +9625,16 @@ function(obj, config, string, mixins, d3util) {
      * @return {component.axis}
      */
     axis.render = function(selection) {
-      root_ = d3util.select(selection).append('g')
-        .attr({
-          'fill': 'none',
-          'shape-rendering': 'crispEdges',
-          'stroke-width': 1
+      if (!root_) {
+        root_ = d3util.applyTarget(axis, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'fill': 'none',
+              'shape-rendering': 'crispEdges',
+              'stroke-width': 1
+            });
         });
+      }
       axis.update();
       return axis;
     };
@@ -9531,7 +9691,7 @@ define('components/label',[
   'd3-ext/util',
   'components/mixins'
 ],
-function(obj, config, string, array, util, mixins) {
+function(obj, config, string, array, d3util, mixins) {
   
 
   return function() {
@@ -9547,18 +9707,19 @@ function(obj, config, string, array, util, mixins) {
 
     defaults_ = {
       type: 'label',
-      cid: undefined,
-      dataId: undefined,
-      cssClass: undefined,
-      text: undefined,
-      gap: undefined,
+      cid: null,
+      target: null,
+      dataId: null,
+      cssClass: null,
+      text: null,
+      gap: null,
       layout: 'horizontal',
       position: 'center-right',
       color: '#333',
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'normal',
       fontSize: 13,
-
+      hiddenStates: null
     };
 
     // PUBLIC
@@ -9629,8 +9790,20 @@ function(obj, config, string, array, util, mixins) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      root_ = util.select(selection || config_.target).append('g');
-      root_.append('text');
+      if (!root_) {
+        root_ = d3util.applyTarget(label, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'label')
+            });
+          // With  xml:space = preserve setting, SVG will simply convert all
+          // newline and tab characters to blanks, and then display the result,
+          // including leading and trailing blanks. the same text.
+          root.append('text')
+            .attr('xml:space', 'preserve');
+          return root;
+        });
+      }
       label.update();
       return label;
     };
@@ -9645,11 +9818,8 @@ function(obj, config, string, array, util, mixins) {
       text = label.text();
       // Return early if no data or render() hasn't been called yet.
       if (!root_ || !text) {
-        return;
+        return label;
       }
-      root_.attr({
-        'class': 'gl-component gl-label'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }
@@ -9704,11 +9874,12 @@ function(obj, config, string, array, util, mixins) {
 define('components/overlay',[
   'core/object',
   'core/config',
+  'core/string',
   'components/label',
   'components/mixins',
   'd3-ext/util'
 ],
-function(obj, config, label, mixins, d3util) {
+function(obj, config, string, label, mixins, d3util) {
   
 
   return function() {
@@ -9727,7 +9898,8 @@ function(obj, config, label, mixins, d3util) {
       layoutConfig: { type: 'horizontal', position: 'center', gap: 6 },
       opacity: 1,
       backgroundColor: '#fff',
-      type: 'overlay'
+      type: 'overlay',
+      hiddenStates: null
     };
 
     /**
@@ -9797,11 +9969,17 @@ function(obj, config, label, mixins, d3util) {
      */
     overlay.render = function(selection) {
       if (!root_) {
-        root_ = d3util.select(selection || config_.target).append('g');
-        root_.append('rect');
-        root_.append('g');
-        overlay.update();
+        root_ = d3util.applyTarget(overlay, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'overlay')
+            });
+          root.append('rect');
+          root.append('g');
+          return root;
+        });
       }
+      overlay.update();
       return overlay;
     };
 
@@ -9815,9 +9993,6 @@ function(obj, config, label, mixins, d3util) {
       if (!root_) {
         return overlay;
       }
-      root_.attr({
-        'class': 'gl-component gl-overlay'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }
@@ -9858,10 +10033,11 @@ function(obj, config, label, mixins, d3util) {
 define('components/asset',[
   'core/object',
   'core/config',
+  'core/string',
   'components/mixins',
   'd3-ext/util'
 ],
-function(obj, config, mixins, d3util) {
+function(obj, config, string, mixins, d3util) {
   
 
   return function() {
@@ -9876,7 +10052,8 @@ function(obj, config, mixins, d3util) {
       cid: null,
       assetId: null,
       target: null,
-      cssClass: null
+      cssClass: null,
+      hiddenStates: null
     };
 
     function asset() {
@@ -9915,9 +10092,14 @@ function(obj, config, mixins, d3util) {
      */
     asset.render = function(selection) {
       if (!root_) {
-        root_ = d3util.select(selection || config_.target).append('g');
-        asset.update();
+        root_ = d3util.applyTarget(asset, selection, function(target) {
+          return target.append('g')
+            .attr({
+              'class': string.classes('component', 'asset')
+            });
+        });
       }
+      asset.update();
       return asset;
     };
 
@@ -9933,9 +10115,6 @@ function(obj, config, mixins, d3util) {
       if (!root_) {
         return asset;
       }
-      root_.attr({
-        'class': 'gl-component gl-asset'
-      });
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }
@@ -9995,12 +10174,11 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_,
-      updateAreaGenerator_;
+      root_;
 
     defaults_ = {
       type: 'area',
-      target: '.gl-framed',
+      target: null,
       cid: null,
       xScale: null,
       yScale: null,
@@ -10008,10 +10186,14 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       color: 'steelBlue',
       inLegend: true,
       areaGenerator: d3.svg.area(),
-      opacity: 1
+      opacity: 1,
+      hiddenStates: null
     };
 
-    updateAreaGenerator_ = function() {
+    /**
+     * Updates the area generator function
+     */
+    function updateAreaGenerator() {
       var dataConfig,
           y0,
           y1;
@@ -10042,7 +10224,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       // Configure the areaGenerator function
       config_.areaGenerator
         .x(function(d, i) {
-          return config_.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+          var value;
+          value = dataFns.dimension(dataConfig, 'x')(d, i);
+          return d3util.isTimeScale(config_.xScale) ?
+            config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -10052,11 +10237,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           value = dataFns.dimension(dataConfig, 'x')(d, i);
           if (config_.xScale) {
             minX = config_.xScale.range()[0];
-            value = config_.xScale(value);
+            value = d3util.isTimeScale(config_.xScale) ?
+              config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
           }
           return value >= minX;
         });
-    };
+    }
 
     /**
      * Main function for area component
@@ -10099,7 +10285,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.update = function() {
-      updateAreaGenerator_();
+      if (!root_) {
+        return area;
+      }
+
+      updateAreaGenerator();
+
       if (config_.cssClass) {
         root_.classed(config_.cssClass, true);
       }
@@ -10119,14 +10310,19 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.render = function(selection) {
-      root_ = d3util.select(selection || config_.target).append('g')
-        .attr({
-          'class': 'gl-component gl-area'
+      if (!root_) {
+        root_ = d3util.applyTarget(area, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'area')
+            });
+          root.append('path')
+            .attr({
+              'class': string.classes('path'),
+            });
+          return root;
         });
-      root_.append('path')
-        .attr({
-          'class': 'gl-path',
-        });
+      }
       area.update();
       return area;
     };
@@ -10139,6 +10335,9 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       return root_;
     };
 
+    /**
+     * Destroys the area and removes everything from the DOM.
+     */
     area.destroy = function() {
       if(root_) {
         root_.remove();
@@ -10153,6 +10352,239 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
   };
 });
 
+define('core/format',[],
+function() {
+  
+
+  function getSuffix(optSuffix) {
+    return optSuffix ? ' ' + optSuffix : '';
+  }
+
+  return {
+
+    /**
+     * Default formatter for a date/time domain using UTC time.
+     * Text is in the format:
+     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM
+     * @public
+     * @param {Array} domain Contains min and max of the domain.
+     * @param {String} optSuffix
+     * @return {String}
+     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
+     */
+    timeDomainUTC: function(domain, optSuffix) {
+      var formatter;
+      formatter = d3.time.format.utc('%b %-e, %I:%M %p');
+      return formatter(domain[0]) + ' - ' +
+          formatter(domain[1]) + getSuffix(optSuffix);
+    },
+
+    /**
+     * Formatter for a date/time domain using local time.
+     * Text is in the format:
+     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM -0700
+     * @public
+     * @param {Array} domain Contains min and max of the domain.
+     * @param {String} optSuffix
+     * @return {String}
+     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
+     */
+    timeDomain: function(domain, optSuffix) {
+      var formatter;
+      formatter = d3.time.format('%b %-e, %I:%M %p');
+      return formatter(domain[0]) + ' - ' +
+          formatter(domain[1]) + getSuffix(optSuffix);
+    },
+
+    /**
+     * Standard formatter for non-time domains.
+     * Text is in the format:
+     *   start - end unit
+     *
+     * @param {Array} domain
+     * @param {String} optSuffix
+     * @return {String}
+     */
+    standardDomain: function(domain, optSuffix) {
+      return domain[0] + ' - ' + domain[1] + getSuffix(optSuffix);
+    }
+
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Component to display the start/end values of a domain.
+ */
+define('components/domain-label',[
+  'core/object',
+  'core/config',
+  'core/string',
+  'core/format',
+  'd3-ext/util',
+  'components/mixins',
+  'components/label'
+],
+function(obj, configMixin, string, format, d3util, mixins, label) {
+  
+
+  return function() {
+
+    // PRIVATE
+
+    var defaults,
+      config,
+      root,
+      dataCollection,
+      innerLabel;
+
+    config = {};
+
+    defaults = {
+      type: 'domainLabel',
+      cid: null,
+      target: null,
+      cssClass: null,
+      suffix: null,
+      dataId: '$domain',
+      layout: 'horizontal',
+      position: 'center-right',
+      formatter: format.timeDomainUTC,
+      dimension: 'x',
+      hiddenStates: ['loading']
+    };
+
+    // PUBLIC
+
+    /**
+     * The main function.
+     * @return {components.domainLabel}
+     */
+    function domainLabel() {
+      obj.extend(config, defaults);
+      innerLabel = label();
+      domainLabel.rebind(
+        innerLabel,
+        'color',
+        'fontFamily',
+        'fontWeight',
+        'fontSize');
+      return domainLabel;
+    }
+
+    // Apply Mixins
+    obj.extend(
+      domainLabel,
+      configMixin.mixin(
+        config,
+        'cid',
+        'target',
+        'cssClass'
+      ),
+      mixins.lifecycle,
+      mixins.toggle);
+
+    /**
+     * Gets/Sets the data source to be used with the domainLabel.
+     * @param {Object} data Any data source.
+     * @return {Object|components.domainLabel}
+     */
+    domainLabel.data = function(data) {
+      // Set data if provided.
+      if (data) {
+        dataCollection = data;
+        return domainLabel;
+      }
+      // Otherwise return the entire raw data.
+      return dataCollection;
+    };
+
+    /**
+     * Does the initial render to the document.
+     * @param {d3.selection|Node|string} A d3.selection, DOM node,
+     *    or a selector string.
+     * @return {components.domainLabel}
+     */
+    domainLabel.render = function(selection) {
+      if (!root) {
+        root = d3util.applyTarget(domainLabel, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'domain-label')
+            });
+          return root;
+        });
+        if (root) {
+          innerLabel.render(root);
+        }
+      }
+      domainLabel.update();
+      return domainLabel;
+    };
+
+    /**
+     * Triggers a document update based on new data/config.
+     * @return {components.domainLabel}
+     */
+    domainLabel.update = function() {
+      // Return early if no data or render() hasn't been called yet.
+      if (!root) {
+        return domainLabel;
+      }
+      if (config.cssClass) {
+        root.classed(config.cssClass, true);
+      }
+      if (config.cid) {
+        root.attr('gl-cid', config.cid);
+      }
+      innerLabel
+        .config('dataId', config.dataId)
+        .data(dataCollection)
+        .text(function(domainData) {
+          return config.formatter(domainData[config.dimension], config.suffix);
+        })
+        .update();
+      root.position(config.position);
+      return domainLabel;
+    };
+
+    /**
+     * Returns the formatted text.
+     * @public
+     * @return {String}
+     */
+    domainLabel.text = function() {
+      return innerLabel.text();
+    };
+
+    /**
+     * Returns the root
+     * @return {d3.selection}
+     */
+    domainLabel.root = function () {
+      return root;
+    };
+
+    /**
+     * Destroys the domainLabel and removes everything from the DOM.
+     * @public
+     */
+    domainLabel.destroy = function() {
+      if (root) {
+        root.remove();
+      }
+      root = null;
+      config = null;
+      defaults = null;
+      innerLabel.destroy();
+    };
+
+    return domainLabel();
+  };
+
+});
+
 define('components/component',[
   'components/line',
   'components/legend',
@@ -10160,9 +10592,10 @@ define('components/component',[
   'components/label',
   'components/overlay',
   'components/asset',
-  'components/area'
+  'components/area',
+  'components/domain-label'
 ],
-function(line, legend, axis, label, overlay, asset, area) {
+function(line, legend, axis, label, overlay, asset, area, domainLabel) {
   
 
   return {
@@ -10172,7 +10605,8 @@ function(line, legend, axis, label, overlay, asset, area) {
     label: label,
     overlay: overlay,
     asset: asset,
-    area: area
+    area: area,
+    domainLabel: domainLabel
   };
 
 });
@@ -10188,48 +10622,53 @@ define('layout/layouts',[],function () {
   var layouts = {
 
     'default': {
-      'class': 'gl-vgroup',
-      'split': [10, 65, 10, 15],
-      children: [{
-        padding: 0,
-        'class': 'gl-info'
-      }, {
-        'class': 'gl-framed',
-        paddingTop: 5,
-        border: 1,
-        borderColor: '#999',
-        backgroundColor: '#fff'
-      }, {
-        'class': 'gl-xaxis',
-        padding: 1,
-        paddingTop: 20
-      }, {
-        'class': 'gl-footer',
-        paddingTop: 1,
-        paddingBottom: 1,
-        padding: 1,
-        borderStyle: 'dotted',
-        borderTop: 1
-      }]
+      name: 'gl-vgroup',
+      split: [10, 65, 10, 15],
+      children: [
+        {
+          name: 'gl-info'
+        },
+        {
+          name: 'gl-main',
+          clip: true,
+          border: 1,
+          borderColor: '#999',
+          backgroundColor: '#fff'
+        },
+        {
+          name: 'gl-xaxis',
+          padding: 1,
+          paddingTop: 20
+        },
+        {
+          name: 'gl-footer',
+          paddingTop: 1,
+          paddingBottom: 1,
+          padding: 1,
+          borderStyle: 'dotted',
+          borderTop: 1
+        }
+      ]
     },
 
    'threepane': {
-      'class': 'gl-vgroup',
-      'split': [15, 70, 15],
-      children: [{
-        padding: 1,
-        'class': 'gl-stat'
-      },{
-        'class': 'gl-unframed',
-        padding: 1,
-        paddingBottom: 10,
-        children: {
-          'class': 'gl-framed'
+      name: 'gl-vgroup',
+      split: [15, 70, 15],
+      children: [
+        {
+          name: 'gl-stat',
+          padding: 1
+        },
+        {
+          name: 'gl-main',
+          padding: 1,
+          paddingBottom: 10
+        },
+        {
+          name: 'gl-info',
+          padding: 1
         }
-      },{
-        padding: 1,
-        'class': 'gl-info'
-      }]
+      ]
     }
 
   };
@@ -10329,10 +10768,52 @@ function (layouts, array) {
   }
 
   /**
+   * Sizes the node based on the border parameters
+   * @param  {d3 selection} node
+   * @param  {Object} borderParams
+   * {
+   *    style: border style <'solid'|'dotted'|'dashed'>,
+   *    color: border color <paint>,
+   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+   *    width: {Array} 4 element array corresponding to
+   *      border width of each edge top, right, bottom and left
+   *      Value : <percentage> | <length> | inherit | 0
+   *      0 represents no border
+   *  }
+   * @return {d3 selection}
+   */
+  function resizeBorderedContainer(node, borderParams) {
+    var child;
+
+    if (!borderParams.hasBorder) {
+      return node;
+    }
+
+    child = node.append('g');
+    child.size(
+      node.width() - (borderParams.width[1] + borderParams.width[3]),
+      node.height() - (borderParams.width[0] + borderParams.width[2]));
+    child.position('top-left',
+      borderParams.width[3], borderParams.width[0]);
+    child.attr({
+      'gl-bordered': 'true'
+    });
+    return child;
+  }
+
+  /**
    * Computes border parameters required to set borders
    * @param  {Object} nodeInfo
-   * @return {Object}
-   *  {style: borderStyle, color: borderColor, width: [t, r, b, l]}
+   * @return {Object} borderParams
+   * borderParams = {
+   *    style: border style <'solid'|'dotted'|'dashed'>,
+   *    color: border color <paint>,
+   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+   *    width: {Array} 4 element array corresponding to
+   *      border width of each edge top, right, bottom and left
+   *      Value : <percentage> | <length> | inherit | 0
+   *      0 represents no border
+   *  }
    */
   function getBorderParams(nodeInfo) {
     var borderParams = {},
@@ -10377,9 +10858,9 @@ function (layouts, array) {
   }
 
   function applyLayout(node) {
-    if (node.classed('gl-vgroup')) {
+    if (node.attr('gl-container-name') === 'gl-vgroup') {
       node.layout({type: 'vertical'});
-    } else if (node.classed('gl-hgroup')) {
+    } else if (node.attr('gl-container-name') === 'gl-hgroup') {
       node.layout({type: 'horizontal'});
     }
   }
@@ -10392,16 +10873,22 @@ function (layouts, array) {
      * Takes the root svg element, width and height.
      */
     setLayout: function(layout, root, width, height) {
-      /*jshint loopfunc: true */
-      var i, node, nodeInfo, dim, borderParams;
-      if (typeof layout === 'string') {
-        layout = layouts.getLayout(layout);
-      }
-      layout = array.getArray(layout);
-      for (i = 0; i < layout.length; i += 1) {
-        nodeInfo = layout[i];
+      var layoutConfig, node, dim, borderParams;
+
+      layoutConfig = (typeof layout === 'string') ?
+        layouts.getLayout(layout) :
+        layout;
+
+      array.getArray(layoutConfig).forEach(function(nodeInfo) {
         node = root.append('g');
+
         node.size(width, height);
+        if (nodeInfo.backgroundColor) {
+          node.backgroundColor(nodeInfo.backgroundColor);
+        }
+        if (nodeInfo.clip === true) {
+          node.clip();
+        }
         borderParams = getBorderParams(nodeInfo);
         if (borderParams.hasBorder) {
           node.border(
@@ -10409,21 +10896,24 @@ function (layouts, array) {
             borderParams.color,
             borderParams.width
           );
-        }
-        if (nodeInfo.backgroundColor) {
-          node.backgroundColor(nodeInfo.backgroundColor);
+          node = resizeBorderedContainer(node, borderParams);
+
         }
         node = getPaddingContainer(node, nodeInfo);
+
         node.attr({
-          'class': nodeInfo['class'],
-          'split': nodeInfo.split
+          'gl-container-name': nodeInfo.name,
+          'gl-split': nodeInfo.split
         });
-        if (node.classed('gl-vgroup')) {
+        if (nodeInfo.class) {
+          node.classed(nodeInfo.class, true);
+        }
+        if (node.attr('gl-container-name') === 'gl-vgroup') {
           dim = calculateDim(nodeInfo.split, height);
           dim = dim.map(function(d) {
             return [width, d];
           });
-        } else if (node.classed('gl-hgroup')) {
+        } else if (node.attr('gl-container-name') === 'gl-hgroup') {
           dim = calculateDim(nodeInfo.split, width);
           dim = dim.map(function(d) {
             return [d, height];
@@ -10437,7 +10927,8 @@ function (layouts, array) {
           }
         }, this);
         applyLayout(node);
-      }
+      }, this);
+
     }
 
   };
@@ -10964,14 +11455,13 @@ define('graphs/graph',[
   'core/config',
   'core/array',
   'core/asset-loader',
-  'core/format',
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
   'data/functions',
   'data/collection'
 ],
-function(obj, config, array, assetLoader, format, components, layoutManager,
+function(obj, config, array, assetLoader, components, layoutManager,
   d3util, dataFns, collection) {
   
 
@@ -10987,7 +11477,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       xAxis_,
       yAxis_,
       legend_,
-      xDomainLabel_,
       addComponent_,
       addAxes_,
       addLegend_,
@@ -10996,9 +11485,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       defaultXaccessor_,
       defaultYaccessor_,
       getComponent_,
-      getFrameHeight_,
-      getFrameWidth_,
-      renderComponent_,
       renderComponents_,
       renderDefs_,
       renderPanel_,
@@ -11008,7 +11494,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       updateScales_,
       updateLegend_,
       upsertData_,
-      updateXDomainLabel_,
       updateAxes_,
       showLoadingOverlay_,
       showEmptyOverlay_,
@@ -11022,6 +11507,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
       areComponentsRendered_;
+
     /**
      * @enum
      * The possible states a graph can be in.
@@ -11038,7 +11524,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
      * Components that do not require a default color
      * @type {Array}
      */
-    NO_COLORED_COMPONENTS = ['x', 'y', 'legend', 'label'];
+    NO_COLORED_COMPONENTS = ['axis', 'legend', 'label'];
 
     config_ = {};
 
@@ -11049,14 +11535,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       viewBoxHeight: 230,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
-      marginTop: 10,
-      marginRight: 0,
-      marginBottom: 30,
-      marginLeft: 0,
-      xScale: d3.time.scale(),
+      xScale: d3.time.scale.utc(),
       yScale: d3.scale.linear(),
       showLegend: true,
-      xDomainLabelFormatter: format.timeDomain,
       xTicks: 7,
       yTicks: 3,
       emptyMessage: 'No data to display',
@@ -11064,7 +11545,10 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       errorMessage: 'Error loading graph data',
       state: 'normal',
       yDomainModifier: 1.2,
-      colorPalette: d3.scale.category20().range()
+      colorPalette: d3.scale.category20().range(),
+      xAxisUnit: null,
+      yAxisUnit: null,
+      primaryContainer: 'gl-main'
     };
 
     /**
@@ -11082,6 +11566,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
       if (component.yScale) {
         component.yScale(config_.yScale);
+      }
+      if (!component.config('target')) {
+        component.config('target', config_.primaryContainer);
       }
       setDefaultColor(component);
       components_.push(component);
@@ -11145,22 +11632,22 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * Calculates the frame height
+     * Gets the main container selection.
      * @private
-     * @return {number}
+     * @return {d3.selection}
      */
-    getFrameHeight_ = function() {
-      return root_.select('.gl-framed').height();
-    };
+    function getPrimaryContainer() {
+      return root_.selectAttr('gl-container-name', config_.primaryContainer);
+    }
 
     /**
-     * Calculates the frame width
+     * Calculates the main container width/height
      * @private
-     * @return {number}
+     * @return {Array} Array of numbers [width, height]
      */
-    getFrameWidth_ = function() {
-      return root_.select('.gl-framed').width();
-    };
+    function getPrimaryContainerSize() {
+      return getPrimaryContainer().size();
+    }
 
     /**
      * Sets default color for on component if color not set
@@ -11174,31 +11661,41 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         colors = d3.functor(config_.colorPalette)();
         len = colors.length;
         if (component.hasOwnProperty('color')) {
-          component.config().color = component.config().color ?
-            component.config().color : colors[coloredComponentsCount++ % len];
+          component.config().color = component.config().color ||
+            colors[(coloredComponentsCount += 1) % len];
         }
       }
     }
 
     /**
+     * Get X-extents for provided data
+     * @param  {Object} componentData
+     * @return {Array}
+     */
+    function getXExtents(componentData) {
+      var extents = [];
+      extents = d3.extent(
+        componentData.data,
+        dataFns.dimension(componentData, 'x')
+      );
+      if (d3util.isTimeScale(config_.xScale)) {
+        return dataFns.toUTCDate(extents);
+      }
+      return extents;
+    }
+
+    /**
      * Sets the target selection and calls render on each component
      * @private
-     * @param  {d3.selection} selection
      */
-    renderComponents_ = function(selection) {
+    renderComponents_ = function() {
       if (!components_) {
         return;
       }
       components_.forEach(function(component) {
-        renderComponent_(component, selection);
+        component.render(root_);
       });
       areComponentsRendered_ = true;
-    };
-
-    renderComponent_ = function(component, selection) {
-      var renderTarget;
-      renderTarget = selection.select(component.config('target')) || root_;
-      component.render(renderTarget);
     };
 
     /**
@@ -11306,9 +11803,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       max = d3.max(xExtents) || config_.xScale.domain()[1];
       min = d3.min(xExtents) || config_.xScale.domain()[0];
 
-      //TODO: find a better way to check if the scale is a time scale
-      if (config_.xScale.toString() === d3.time.scale().toString()) {
-
+      if (d3util.isTimeScale(config_.xScale)) {
         if (config_.domainIntervalUnit) {
           offset = config_.domainIntervalUnit.offset(
             max,
@@ -11320,7 +11815,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
 
       xExtents = [min, max];
-      config_.xScale.rangeRound([0, getFrameWidth_()])
+      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
         .domain(xExtents);
       return xExtents;
     };
@@ -11337,7 +11832,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       }
 
       yExtents = d3.extent(yExtents);
-      config_.yScale.rangeRound([getFrameHeight_(), 0])
+      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
         .domain(yExtents);
       return yExtents;
     };
@@ -11355,10 +11850,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         if (component.data) {
           componentData = component.data();
           if (componentData && componentData.data && componentData.dimensions) {
-            xExtents = xExtents.concat(
-              d3.extent(componentData.data,
-                dataFns.dimension(componentData, 'x')));
-
+            xExtents = xExtents.concat(getXExtents(componentData));
             yExtents = yExtents.concat(
               d3.extent(componentData.data,
                 function(d, i) {
@@ -11394,23 +11886,14 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     updateAxes_ = function() {
       xAxis_.config({
         scale: config_.xScale,
-        ticks: config_.xTicks
+        ticks: config_.xTicks,
+        unit: config_.xAxisUnit
       });
       yAxis_.config({
         scale: config_.yScale,
-        ticks: config_.yTicks
+        ticks: config_.yTicks,
+        unit: config_.yAxisUnit
       });
-    };
-
-    /**
-     * Updates the text in the label showing the date range.
-     * TODO: position this with layout manager
-     * @private
-     */
-    updateXDomainLabel_ = function() {
-      xDomainLabel_
-        .data(config_.xScale.domain())
-        .text(config_.xDomainLabelFormatter);
     };
 
     /**
@@ -11422,7 +11905,6 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_.updateDerivations();
       updateAxes_();
       updateLegend_();
-      updateXDomainLabel_();
       if (isRendered_) {
         updateStateDisplay();
       }
@@ -11447,7 +11929,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     };
 
     /**
-     * Displays the empty message over the framed area.
+     * Displays the empty message over the main container.
      * @private
      */
     showEmptyOverlay_ = function() {
@@ -11483,11 +11965,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: labels
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
-     * Displays the loading spinner and message over the framed area.
+     * Displays the loading spinner and message over the main container.
      * @private
      */
     showLoadingOverlay_ = function() {
@@ -11510,11 +11992,11 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: [spinner, label]
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
-     * Displays the error icon and message over the framed area.
+     * Displays the error icon and message over the main container.
      * @private
      */
     showErrorOverlay_ = function() {
@@ -11537,7 +12019,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
           components: [icon, label]
         });
       addComponent_(overlay);
-      overlay.render(root_.select('.gl-framed'));
+      overlay.render(root_);
     };
 
     /**
@@ -11548,9 +12030,8 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
     function initGraphComponents() {
       addLegend_();
       addAxes_();
-      addComponent_(xDomainLabel_);
       update_();
-      renderComponents_(root_);
+      renderComponents_();
     }
 
     /** Sets data on each component if data is set  */
@@ -11574,21 +12055,20 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       dataCollection_ = collection.create();
       xAxis_ = components.axis()
         .config({
-          'type': 'x',
-          'orient': 'bottom',
-          'target': '.gl-xaxis'
+          axisType: 'x',
+          orient: 'bottom',
+          target: 'gl-xaxis',
+          hiddenStates: ['empty', 'error', 'loading']
         });
       yAxis_ = components.axis()
         .config({
-          'type': 'y',
-          'orient': 'right'
+          axisType: 'y',
+          orient: 'right',
+          tickPadding: 5
         });
-      legend_ = components.legend();
-      xDomainLabel_ = components.label()
+      legend_ = components.legend()
         .config({
-          cid: 'xDomainLabel',
-          target: '.gl-footer',
-          position: 'center-right'
+          target: 'gl-info'
         });
       coloredComponentsCount = 0;
       return graph;
@@ -11626,22 +12106,22 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       graph.removeComponent('emptyOverlay');
       graph.removeComponent('loadingOverlay');
       graph.removeComponent('errorOverlay');
-      showComponent(legend_);
-      showComponent(xAxis_);
-      showComponent(xDomainLabel_);
+      components_.forEach(function(c) {
+        var hiddenStates = c.config('hiddenStates');
+        if (array.contains(hiddenStates, config_.state)) {
+          hideComponent(c);
+        } else {
+          showComponent(c);
+        }
+      });
       switch (config_.state) {
         case STATES.EMPTY:
           showEmptyOverlay_();
-          hideComponent(xAxis_);
           break;
         case STATES.LOADING:
-          hideComponent(xAxis_);
-          hideComponent(legend_);
-          hideComponent(xDomainLabel_);
           showLoadingOverlay_();
           break;
         case STATES.ERROR:
-          hideComponent(xAxis_);
           showErrorOverlay_();
           break;
       }
@@ -11678,7 +12158,7 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
         }
         if (Array.isArray(data)) {
           var i, len = data.length;
-          for (i = 0; i < len; i++) {
+          for (i = 0; i < len; i += 1) {
             upsertData_(data[i]);
           }
         } else {
@@ -11712,11 +12192,9 @@ function(obj, config, array, assetLoader, format, components, layoutManager,
       component = components[componentConfig.type]();
       component.config(componentConfig);
       addComponent_(component);
-
       if (isRendered_) {
-        renderComponent_(component, root_);
+        component.render(root_);
       }
-
       return graph;
     };
 
@@ -11864,9 +12342,10 @@ define('graphs/graph-builder',[
   'core/object',
   'core/array',
   'core/string',
+  'd3-ext/util',
   'graphs/graph'
 ],
-function(obj, array, string, graph) {
+function(obj, array, string, d3util, graph) {
   
 
     var defaults,
@@ -11916,16 +12395,22 @@ function(obj, array, string, graph) {
      *
      * TODO: Externalize this once a component manager is available.
      */
-    INTERNAL_COMPONENTS_CONFIG = [{
-      cid: 'gl-stats',
-      type: 'label',
-      dataId: 'gl-stats',
-      position: 'center-left',
-      target: '.gl-footer',
-      text: function(d) {
-        return 'Min: ' + d.min + ' / Max: ' + d.max + ' / Avg: ' + d.avg;
+    INTERNAL_COMPONENTS_CONFIG = [
+      {
+        cid: 'gl-stats',
+        type: 'label',
+        dataId: 'gl-stats',
+        position: 'center-left',
+        target: 'gl-footer'
+      },
+      {
+        cid: 'gl-domain-label',
+        type: 'domainLabel',
+        target: 'gl-footer',
+        position: 'center-right',
+        suffix: 'UTC'
       }
-    }];
+    ];
 
     /**
      * Determines if a data set corresponding to the data id is an internal
@@ -11987,7 +12472,7 @@ function(obj, array, string, graph) {
      * Overrides the removeData() funciton on the graph.
      * Additionally removes any corresponding components when called.
      *
-     * TOOD: remove this in favor of data collection events?
+     * TODO: remove this in favor of data collection events
      *
      * @private
      * @param {graphs.graph} g
@@ -12005,7 +12490,7 @@ function(obj, array, string, graph) {
      * Overrides the add() function on the graph's data collection. Anytime
      * add() is called a new component of the specified type will be added too.
      *
-     * TOOD: remove this in favor of data collection events?
+     * TODO: remove this in favor of data collection events
      *
      * @private
      * @param {String} componentType
@@ -12041,8 +12526,15 @@ function(obj, array, string, graph) {
      * @param {graphs.graph} g
      */
     function addInternalComponents(g) {
+      var unit;
       INTERNAL_COMPONENTS_CONFIG.forEach(function(componentConfig) {
         g.component(componentConfig);
+      });
+      unit = g.config('yAxisUnit') || '';
+      g.component('gl-stats').text(function(d) {
+        return 'Avg: ' + d.avg + unit +
+               '    Min: ' +  d.min + unit +
+               '    Max: ' + d.max + unit;
       });
     }
 
@@ -12081,7 +12573,8 @@ function(obj, array, string, graph) {
       g = graph()
         .config({
           forceY: [0],
-          layout: optLayout || 'default'
+          layout: optLayout || 'default',
+          yAxisUnit: 'ms'
         });
       addInternalData(g);
       addInternalComponents(g);
@@ -12107,18 +12600,67 @@ define('d3-ext/size',['d3'], function(d3) {
   
 
   /**
+   * Determines if the selection's node is a <g> node.
+   * @param {d3.selection} selection
+   * @return {Boolean}
+   */
+  function isGnode(selection) {
+    return !selection.empty() && selection.node().tagName === 'g';
+  }
+
+  /**
+   * Appends a layout rect if it doesn't exist, otherwise returns
+   *   the existing one.
+   * @param {d3.selection} selection
+   * @return {d3.selection}
+   */
+  function lazyAddLayoutRect(selection) {
+    var layoutRect;
+
+    layoutRect = selection.select('.gl-layout');
+    if (layoutRect.empty()) {
+      layoutRect = selection.append('rect')
+        .attr({
+          class: 'gl-layout',
+          fill: 'none'
+        });
+    }
+    return layoutRect;
+  }
+
+  /**
    * d3 selection width
    * Returns width attribute of a non-group element.
    * If element is a group,
    *   it returns the 'gl-width' attribute, if it's defined.
    *   else it returns the bounding box width.
+   * @param {Number} w
+   * @return {Number|d3.selection}
    */
-  d3.selection.prototype.width = function() {
-    var width = this.attr('gl-width');
-    if (width) {
-      return parseInt(width, 10);
+  d3.selection.prototype.width = function(w) {
+    var width, nonGnode;
+
+    // Getting.
+    if (!arguments.length) {
+      width = this.attr('gl-width');
+      if (width) {
+        return parseFloat(width);
+      }
+      return this.node().getBBox().width;
     }
-    return this.node().getBBox().width;
+    // Setting.
+    if (isGnode(this)) {
+      this.attr({
+        'gl-width': w
+      });
+      nonGnode = lazyAddLayoutRect(this);
+    } else {
+      nonGnode = this;
+    }
+    nonGnode.attr({
+      width: w
+    });
+    return this;
   };
 
   /**
@@ -12127,13 +12669,33 @@ define('d3-ext/size',['d3'], function(d3) {
    * If element is a group,
    *   it returns the 'gl-height' attribute, if it's defined.
    *   else it returns the bounding box height.
+   * @param {Number} h
+   * @return {Number|d3.selection}
    */
-  d3.selection.prototype.height = function() {
-    var height = this.attr('gl-height');
-    if (height) {
-      return parseInt(height, 10);
+  d3.selection.prototype.height = function(h) {
+    var height, nonGnode;
+
+    // Getting.
+    if (!arguments.length) {
+      height = this.attr('gl-height');
+      if (height) {
+        return parseFloat(height);
+      }
+      return this.node().getBBox().height;
     }
-    return this.node().getBBox().height;
+    // Setting.
+    if (isGnode(this)) {
+      this.attr({
+        'gl-height': h
+      });
+      nonGnode = lazyAddLayoutRect(this);
+    } else {
+      nonGnode = this;
+    }
+    nonGnode.attr({
+      height: h
+    });
+    return this;
   };
 
   /**
@@ -12141,29 +12703,21 @@ define('d3-ext/size',['d3'], function(d3) {
    * If element is a group,
    *   it sets the gl-width and gl-height attributes.
    * else it returns width and height attribute of the element.
+   *
+   * @param {Number} width
+   * @param {Number} height
+   * @return {Array|d3.selection}
    */
   d3.selection.prototype.size = function(width, height) {
-    var rect;
-
-    if (this.node().tagName === 'g') {
-      rect = this.select('.gl-layout-size');
-
-      if (rect.empty()) {
-        rect = this.append('rect');
-      }
-
-      rect.attr({
-        'class': 'gl-layout-size',
-        width: width,
-        height: height,
-        fill: 'none'
-      });
-
-      this.attr({ 'gl-width': width, 'gl-height': height });
-    } else {
-      this.attr({ width: width, height: height });
+    // No args, return current width/height.
+    if (!arguments.length) {
+      return [
+        this.width(),
+        this.height()
+      ];
     }
-    return this;
+    // Has args, set width/height.
+    return this.width(width).height(height);
   };
 
   return d3;
@@ -12176,6 +12730,7 @@ function (array) {
   
 
   return {
+
     partial: function (fn) {
       var args = array.convertArgs(arguments, 1);
       return function() {
@@ -12184,6 +12739,7 @@ function (array) {
         return fn.apply(this, newArgs);
       };
     }
+
   };
 
 });
@@ -12291,7 +12847,7 @@ define('d3-ext/layout',[
     settings = settings || {};
     var type = settings.type || 'horizontal',
         gap = settings.gap || 0,
-        ignore = settings.ignore || 'gl-layout-size',
+        ignore = settings.ignore || 'gl-layout',
         position = settings.position;
 
     this.each(function() {
@@ -12337,7 +12893,7 @@ define('d3-ext/border',[
     dasharrayDotted: [1,1],
     dasharrayDashed: [5,5],
     lineBorderClassName: 'gl-line-border',
-    sizingRectClassName: 'gl-layout-size'
+    layoutRectClassName: 'gl-layout'
   };
 
   /**
@@ -12403,29 +12959,6 @@ define('d3-ext/border',[
   }
 
   /**
-   * Computes the stroke-width attribute
-   * @param {Array} 4 element array corresponding to
-   *      border width of each edge top, right, bottom and left
-   *      Value : <percentage> | <length> | inherit | 0
-   *      0 represents no border
-   */
-  function getStrokeWidth(width) {
-    var strokeWidth = 1;
-
-    if (!!width[0]) {
-      strokeWidth = parseInt(width[0], 10);
-    } else if (!!width[1])  {
-      strokeWidth = parseInt(width[1], 10);
-    } else if (!!width[2]) {
-      strokeWidth = parseInt(width[2], 10);
-    } else if (!!width[3]) {
-      strokeWidth = parseInt(width[3], 10);
-    }
-
-    return strokeWidth;
-  }
-
-  /**
    * Computes the class name for border
    * @param  {string} style  Style of the border <'solid'|'dashed'|'dotted'>
    * @param  {string} subClass Subclass to append class name
@@ -12458,7 +12991,8 @@ define('d3-ext/border',[
     var  className, dasharray, line;
 
     className = getBorderClass(lineInfo.style, lineInfo.subClass);
-    dasharray = getStrokeDashArray(node, lineInfo);
+    dasharray = lineInfo.style !== 'solid' ?
+      getStrokeDashArray(node, lineInfo) : '';
     line = node.select('.' + className);
 
     if (line.empty()) {
@@ -12474,34 +13008,6 @@ define('d3-ext/border',[
       'stroke': lineInfo.color,
       'stroke-width': lineInfo.width,
       'stroke-dasharray': dasharray.toString()
-    });
-  }
-
-  /**
-   * Applies solid border node by setting the
-   * stroke-dasharray attribute on the rect inside
-   * the node.
-   * @param  {d3.selection} node
-   * @param  {Object} borderInfo Contains
-   *  {
-   *    style: border style <'solid'|'dotted'|'dashed'>,
-   *    color: border color <paint>,
-   *    @see http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
-   *    width: {Array} 4 element array corresponding to
-   *      border width of each edge top, right, bottom and left
-   *      Value : <percentage> | <length> | inherit | 0
-   *      0 represents no border
-   *  }
-   */
-  function applyRectBorder(node, borderInfo) {
-    var strokeDashArray;
-
-    strokeDashArray = getStrokeDashArray(node, borderInfo);
-
-    node.attr({
-      'stroke': borderInfo.color,
-      'stroke-width': getStrokeWidth(borderInfo.width),
-      'stroke-dasharray': strokeDashArray.toString()
     });
   }
 
@@ -12522,17 +13028,19 @@ define('d3-ext/border',[
    */
   function applyBorder(node, borderInfo) {
     //TODO: append this to the object
-    var lineInfo = {
+    var width = 0, lineInfo;
+    lineInfo = {
       color: borderInfo.color,
       style: borderInfo.style
     };
 
     if (!!borderInfo.width[0]) {
+      width = borderInfo.width[0];
       lineInfo = {
         x1: 0,
-        y1: 0,
+        y1: width/2,
         x2: node.width(),
-        y2: 0,
+        y2: width/2,
         subClass: 'top',
         width: borderInfo.width[0],
         color: borderInfo.color,
@@ -12542,10 +13050,11 @@ define('d3-ext/border',[
     }
 
     if (!!borderInfo.width[1]) {
+      width = borderInfo.width[1];
       lineInfo = {
-        x1: node.width(),
+        x1: node.width() - width/2,
         y1: 0,
-        x2: node.width(),
+        x2: node.width() - width/2,
         y2: node.height(),
         subClass: 'right',
         width: borderInfo.width[1],
@@ -12556,11 +13065,12 @@ define('d3-ext/border',[
     }
 
     if (!!borderInfo.width[2]) {
+      width = borderInfo.width[2];
       lineInfo = {
         x1: 0,
-        y1: node.height(),
+        y1: node.height() - width/2,
         x2: node.width(),
-        y2: node.height(),
+        y2: node.height() - width/2,
         subClass: 'bottom',
         width: borderInfo.width[2],
         color: borderInfo.color,
@@ -12570,10 +13080,11 @@ define('d3-ext/border',[
     }
 
     if (!!borderInfo.width[3]) {
+      width = borderInfo.width[3];
       lineInfo = {
-        x1: 0,
+        x1: width/2,
         y1: 0,
-        x2: 0,
+        x2: width/2,
         y2: node.height(),
         subClass: 'left',
         width: borderInfo.width[3],
@@ -12592,7 +13103,7 @@ define('d3-ext/border',[
     node.selectAll('.' + DEFAULTS.lineBorderClassName)
       .remove();
 
-    node.select('.' + DEFAULTS.sizingRectClassName)
+    node.select('.' + DEFAULTS.layoutRectClassName)
       .attr('stroke-dasharray', null);
   }
 
@@ -12609,7 +13120,7 @@ define('d3-ext/border',[
   d3.selection.prototype.border = function border(style, color, width) {
     var rect, borderInfo;
 
-    rect = this.select('.' + DEFAULTS.sizingRectClassName);
+    rect = this.select('.' + DEFAULTS.layoutRectClassName);
 
     if (!rect.empty()) {
       borderInfo = {
@@ -12619,12 +13130,7 @@ define('d3-ext/border',[
       };
 
       removeExistingBorders(this);
-
-      if (style === 'solid') {
-        applyRectBorder(rect, borderInfo);
-      } else {
-        applyBorder(this, borderInfo);
-      }
+      applyBorder(this, borderInfo);
 
       this.attr({
         'gl-border-color': borderInfo.color,
@@ -12656,14 +13162,76 @@ define('d3-ext/background-color',['d3'], function(d3) {
     var rect;
 
     if (this.node().tagName === 'g') {
-      rect = this.select('.gl-layout-size');
+      rect = this.select('.gl-layout');
       if (rect.empty()) {
         this.size(this.width(), this.height());
-        rect = this.select('.gl-layout-size');
+        rect = this.select('.gl-layout');
       }
       rect.attr('fill', color);
       this.attr('gl-background-color', color);
     }
+    return this;
+  };
+
+  return d3;
+});
+
+/**
+ * @fileOverview
+ * d3 Selection clip path helper.
+ */
+define('d3-ext/clip',[
+  'd3',
+  'core/string'
+],
+function(d3, string) {
+  
+
+  /**
+   * d3 selection clip
+   *
+   * Adds a clipPath for the <g> element in the selection.
+   */
+  d3.selection.prototype.clip = function() {
+    var layoutRect, defs, clipPath, clipRect;
+
+    if (this.node().tagName !== 'g') {
+      return this;
+    }
+
+    layoutRect = this.select('.gl-layout');
+    if (layoutRect.empty()) {
+      this.size(this.width(), this.height());
+      layoutRect = this.select('.gl-layout');
+    }
+
+    defs = this.select('defs');
+    if (defs.empty()) {
+      defs = this.append('defs');
+    }
+
+    clipPath = defs.select('clipPath');
+    if (clipPath.empty()) {
+      clipPath = defs.append('clipPath')
+        .attr({
+          class: 'gl-clip-path',
+          id: 'gl-clip-path-' + string.random(),
+        });
+    }
+
+    clipRect = clipPath.select('rect');
+    if (clipRect.empty()) {
+      clipRect = clipPath.append('rect');
+    }
+    clipRect.attr({
+      width: this.width(),
+      height: this.height()
+    });
+
+    this.attr({
+      'gl-clip': 'true',
+      'clip-path': 'url(#' + clipPath.attr('id') + ')'
+    });
     return this;
   };
 
@@ -12676,7 +13244,9 @@ define('d3-ext/d3-ext',[
   'd3-ext/layout',
   'd3-ext/position',
   'd3-ext/border',
-  'd3-ext/background-color'
+  'd3-ext/background-color',
+  'd3-ext/clip',
+  'd3-ext/select-attr'
 ], function(d3) {
   
   return d3;
