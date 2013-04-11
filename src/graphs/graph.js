@@ -44,7 +44,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
-      componentManager_;
+      componentManager_,
+      isRendered;
 
     /**
      * @enum
@@ -73,7 +74,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       viewBoxHeight: 230,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
-      xScale: d3.time.scale.utc(),
+      xScale: d3.time.scale.utc().domain([0, 0]),
       yScale: d3.scale.linear(),
       showLegend: true,
       xTicks: 7,
@@ -446,10 +447,29 @@ function(obj, config, array, assetLoader, componentManager, components,
     };
 
     /**
+     * Determins if the domain is "empty" (both values are zero).
+     * TODO: Move to data collection when ready.
+     *
+     * @private
+     * @param {Array} domain A 2 element array.
+     * @return {Boolean}
+     */
+    function domainIsEmpty(domain) {
+      var d0, d1;
+
+      d0 = domain[0];
+      d1 = domain[1];
+      if (d0 instanceof Date && d1 instanceof Date) {
+        return d0.getTime() === 0 && d1.getTime() === 0;
+      }
+      return d0 === 0 && d1 === 0;
+    }
+
+    /**
      * Adds/removes overlays & hides/shows components based on state.
      * @private
      */
-    function updateStateDisplay() {
+    function updateComponentVisibility() {
       componentManager_.destroy([
           'gl-empty-overlay',
           'gl-loading-overlay',
@@ -471,6 +491,12 @@ function(obj, config, array, assetLoader, componentManager, components,
           break;
         case STATES.ERROR:
           showErrorOverlay_();
+          break;
+        case STATES.NORMAL:
+          // Hide x-axis if theres no data.
+          if (domainIsEmpty(config_.xScale.domain())) {
+            componentManager_.first('gl-xaxis').hide();
+          }
           break;
       }
     }
@@ -534,7 +560,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       }
       config_.state = newState;
       if (graph.isRendered()) {
-        updateStateDisplay();
+        updateComponentVisibility();
       }
       return graph;
     };
@@ -613,7 +639,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       dataCollection_.updateDerivations();
       updateComponents();
       if (graph.isRendered()) {
-        updateStateDisplay();
+        updateComponentVisibility();
       }
       return graph;
     };
@@ -633,7 +659,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       // Update y-axis once more to ensure ticks are above everything else.
       componentManager_.update(['gl-yaxis']);
       // Force state update.
-      updateStateDisplay();
+      updateComponentVisibility();
+      isRendered = true;
       return graph;
     };
 
@@ -642,7 +669,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @return {Boolean}
      */
     graph.isRendered = function() {
-      return !!root_;
+      return isRendered;
     };
 
     /**

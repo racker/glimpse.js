@@ -3,9 +3,10 @@ define([
   'core/asset-loader',
   'data/collection',
   'test-util/component',
-  'data/functions'
+  'data/functions',
+  'components/line'
 ],
-function(graph, assetLoader, dc, compUtil, dataFns) {
+function(graph, assetLoader, dc, compUtil, dataFns, lineComponent) {
   'use strict';
 
   describe('graphs.graph', function() {
@@ -372,12 +373,15 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
     });
 
     describe('render()', function() {
-      var selection, panel;
+      var selection, panel, testLineComponent;
 
       beforeEach(function() {
         setGraph();
         setSpies();
         selection = jasmine.htmlFixture();
+        testLineComponent = lineComponent();
+        spyOn(testLineComponent, 'show');
+        testGraph.component(testLineComponent);
         testGraph.render(selection.node());
         panel = selection.select('svg');
       });
@@ -435,6 +439,26 @@ function(graph, assetLoader, dc, compUtil, dataFns) {
 
       it('calls render on y-axis component', function() {
         expect(yAxis.render).toHaveBeenCalled();
+      });
+
+      it('updates the state display once', function() {
+        expect(testLineComponent.show).toHaveBeenCalledOnce();
+      });
+
+      it('doesnt show the x-axis if there is no data', function() {
+        var testGraph = graph();
+        testGraph.render(selection);
+        expect(testGraph.root().select('.gl-x-axis').node())
+          .toHaveAttr('display', 'none');
+      });
+
+      it('shows the x-axis if there is data', function() {
+        var testGraph = graph()
+          .data(fakeData)
+          .component({ type: 'line', dataId: 'fakeData' })
+          .render(selection);
+        expect(testGraph.root().select('.gl-x-axis').attr('display'))
+          .toBeNull();
       });
 
       //TODO: tests for the layout of components.
