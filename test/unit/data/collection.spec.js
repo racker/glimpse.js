@@ -563,6 +563,112 @@ define([
 
     });
 
+    describe('extents', function() {
+      var fakeData, xExtents, yExtents;
+
+      fakeData = [
+        {
+          id:'fakeData1',
+          data: [
+            { x: 50, y: 10},
+            { x: 145, y: 20},
+            { x: 250, y: 40}
+          ]
+        },
+        {
+          id:'fakeData2',
+          data: [
+            { x: 10, y: 5},
+            { x: 100, y: 20},
+            { x: 200, y: 30}
+          ]
+        },
+        {
+          id:'fakeData3',
+          data: [
+            { x: 10, y: 50},
+            { x: 150, y: 45},
+            { x: 500, y: 35}
+          ]
+        }
+      ];
+
+      beforeEach(function() {
+        dataCollection.add([
+          {
+            id: 'data1',
+            data: fakeData[0].data,
+            dimensions: {
+              x: function(d) { return d.x; },
+              y: function(d) { return d.y; }
+            }
+          },
+          {
+            id: 'data2',
+            data: fakeData[1].data,
+            dimensions: {
+              x: function(d) { return d.x; },
+              y: function(d) { return d.y; }
+            }
+          },
+          {
+            id: 'data3',
+            data: fakeData[2].data,
+            dimensions: {
+              x: function(d) { return d.x; },
+              y: function(d) { return d.y; }
+            }
+          },
+          {
+            id: 'data4',
+            sources: '*',
+            derivation: function () {
+              return {
+                x: 1000,
+                y: 1000,
+              };
+            }
+          }
+        ]);
+      });
+
+      it('calculates the xExtents for the provided sources', function() {
+        xExtents = dataCollection.xExtents(['data1', 'data2']);
+        expect(xExtents).toEqual([10, 250]);
+      });
+
+
+      it('returns the xExtents of all non-derived sources if called with *',
+        function() {
+          dataCollection.xExtents('*');
+          expect(dataCollection.xExtents()).toEqual([10, 500]);
+        }
+      );
+
+      it('returns the xExtents of * if called without parameters', function() {
+        expect(dataCollection.xExtents()).toEqual([10, 500]);
+      });
+
+      it('calculates the yExtents for the provided sources', function() {
+        yExtents = dataCollection.yExtents(['data1', 'data2']);
+        expect(yExtents).toEqual([5, 40]);
+      });
+
+      it('returns the yExtents of all non-derived sources if called with *',
+        function() {
+          dataCollection.yExtents('*');
+          expect(dataCollection.yExtents()).toEqual([5, 50]);
+        }
+      );
+
+      it('returns the yExtents of * if called without parameters', function() {
+        dataCollection.yExtents(['data1', 'data2']);
+        expect(dataCollection.yExtents()).toEqual([5, 50]);
+      });
+
+
+    });
+
   });
 
 });

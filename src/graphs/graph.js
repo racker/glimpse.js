@@ -28,18 +28,8 @@ function(obj, config, array, assetLoader, componentManager, components,
     var config_,
       defaults_,
       root_,
-      configureXScale_,
-      configureYScale_,
       defaultXaccessor_,
       defaultYaccessor_,
-      renderDefs_,
-      renderPanel_,
-      renderSvg_,
-      updateScales_,
-      upsertData_,
-      showLoadingOverlay_,
-      showEmptyOverlay_,
-      showErrorOverlay_,
       dataCollection_,
       STATES,
       NO_COLORED_COMPONENTS,
@@ -87,7 +77,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       colorPalette: d3.scale.category20().range(),
       xAxisUnit: null,
       yAxisUnit: null,
-      primaryContainer: 'gl-main'
+      primaryContainer: 'gl-main',
+      domainIntervalUnit: null
     };
 
     /**
@@ -147,37 +138,20 @@ function(obj, config, array, assetLoader, componentManager, components,
     }
 
     /**
-     * Get X-extents for provided data
-     * @param  {Object} componentData
-     * @return {Array}
-     */
-    function getXExtents(componentData) {
-      var extents = [];
-      extents = d3.extent(
-        componentData.data,
-        dataFns.dimension(componentData, 'x')
-      );
-      if (d3util.isTimeScale(config_.xScale)) {
-        return dataFns.toUTCDate(extents);
-      }
-      return extents;
-    }
-
-    /**
      * Appends defs
      * @private
      * @param  {d3.selection} selection
      */
-    renderDefs_ = function(selection) {
+    function renderDefs(selection) {
       return selection.append('defs');
-    };
+    }
 
     /**
      * Appends svg node to the selection
      * @private
      * @param  {d3.selection} selection
      */
-    renderSvg_ = function(selection) {
+    function renderSvg(selection) {
       root_ = selection.append('svg')
         .attr({
           'width': config_.width,
@@ -190,103 +164,59 @@ function(obj, config, array, assetLoader, componentManager, components,
           'preserveAspectRatio': config_.preserveAspectRatio
         });
       return root_;
-    };
+    }
 
     /**
      * Sets up the panel(svg)
      * @private
      * @param  {d3.selection} selection
      */
-    renderPanel_ = function(selection) {
-      root_ = renderSvg_(selection);
-      renderDefs_(root_);
+    function renderPanel(selection) {
+      root_ = renderSvg(selection);
+      renderDefs(root_);
       layoutManager.setLayout(
         config_.layout,
         root_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
-    };
-
-    /**
-     * configures the X scale
-     * @param  {Array} xExtents
-     */
-    configureXScale_ = function(xExtents) {
-      var max, min, offset, newMin;
-
-      if (config_.forceX) {
-        xExtents = xExtents.concat(config_.forceX);
-      }
-
-      max = d3.max(xExtents) || config_.xScale.domain()[1];
-      min = d3.min(xExtents) || config_.xScale.domain()[0];
-
-      if (d3util.isTimeScale(config_.xScale)) {
-        if (config_.domainIntervalUnit) {
-          offset = config_.domainIntervalUnit.offset(
-            max,
-            -(config_.domainIntervalPeriod || 1)
-          );
-          newMin = +min > +offset ? min : offset;
-          min = newMin;
-        }
-      }
-
-      xExtents = [min, max];
-      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
-        .domain(xExtents);
-      return xExtents;
-    };
-
-    /**
-     * configures the Y scale
-     * @param  {Array} yExtents
-     */
-    configureYScale_ = function(yExtents) {
-      yExtents.push(Math.round(d3.max(yExtents) * config_.yDomainModifier));
-
-      if (config_.forceY) {
-        yExtents = yExtents.concat(config_.forceY);
-      }
-
-      yExtents = d3.extent(yExtents);
-      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
-        .domain(yExtents);
-      return yExtents;
-    };
+    }
 
     /**
      * Updates the domain on the scales
      * @private
      */
-    updateScales_ = function() {
+    function updateScales() {
       var xExtents = [],
-        yExtents = [];
+        yExtents = [],
+        dataIds = [];
 
-      // TODO: Move this extent calculation into the data collection.
       componentManager_.get().forEach(function(component) {
         var componentData;
         if (component.data) {
           componentData = component.data();
           if (componentData && componentData.data && componentData.dimensions) {
-            xExtents = xExtents.concat(getXExtents(componentData));
-            yExtents = yExtents.concat(
-              d3.extent(componentData.data,
-                function(d, i) {
-                  var value = dataFns.dimension(componentData, 'y')(d, i);
-                  // If Y-baselines are used (stacked),
-                  //   use the sum of the baseline and Y.
-                  if (componentData.dimensions.y0) {
-                    value += dataFns.dimension(componentData, 'y0')(d, i);
-                  }
-                  return value;
-                })
-              );
+            dataIds.push(component.config('dataId'));
           }
         }
       });
-      xExtents = configureXScale_(xExtents);
-      yExtents = configureYScale_(yExtents);
+
+      xExtents = calculateXExtents(dataIds);
+      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
+        .domain(xExtents);
+
+      yExtents = calculateYExtents(dataIds);
+      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
+        .domain(yExtents);
+
+      updateDomain(xExtents, yExtents);
+    }
+
+    /**
+     * Updates $domain in the data collection
+     * @param  {Array<number>} xExtents
+     * @param  {Array<number>} yExtents
+     */
+    function updateDomain(xExtents, yExtents) {
       dataCollection_.add({
         id: '$domain',
         sources: '',
@@ -297,7 +227,72 @@ function(obj, config, array, assetLoader, componentManager, components,
           };
         }
       });
-    };
+    }
+
+    /**
+     * Calculates the Y extents
+     * @param  {Array<string>} dataIds
+     * @return {Array<number>}
+     */
+    function calculateYExtents(dataIds) {
+      var yExtents;
+
+      yExtents = dataCollection_.yExtents(dataIds);
+
+      //TODO: move yDomainModifier and forceY to datacollection
+      yExtents.push(Math.round(d3.max(yExtents) * config_.yDomainModifier));
+      if (config_.forceY) {
+        yExtents = yExtents.concat(config_.forceY);
+      }
+      return d3.extent(yExtents);
+    }
+
+    /**
+     * Calculates the X extents
+     * @param  {Array<string>} dataIds
+     * @return {Array<number>}
+     */
+    function calculateXExtents(dataIds) {
+      var xExtents;
+
+      xExtents = dataCollection_.xExtents(dataIds);
+
+      //TODO: move domainIntervalPeriod and forceX to datacollection
+      if (config_.forceX) {
+        xExtents = xExtents.concat(config_.forceX);
+      }
+
+      if (d3util.isTimeScale(config_.xScale)) {
+        if (config_.domainIntervalUnit) {
+          xExtents = appyDomainIntervalPeriod(xExtents);
+        }
+      }
+      if (xExtents) {
+        return d3.extent(xExtents);
+      }
+      return [0, 0];
+    }
+
+    /**
+     * Applies domain interval period to the x domain
+     * @param  {Array} extents
+     * @return {Array}
+     */
+    function appyDomainIntervalPeriod(extents) {
+      var max, min, offset, newMin;
+
+      max = d3.max(extents) ? d3.max(extents) : config_.xScale.domain()[1];
+      min = d3.min(extents) ? d3.min(extents) : config_.xScale.domain()[0];
+
+      offset = config_.domainIntervalUnit.offset(
+        max,
+        -(config_.domainIntervalPeriod || 1)
+      );
+      newMin = +min > +offset ? min : offset;
+      min = newMin;
+
+      return [min, max];
+    }
 
     /**
      * Formats the keys for the legend and calls update on it
@@ -344,7 +339,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * Inserts/Updates object in data array
      * @param  {object} data
      */
-    upsertData_ = function(data) {
+    function upsertData(data) {
       //Set default x and y accessors.
       if(!data.dimensions) {
         data.dimensions = {};
@@ -356,13 +351,13 @@ function(obj, config, array, assetLoader, componentManager, components,
         data.dimensions.y = defaultYaccessor_;
       }
       dataCollection_.upsert(data);
-    };
+    }
 
     /**
      * Displays the empty message over the main container.
      * @private
      */
-    showEmptyOverlay_ = function() {
+    function showEmptyOverlay() {
       var labelTexts,
           labels,
           layoutConfig;
@@ -394,13 +389,13 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: labels
         });
       componentManager_.render(root_, 'gl-empty-overlay');
-    };
+    }
 
     /**
      * Displays the loading spinner and message over the main container.
      * @private
      */
-    showLoadingOverlay_ = function() {
+    function showLoadingOverlay() {
       var label,
           spinner;
 
@@ -419,13 +414,13 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: [spinner, label]
         });
       componentManager_.render(root_, 'gl-loading-overlay');
-    };
+    }
 
     /**
      * Displays the error icon and message over the main container.
      * @private
      */
-    showErrorOverlay_ = function() {
+    function showErrorOverlay() {
       var label,
           icon;
 
@@ -444,7 +439,7 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: [icon, label]
         });
       componentManager_.render(root_, 'gl-error-overlay');
-    };
+    }
 
     /**
      * Determins if the domain is "empty" (both values are zero).
@@ -484,13 +479,13 @@ function(obj, config, array, assetLoader, componentManager, components,
       });
       switch (config_.state) {
         case STATES.EMPTY:
-          showEmptyOverlay_();
+          showEmptyOverlay();
           break;
         case STATES.LOADING:
-          showLoadingOverlay_();
+          showLoadingOverlay();
           break;
         case STATES.ERROR:
-          showErrorOverlay_();
+          showErrorOverlay();
           break;
         case STATES.NORMAL:
           // Hide x-axis if theres no data.
@@ -580,10 +575,10 @@ function(obj, config, array, assetLoader, componentManager, components,
         if (Array.isArray(data)) {
           var i, len = data.length;
           for (i = 0; i < len; i += 1) {
-            upsertData_(data[i]);
+            upsertData(data[i]);
           }
         } else {
-          upsertData_(data);
+          upsertData(data);
         }
         componentManager_.applySharedObject('data');
         return graph;
@@ -634,7 +629,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @return {graphs.graph}
      */
     graph.update = function() {
-      updateScales_();
+      updateScales();
       dataCollection_.updateDerivations();
       updateComponents();
       if (graph.isRendered()) {
@@ -652,7 +647,7 @@ function(obj, config, array, assetLoader, componentManager, components,
     graph.render = function(selector) {
       var selection = d3util.select(selector);
       assetLoader.loadAll();
-      renderPanel_(selection);
+      renderPanel(selection);
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.

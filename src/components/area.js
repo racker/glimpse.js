@@ -72,8 +72,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         .x(function(d, i) {
           var value;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          return d3util.isTimeScale(config_.xScale) ?
-            config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
+          return config_.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -83,8 +82,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           value = dataFns.dimension(dataConfig, 'x')(d, i);
           if (config_.xScale) {
             minX = config_.xScale.range()[0];
-            value = d3util.isTimeScale(config_.xScale) ?
-              config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
+            value = config_.xScale(value);
           }
           return value >= minX;
         });

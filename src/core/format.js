@@ -19,10 +19,12 @@ function() {
      * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
      */
     timeDomainUTC: function(domain, optSuffix) {
-      var formatter;
+      var formatter, dateStart, dateEnd;
       formatter = d3.time.format.utc('%b %-e, %I:%M %p');
-      return formatter(domain[0]) + ' - ' +
-          formatter(domain[1]) + getSuffix(optSuffix);
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
     },
 
     /**
@@ -36,10 +38,12 @@ function() {
      * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
      */
     timeDomain: function(domain, optSuffix) {
-      var formatter;
+      var formatter, dateStart, dateEnd;
       formatter = d3.time.format('%b %-e, %I:%M %p');
-      return formatter(domain[0]) + ' - ' +
-          formatter(domain[1]) + getSuffix(optSuffix);
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
     },
 
     /**

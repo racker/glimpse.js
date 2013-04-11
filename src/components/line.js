@@ -70,10 +70,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     function getX(data, index) {
       var x, dataConfig;
       dataConfig = line.data();
-      x = dataFns.dimension(dataConfig, 'x')(data, index);
-      if (d3util.isTimeScale(config_.xScale)) {
-        return dataFns.toUTCDate(x);
-      }
+      x = dataFns.dimension(
+        dataConfig,
+        'x'
+      )(data, index);
       return x;
     }
 
