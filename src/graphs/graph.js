@@ -535,7 +535,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       }
       componentManager_
         .registerSharedObject('xScale', config_.xScale, true)
-        .registerSharedObject('yScale', config_.yScale, true);
+        .registerSharedObject('yScale', config_.yScale, true)
+        .registerSharedObject('data', dataCollection_, true);
       coloredComponentsCount = 0;
       return graph;
     }
@@ -584,9 +585,7 @@ function(obj, config, array, assetLoader, componentManager, components,
         } else {
           upsertData_(data);
         }
-        componentManager_
-          .registerSharedObject('data', dataCollection_, true)
-          .applySharedObject('data');
+        componentManager_.applySharedObject('data');
         return graph;
       }
 

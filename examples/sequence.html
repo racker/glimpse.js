@@ -59,6 +59,12 @@
           g3.update();
         }, 0);
 
+        var g4 = glimpse.graphBuilder().create('line')
+          .render('#container');
+        var dataCollection = g4.data();
+        dataCollection.add(dataConfig);
+        g4.update();
+
         // for debugging
         window.gl = glimpse;
         window.g1 = g1;

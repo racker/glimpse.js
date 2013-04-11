@@ -125,6 +125,16 @@ function(graph, assetLoader, dc, compUtil, dataFns, lineComponent) {
       expect(testGraph.component('gl-yaxis').config('unit')).toBe('ms');
     });
 
+    it('auto-sets data on new components via the data collection', function() {
+      var newGraph, dataCollection, testLine;
+      newGraph = graph();
+      dataCollection = newGraph.data();
+      newGraph.component({ cid: 'testLine', type: 'line', dataId: 'foo' });
+      testLine = newGraph.component().first('testLine');
+      dataCollection.add({ id: 'foo' });
+      expect(testLine.data().id).toBe('foo');
+    });
+
     describe('config()', function() {
       var config;
 
@@ -642,9 +652,8 @@ function(graph, assetLoader, dc, compUtil, dataFns, lineComponent) {
       it('sets data on component after data is set(post render)',
         function () {
           testGraph.render(selection.node());
-          expect(testComponent.data()).not.toBeDefined();
           testGraph.data(fakeData).update();
-          expect(testComponent.data()).toBeDefinedAndNotNull();
+          expect(testComponent.data()).toBe(fakeData[0]);
       });
 
     });
