@@ -470,6 +470,22 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
           .toBeNull();
       });
 
+      it('doesnt show the y-axis if there is no data', function() {
+        var testGraph = graph();
+        testGraph.render(selection);
+        expect(testGraph.root().select('.gl-y-axis').node())
+          .toHaveAttr('display', 'none');
+      });
+
+      it('shows the y-axis if there is data', function() {
+        var testGraph = graph()
+          .data(fakeData)
+          .component({ type: 'line', dataId: 'fakeData' })
+          .render(selection);
+        expect(testGraph.root().select('.gl-y-axis').attr('display'))
+          .toBeNull();
+      });
+
       //TODO: tests for the layout of components.
       //dependency layout manager.
 

@@ -200,15 +200,18 @@ function(obj, config, array, assetLoader, componentManager, components,
         }
       });
 
-      xExtents = calculateXExtents(dataIds);
-      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
-        .domain(xExtents);
+      if (dataIds.length > 0) {
+        xExtents = calculateXExtents(dataIds);
+        config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
+          .domain(xExtents);
 
-      yExtents = calculateYExtents(dataIds);
-      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
-        .domain(yExtents);
-
-      updateDomain(xExtents, yExtents);
+        yExtents = calculateYExtents(dataIds);
+        config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
+          .domain(yExtents);
+        updateDomain(xExtents, yExtents);
+      } else {
+        updateDomain([0,0], [0,0]);
+      }
     }
 
     /**
@@ -491,6 +494,7 @@ function(obj, config, array, assetLoader, componentManager, components,
           // Hide x-axis if theres no data.
           if (domainIsEmpty(config_.xScale.domain())) {
             componentManager_.first('gl-xaxis').hide();
+            componentManager_.first('gl-yaxis').hide();
           }
           break;
       }
