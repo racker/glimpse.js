@@ -26,11 +26,13 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       type: 'line',
       target: null,
       cid: null,
-      color: null,
+      color: '#000',
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
+      xScale: null,
+      yScale: null,
       opacity: 1,
       hiddenStates: null
     };

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Asset Component Examples</h1>
+    <h3>This example shows asset component with different configurations</h3>
+    <h5>1. Error icon asset component</h5>
+    <svg height="50px" id="container"></svg>
+
+    <h5>2. Spinner asset component</h5>
+    <svg id="container-1"></svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // 1. error icon asset
+        var assetComponent = glimpse.components.asset(), 
+            assets = glimpse.assetLoader.loadAll(), //load assets
+            spinner; 
+
+        assetComponent.config({
+          assetId: 'gl-asset-icon-error'
+        });
+            
+        assetComponent.render('#container');
+     
+        //2. spinner asset
+        spinner = glimpse.components.asset().config({
+              assetId: 'gl-asset-spinner'
+        });
+
+        spinner.render('#container-1');
+
+
+        // for debugging
+        window.component = spinner;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>

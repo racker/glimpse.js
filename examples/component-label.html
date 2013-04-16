@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Label Component Examples</h1>
+    <h3>This example shows label component with different configurations</h3>
+    <h5>1. Basic label</h5>
+    <svg height="50px" id="container"></svg>
+
+    <h5>2. Label with bigger font size</h5>
+    <svg height="50px" id="container-1"></svg>
+
+    <h5>3. Label with 'new-cls' css class name and a 'gl-second' target (please inspect)</h5>
+    <svg height="50px" id="container-2">
+      <g gl-container-name="gl-first"></g>
+      <g gl-container-name="gl-second"></g>
+    </svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var oneHr       = 1000 * 60 * 60,
+            latencyData = [
+              { "time": 0,       "latency": 100 },
+              { "time": oneHr,   "latency": 50 },
+              { "time": oneHr*2, "latency": 25 },
+              { "time": oneHr*8, "latency": 25 }
+            ], 
+            dataConfig   = {
+              data : latencyData, 
+              id : 'firstData'
+            };
+
+        // 1. Basic default label
+        var dataCollection = glimpse.dataCollection.create(),
+            labelComponent = glimpse.components.label(), 
+            labelComponent1, 
+            labelComponent2;
+
+        dataCollection.add(dataConfig);
+
+        // binding the data to the component   
+        labelComponent.data(dataCollection)
+          .config('dataId', 'firstData');
+
+        // d - reference to data
+        labelComponent.text(function(d, i) {
+          return d.id;
+        });
+            
+        labelComponent.render('#container');
+        
+
+        // 2. Label configured with different font size, color, font, etc.
+        labelComponent1 = glimpse.components.label().text('Bigger label');
+
+        labelComponent1.config({
+              'color': '#FF0000', 
+              'fontSize': 20, 
+              'fontFamily': 'verdana', 
+              'fontWeight': 'bold'
+        });
+
+        labelComponent1.render('#container-1');
+
+        //3. Label with target config (target element using gl-container-name) and css class added
+        labelComponent2 = glimpse.components.label().text('Label on <g> with gl-container-name="gl-second"');
+
+        labelComponent2.config({
+              'cssClass' : 'new-cls', 
+              'target' : 'gl-second', 
+              'color' :   '#5E2D79'
+        });
+
+        labelComponent2.render('#container-2');
+
+        // for debugging
+        window.component = labelComponent2;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>

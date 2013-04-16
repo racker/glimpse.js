@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Overlay Component Examples</h1>
+    <h3>This example shows overlay component with different configurations</h3>
+    <h5> 1. Basic overlay component</h5>
+    <svg height="100px" id="container"></svg>
+
+    <h5> 2. Overlay component with vertical positioning</h5>
+    <svg height="100px" id="container-1"></svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+      var label,
+          spinner,
+          overlayComponent,
+          overlayComponent1,
+          label1,
+          spinner1,
+          assets = glimpse.assetLoader.loadAll();
+
+      spinner = glimpse.components.asset().config({
+        assetId: 'gl-asset-spinner'
+      });
+
+      label = glimpse.components.label()
+        .text("loading")
+        .config({
+          color: '#666',
+          fontSize: 13
+        });
+
+      // 1. Basic overlay 
+      overlayComponent = glimpse.components.overlay().config({
+          cid: 'gl-loading-overlay',
+          components: [spinner, label]
+        });
+
+       overlayComponent.render('#container');
+
+       //2.  Overlay component with vertical positioning
+      spinner1 = glimpse.components.asset().config({
+        assetId: 'gl-asset-spinner'
+      });
+
+      label1 = glimpse.components.label()
+        .text("loading")
+        .config({
+          color: '#666',
+          fontSize: 13
+        });
+
+      overlayComponent1 = glimpse.components.overlay().config({
+          components: [spinner1, label1], 
+          layoutConfig: { type: 'vertical', position: 'center', gap: 8 },
+          backgroundColor: '#fff'
+        });
+
+        overlayComponent1.render('#container-1');
+
+
+        // for debugging
+        window.component = overlayComponent;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>

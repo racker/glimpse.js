@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Legend Component Examples</h1>
+    <h3>This example shows legend component with different configurations</h3>
+    <h5> 1. Legend componenet with basic config</h5>
+    <svg height="100px" id="container"></svg>
+
+    <h5> 2. Legend with vertical layout and differet spacing, font, color, gap, etc. configurations</h5>
+    <svg id="container-1"></svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // 1. Legend componenet with basic config.
+        var legendComponent = glimpse.components.legend(),
+            key1 = { color: 'blue', label: 'blue label' },
+            key2 = { color: function() { return 'green'; }, label: 'green label' },
+            keys = [key1, key2],
+            legendComponent1;
+            
+        // bind keys to the legend.  
+        legendComponent.keys(keys);
+            
+        legendComponent.render('#container');
+        
+        //2. Legend with vertical layout and differet spacing, font, color, gap, etc. configurations.
+        legendComponent1 = glimpse.components.legend();
+
+        legendComponent1.keys(keys);
+        legendComponent1.config({
+            'cid' : 'legend-2', 
+            'fontColor' : '#FF0000', 
+            'layout' : 'vertical',
+            'position': 'left',
+            'fontSize': 18, 
+            'fontFamily': 'verdana', 
+            'fontWeight': 'bold',
+            'gap': 10,
+            'indicatorWidth': 15,
+            'indicatorHeight': 15,
+            'indicatorSpacing': 6
+          });
+
+        legendComponent1.render('#container-1');
+
+        // for debugging
+        window.graph = legendComponent;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>

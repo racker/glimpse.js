@@ -504,7 +504,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
       it('sets default color on component using colorPalette',
         function() {
-          expect(testComponent.config().color).toBe('green');
+          expect(testComponent.config().color).toBe('#000');
         }
       );
 

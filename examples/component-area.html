@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Area Component Examples</h1>
+    <h3>This example shows area component with different configurations</h3>
+    <h5> 1. Basic area with x and y scale provided</h5>
+    <svg height="200px" id="container"></svg>
+
+    <h5> 2. Area component with lower opacity and red color</h5>
+    <svg height="200px" id="container-1"></svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var oneHr = 1000 * 60 * 60,
+            latencyData = [
+              { "time": 0,  "latency": 100 },
+              { "time": oneHr, "latency": 50 },
+              { "time": oneHr*2, "latency": 25 },
+              { "time": oneHr*3, "latency": 25 }
+            ],
+            dataConfig = [
+            {
+              id: 'latencyDfw',
+              title: 'Time to Connect (DFW)',
+              data: latencyData,
+              dimensions: {
+                x: 'time',
+                y: 'latency'
+              }
+            }
+            ];
+
+        // 1. Area componenet with basic config.
+        var timeScale = d3.time.scale(),
+            linearScale = d3.scale.linear(), 
+            dataCollection = glimpse.dataCollection.create(),
+            areaComponent = glimpse.components.area(),
+            x, 
+            y, 
+            areaComponent1;
+
+        // needs x and y scale because there is no graph
+        x = timeScale.domain([0, oneHr*3]).range([0, 200]), 
+        y = linearScale.domain([0, 100]).range([100, 0]);
+
+        //bind data using dataCollection    
+        dataCollection.add(dataConfig);
+
+
+        areaComponent.data(dataCollection).config({
+            'dataId' : 'latencyDfw', 
+            'xScale' : x, 
+            'yScale' : y
+          });
+            
+        areaComponent.render('#container');
+        
+        //2. Area with lower opacity and red color
+        areaComponent1 = glimpse.components.area();
+
+        areaComponent1.data(dataCollection).config({
+            'dataId' : 'latencyDfw', 
+            'color' : '#FF0000',
+            'opacity' : .3,
+            'xScale' : x, 
+            'yScale' : y
+          });
+
+        areaComponent1.render('#container-1');
+
+        // for debugging
+        window.component = areaComponent;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>
