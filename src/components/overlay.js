@@ -8,7 +8,7 @@ define([
   'core/config',
   'core/string',
   'components/label',
-  'components/mixins',
+  'mixins/mixins',
   'd3-ext/util'
 ],
 function(obj, config, string, label, mixins, d3util) {
@@ -83,6 +83,12 @@ function(obj, config, string, label, mixins, d3util) {
       mixins.lifecycle,
       mixins.toggle);
 
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    overlay.dispatch = mixins.dispatch();
+
     /*
      * Gets the root selection of this component.
      * @public
@@ -112,6 +118,7 @@ function(obj, config, string, label, mixins, d3util) {
         });
       }
       overlay.update();
+      overlay.dispatch.render.call(this);
       return overlay;
     };
 
@@ -132,6 +139,7 @@ function(obj, config, string, label, mixins, d3util) {
         root_.attr('gl-cid', config_.cid);
       }
       updateChildren_();
+      overlay.dispatch.update.call(this);
       return overlay;
     };
 
@@ -150,6 +158,7 @@ function(obj, config, string, label, mixins, d3util) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      overlay.dispatch.destroy.call(this);
     };
 
     return overlay();

@@ -8,7 +8,7 @@ define([
   'core/object',
   'core/string',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'data/functions'
 ],
 function(array, config, obj, string, d3util, mixins, dataFns) {
@@ -99,6 +99,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       mixins.lifecycle,
       mixins.toggle);
 
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    line.dispatch = mixins.dispatch();
+
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
     line.data = function(data) {
@@ -148,6 +154,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         .data(dataConfig.data);
       update(selection);
       remove(selection);
+      line.dispatch.update.call(this);
       return line;
     };
 
@@ -172,6 +179,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         });
       }
       line.update();
+      line.dispatch.render.call(this);
       return line;
     };
 
@@ -194,6 +202,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      line.dispatch.destroy.call(this);
     };
 
     return line();

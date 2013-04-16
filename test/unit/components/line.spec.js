@@ -9,7 +9,7 @@ function(d3, object, line, dc) {
 
   describe('components.line', function() {
 
-    var testLine, data, dataCollection;
+    var testLine, data, dataCollection, handlerSpy;
 
     data = [{
       id:'fakeData',
@@ -39,6 +39,7 @@ function(d3, object, line, dc) {
       dataCollection = dc.create();
       spyOn(object, 'extend').andCallThrough();
       testLine = line();
+      handlerSpy = jasmine.createSpy();
     });
 
     afterEach(function(){
@@ -154,8 +155,13 @@ function(d3, object, line, dc) {
         setData();
         setScales();
         testLine.render('#svg-fixture');
+        testLine.dispatch.on('update', handlerSpy);
         testLine.update();
         path = selection.select('path').node();
+      });
+
+      it('dispatches an "update" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('configures the lineGenerator', function() {
@@ -197,7 +203,12 @@ function(d3, object, line, dc) {
         selection = jasmine.svgFixture();
         setData();
         spyOn(testLine, 'update');
+        testLine.dispatch.on('render', handlerSpy);
         testLine.render('#svg-fixture');
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('appends group element to the selection', function() {
@@ -231,7 +242,12 @@ function(d3, object, line, dc) {
         setData();
         spyOn(testLine, 'update');
         testLine.render(selection);
+        testLine.dispatch.on('destroy', handlerSpy);
         testLine.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all child nodes', function() {

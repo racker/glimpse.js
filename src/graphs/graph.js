@@ -12,7 +12,7 @@ define([
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'data/functions',
   'data/collection'
 ],
@@ -548,6 +548,12 @@ function(obj, config, array, assetLoader, componentManager, components,
     graph.STATES = STATES;
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    graph.dispatch = mixins.dispatch('state');
+
+    /**
      * Configures the graph state and triggers overlays updates.
      * @public
      * @return {graph.STATES}
@@ -562,6 +568,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
+      graph.dispatch.state.call(this);
       return graph;
     };
 
@@ -639,6 +646,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
+      graph.dispatch.update.call(this);
       return graph;
     };
 
@@ -659,6 +667,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
+      graph.dispatch.render.call(this);
       return graph;
     };
 
@@ -681,6 +690,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       config_ = null;
       defaults_ = null;
       componentManager_ = null;
+      graph.dispatch.destroy.call(this);
     };
 
      /**

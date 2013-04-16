@@ -8,7 +8,7 @@ define([
   'core/string',
   'core/format',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'components/label'
 ],
 function(obj, configMixin, string, format, d3util, mixins, label) {
@@ -71,6 +71,12 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    domainLabel.dispatch = mixins.dispatch();
+
+    /**
      * Gets/Sets the data source to be used with the domainLabel.
      * @param {Object} data Any data source.
      * @return {Object|components.domainLabel}
@@ -105,6 +111,7 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
         }
       }
       domainLabel.update();
+      domainLabel.dispatch.render.call(this);
       return domainLabel;
     };
 
@@ -135,6 +142,7 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
       }
       innerLabel.update();
       root.position(config.position);
+      domainLabel.dispatch.update.call(this);
       return domainLabel;
     };
 
@@ -167,6 +175,7 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
       config = null;
       defaults = null;
       innerLabel.destroy();
+      domainLabel.dispatch.destroy.call(this);
     };
 
     return domainLabel();

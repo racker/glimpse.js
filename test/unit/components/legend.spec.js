@@ -5,7 +5,7 @@ function(legend) {
   'use strict';
 
   describe('components.legend', function() {
-    var testLegend, svgNode, rootNode, key1, key2, keys;
+    var testLegend, svgNode, rootNode, key1, key2, keys, handlerSpy;
 
     function select(selector) {
       return jasmine.svgFixture().select(selector);
@@ -23,6 +23,7 @@ function(legend) {
       testLegend.keys(keys);
       svgNode = jasmine.svgFixture().node();
       spyOn(testLegend, 'update').andCallThrough();
+      handlerSpy = jasmine.createSpy();
     });
 
     describe('config', function() {
@@ -48,8 +49,13 @@ function(legend) {
     describe('render()', function() {
 
       beforeEach(function() {
+        testLegend.dispatch.on('render', handlerSpy);
         testLegend.render('#svg-fixture');
         rootNode = select('.gl-legend').node();
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('renders to the provided selection', function() {
@@ -137,6 +143,12 @@ function(legend) {
 
         beforeEach(function() {
           testLegend.render('#svg-fixture');
+          testLegend.dispatch.on('update', handlerSpy);
+        });
+
+        it('dispatches an "update" event', function() {
+          testLegend.update();
+          expect(handlerSpy).toHaveBeenCalledOnce();
         });
 
         it('removes keys from the DOM when key data is removed', function() {
@@ -196,7 +208,12 @@ function(legend) {
       beforeEach(function() {
         selection = jasmine.svgFixture();
         testLegend.render(selection);
+        testLegend.dispatch.on('destroy', handlerSpy);
         testLegend.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all the dom nodes', function() {

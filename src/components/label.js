@@ -8,7 +8,7 @@ define([
   'core/string',
   'core/array',
   'd3-ext/util',
-  'components/mixins'
+  'mixins/mixins'
 ],
 function(obj, config, string, array, d3util, mixins) {
   'use strict';
@@ -69,6 +69,12 @@ function(obj, config, string, array, d3util, mixins) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    label.dispatch = mixins.dispatch();
+
+    /**
      * Gets/Sets the data source to be used with the label.
      * Uses the configurable "text" accessor function to retrieve text.
      * @param {Object} data Any data source.
@@ -124,6 +130,7 @@ function(obj, config, string, array, d3util, mixins) {
         });
       }
       label.update();
+      label.dispatch.render.call(this);
       return label;
     };
 
@@ -156,6 +163,7 @@ function(obj, config, string, array, d3util, mixins) {
       })
       .text(text);
       root_.position(config_.position);
+      label.dispatch.update.call(this);
       return label;
     };
 
@@ -178,6 +186,7 @@ function(obj, config, string, array, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      label.dispatch.destroy.call(this);
     };
 
     return label();

@@ -8,7 +8,7 @@ function(area, dc) {
   describe('components.area', function() {
 
     var testArea, testData, selection, areaGenerator,
-        dataCollection;
+        dataCollection, handlerSpy;
 
     function getTestData() {
       return [{
@@ -40,6 +40,7 @@ function(area, dc) {
       testArea = area();
       areaGenerator = testArea.areaGenerator();
       dataCollection = dc.create();
+      handlerSpy = jasmine.createSpy();
     });
 
     it('has has convenience functions', function() {
@@ -177,7 +178,12 @@ function(area, dc) {
       beforeEach(function() {
         setData();
         spyOn(testArea, 'update').andCallThrough();
+        testArea.dispatch.on('render', handlerSpy);
         testArea.render(selection);
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('appends the root element', function() {
@@ -233,7 +239,12 @@ function(area, dc) {
       beforeEach(function() {
         setData();
         testArea.render(selection);
+        testArea.dispatch.on('destroy', handlerSpy);
         testArea.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all child nodes', function() {
@@ -258,8 +269,13 @@ function(area, dc) {
         testData[0].dimensions.y = function(d) { return d.y + 2; };
         testData[0].dimensions.y0 = null;
         setData();
+        testArea.dispatch.on('update', handlerSpy);
         testArea.update();
         path = selection.select('path').node();
+      });
+
+      it('dispatches an "update" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('updates the areaGenerator x accessor', function() {
@@ -288,4 +304,3 @@ function(area, dc) {
   });
 
 });
-

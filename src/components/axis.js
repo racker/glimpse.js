@@ -6,7 +6,7 @@ define([
   'core/object',
   'core/config',
   'core/string',
-  'components/mixins',
+  'mixins/mixins',
   'd3-ext/util'
 ],
 function(obj, config, string, mixins, d3util) {
@@ -128,7 +128,6 @@ function(obj, config, string, mixins, d3util) {
       return axis;
     }
 
-
     // Apply mixins.
     obj.extend(
       axis,
@@ -137,6 +136,12 @@ function(obj, config, string, mixins, d3util) {
         'cid'),
       mixins.lifecycle,
       mixins.toggle);
+
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    axis.dispatch = mixins.dispatch();
 
     /**
      * Apply updates to the axis.
@@ -162,6 +167,7 @@ function(obj, config, string, mixins, d3util) {
 
       formatAxis();
       repositionDOM();
+      axis.dispatch.update.call(this);
       return axis;
     };
 
@@ -182,6 +188,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       axis.update();
+      axis.dispatch.render.call(this);
       return axis;
     };
 
@@ -218,6 +225,7 @@ function(obj, config, string, mixins, d3util) {
       config_ = null;
       defaults_ = null;
       d3axis_ = null;
+      axis.dispatch.destroy.call(this);
     };
 
     return axis();

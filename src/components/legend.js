@@ -8,7 +8,7 @@ define([
   'core/config',
   'core/string',
   'd3-ext/util',
-  'components/mixins'
+  'mixins/mixins'
 ],
 function(obj, config, string, d3util, mixins) {
   'use strict';
@@ -148,6 +148,12 @@ function(obj, config, string, d3util, mixins) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    legend.dispatch = mixins.dispatch();
+
+    /**
      * Apply post-render updates.
      * Insert/update/remove DOM for each key.
      */
@@ -172,6 +178,7 @@ function(obj, config, string, d3util, mixins) {
       update_(selection);
       root_.layout({type: config_.layout, gap: config_.gap});
       root_.position(config_.position);
+      legend.dispatch.update.call(this);
       return legend;
     };
 
@@ -191,6 +198,7 @@ function(obj, config, string, d3util, mixins) {
         });
       }
       legend.update();
+      legend.dispatch.render.call(this);
       return legend;
     };
 
@@ -213,6 +221,7 @@ function(obj, config, string, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      legend.dispatch.destroy.call(this);
     };
 
     return legend();

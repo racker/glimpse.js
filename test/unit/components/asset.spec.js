@@ -4,16 +4,14 @@ define([
 function(asset) {
   'use strict';
 
-  describe('components.overlay', function() {
-    var testAsset, selection, root, useEl;
+  describe('components.asset', function() {
+    var testAsset, selection, root, useEl, handlerSpy;
 
     beforeEach(function() {
       selection = jasmine.svgFixture();
       testAsset = asset();
       spyOn(testAsset, 'update').andCallThrough();
-      testAsset.render(selection);
-      root = testAsset.root();
-      useEl = root.select('use');
+      handlerSpy = jasmine.createSpy();
     });
 
     it('adds all convenience functions', function() {
@@ -23,6 +21,11 @@ function(asset) {
 
     describe('root()', function() {
 
+      beforeEach(function() {
+        testAsset.render(selection);
+        root = testAsset.root();
+      });
+
       it('gets the root element', function() {
         var firstChild = selection.node().firstChild;
         expect(root.node()).toBe(firstChild);
@@ -31,6 +34,17 @@ function(asset) {
     });
 
     describe('render()', function() {
+
+      beforeEach(function() {
+        testAsset.dispatch.on('render', handlerSpy);
+        testAsset.render(selection);
+        root = testAsset.root();
+        useEl = root.select('use');
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
 
       it('renders to the provided selection', function() {
         expect(root.node().parentNode).toBe(selection.node());
@@ -55,6 +69,17 @@ function(asset) {
     });
 
     describe('update()', function() {
+
+      beforeEach(function() {
+        testAsset.dispatch.on('update', handlerSpy);
+        testAsset.render(selection);
+        root = testAsset.root();
+        useEl = root.select('use');
+      });
+
+      it('dispatches an "update" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
 
       it('updates the css class', function() {
         testAsset.cssClass('my-class').update();
@@ -86,7 +111,13 @@ function(asset) {
     describe('destroy()', function() {
 
       beforeEach(function() {
+        testAsset.dispatch.on('destroy', handlerSpy);
+        testAsset.render(selection);
         testAsset.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all child nodes', function() {

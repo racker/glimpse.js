@@ -673,6 +673,33 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
     });
 
+    describe('dispatch', function() {
+      var renderSpy, newGraph;
+
+      beforeEach(function() {
+        newGraph = graph();
+        renderSpy = jasmine.createSpy();
+        testGraph.dispatch.on('render', renderSpy);
+      });
+
+      it('contains a render method', function() {
+        expect(testGraph.dispatch.render).toBeOfType('function');
+      });
+
+      it('contains an update method', function() {
+        expect(testGraph.dispatch.update).toBeOfType('function');
+      });
+
+      it('contains a destroy method', function() {
+        expect(testGraph.dispatch.destroy).toBeOfType('function');
+      });
+
+      it('contains a state method', function() {
+        expect(testGraph.dispatch.state).toBeOfType('function');
+      });
+
+    });
+
   });
 
 });

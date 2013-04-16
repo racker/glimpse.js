@@ -7,7 +7,7 @@ function(axisComponent) {
   describe('components.axis', function() {
 
     var componentId = 'axis123',
-        axis, container, node;
+        axis, container, node, handlerSpy;
 
     function getComponentNode() {
       return container.select('[gl-cid=' + componentId + ']').node();
@@ -17,6 +17,7 @@ function(axisComponent) {
       container = jasmine.svgFixture().append('g').size(400, 200);
       axis = axisComponent();
       axis.config({cid: componentId });
+      handlerSpy = jasmine.createSpy();
     });
 
     it('axis to be defined', function() {
@@ -32,6 +33,12 @@ function(axisComponent) {
     });
 
     describe('.render()', function() {
+
+      it('dispatches a "render" event', function() {
+        axis.dispatch.on('render', handlerSpy);
+        axis.render(container);
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
 
       it('handles defaults', function() {
         axis.config({
@@ -207,6 +214,12 @@ function(axisComponent) {
         axis.render(container);
       });
 
+      it('dispatches an "update" event', function() {
+        axis.dispatch.on('update', handlerSpy);
+        axis.update();
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
+
       it('repositions itself to the bottom of its parents DOM', function() {
         container.append('g');
         axis.update();
@@ -225,7 +238,12 @@ function(axisComponent) {
           orient: 'bottom'
         });
         axis.render(container);
+        axis.dispatch.on('destroy', handlerSpy);
         axis.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all child nodes', function() {

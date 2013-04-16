@@ -6,17 +6,14 @@ function(overlay, componentUtil) {
   'use strict';
 
   describe('components.overlay', function() {
-    var testOverlay, selection, rect, root, mockComponent;
+    var testOverlay, selection, rect, root, mockComponent, handlerSpy;
 
     beforeEach(function() {
+      handlerSpy = jasmine.createSpy();
       selection = jasmine.svgFixture();
       testOverlay = overlay();
       spyOn(testOverlay, 'update').andCallThrough();
-      testOverlay.render(selection);
-      root = testOverlay.root();
-      rect = root.select('rect');
       mockComponent = componentUtil.getMockComponent();
-      mockComponent.target = root;
     });
 
     it('adds all convenience functions', function() {
@@ -26,6 +23,11 @@ function(overlay, componentUtil) {
 
     describe('root()', function() {
 
+      beforeEach(function() {
+        testOverlay.render(selection);
+        root = testOverlay.root();
+      });
+
       it('gets the root element', function() {
         var firstChild = selection.node().firstChild;
         expect(root.node()).toBe(firstChild);
@@ -34,6 +36,17 @@ function(overlay, componentUtil) {
     });
 
     describe('render()', function() {
+
+      beforeEach(function() {
+        testOverlay.dispatch.on('render', handlerSpy);
+        testOverlay.render(selection);
+        root = testOverlay.root();
+        rect = root.select('rect');
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
 
       it('renders to the provided selection', function() {
         expect(root.node().parentNode).toBe(selection.node());
@@ -66,6 +79,18 @@ function(overlay, componentUtil) {
     });
 
     describe('update()', function() {
+
+      beforeEach(function() {
+        testOverlay.render(selection);
+        root = testOverlay.root();
+        mockComponent.target = root;
+        testOverlay.dispatch.on('update', handlerSpy);
+      });
+
+      it('dispatches an "update" event', function() {
+        testOverlay.update();
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
 
       it('updates the css class', function() {
         testOverlay.cssClass('my-class').update();
@@ -117,9 +142,15 @@ function(overlay, componentUtil) {
     describe('destroy()', function() {
 
       beforeEach(function() {
+        mockComponent.target = root;
         spyOn(mockComponent, 'destroy');
         testOverlay.config('components', [mockComponent]);
+        testOverlay.dispatch.on('destroy', handlerSpy);
         testOverlay.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('calls destroy() on subcomponents', function() {

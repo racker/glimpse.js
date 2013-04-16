@@ -7,7 +7,7 @@ function(label, dc) {
 
   describe('components.label', function() {
     var selection, testLabel, svgNode, root, textContent,
-        dataCollection;
+        dataCollection, handlerSpy;
 
     beforeEach(function() {
       textContent = 'some random text';
@@ -17,6 +17,7 @@ function(label, dc) {
       testLabel = label()
         .text(textContent);
       spyOn(testLabel, 'update').andCallThrough();
+      handlerSpy = jasmine.createSpy();
     });
 
     describe('config()', function() {
@@ -40,8 +41,13 @@ function(label, dc) {
     describe('render()', function() {
 
       beforeEach(function() {
+        testLabel.dispatch.on('render', handlerSpy);
         testLabel.render(selection);
         root = selection.select('.gl-label');
+      });
+
+      it('dispatches a "render" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('renders to the provided selection', function() {
@@ -82,6 +88,12 @@ function(label, dc) {
         testLabel.render(selection);
         root = selection.select('.gl-label');
         textSelection = root.select('text');
+        testLabel.dispatch.on('update', handlerSpy);
+      });
+
+      it('dispatches an "update" event', function() {
+        testLabel.update();
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('does nothing if render() hanst been called', function() {
@@ -188,7 +200,12 @@ function(label, dc) {
 
       beforeEach(function() {
         testLabel.render(selection);
+        testLabel.dispatch.on('destroy', handlerSpy);
         testLabel.destroy();
+      });
+
+      it('dispatches a "destroy" event', function() {
+        expect(handlerSpy).toHaveBeenCalledOnce();
       });
 
       it('removes all child nodes', function() {
