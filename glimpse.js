@@ -8846,7 +8846,7 @@ function() {
 
 });
 
-define('components/mixins/toggle',[],function () {
+define('mixins/toggle',[],function () {
   
 
   return {
@@ -8859,6 +8859,9 @@ define('components/mixins/toggle',[],function () {
       var root = this.root();
       if (root) {
         root.attr('display', null);
+        if (this.dispatch && this.dispatch.show) {
+          this.dispatch.show.call(this);
+        }
       }
       return this;
     },
@@ -8871,6 +8874,9 @@ define('components/mixins/toggle',[],function () {
       var root = this.root();
       if (root) {
         root.attr('display', 'none');
+        if (this.dispatch && this.dispatch.hide) {
+          this.dispatch.hide.call(this);
+        }
       }
       return this;
     }
@@ -8881,10 +8887,51 @@ define('components/mixins/toggle',[],function () {
 
 /**
  * @fileOverview
+ * Creates a default d3.dispatch with common component events.
+ * Optionally can provide additional events.
+ */
+define('mixins/dispatch',[],function() {
+  
+
+  /**
+   * List of event names common to all components.
+   * @const
+   */
+  var COMMON_EVENTS = [
+    'render',
+    'update',
+    'show',
+    'hide',
+    'destroy'
+  ];
+
+  /**
+   * Creates a d3 event dispatcher with common events by default.
+   * Optionally supplied additional events will also be added.
+   *
+   * @public
+   * @param {string} arguments Any other event names to add.
+   * @return {d3.dispatch}
+   * @see https://github.com/mbostock/d3/wiki/Internals#wiki-d3_dispatch
+   */
+  return function() {
+    var eventNames;
+
+    eventNames = COMMON_EVENTS;
+    if (arguments.length) {
+      eventNames = Array.prototype.concat.apply(eventNames, arguments);
+    }
+    return d3.dispatch.apply(null, eventNames);
+  };
+
+});
+
+/**
+ * @fileOverview
  * These are methods that all components are expected to have.
  * Use this mixin as a convenience for noops and override as needed.
  */
-define('components/mixins/lifecycle',[],function () {
+define('mixins/lifecycle',[],function () {
   
 
   return {
@@ -8916,19 +8963,22 @@ define('components/mixins/lifecycle',[],function () {
 
 });
 
-define('components/mixins',[
-  'components/mixins/toggle',
-  'components/mixins/lifecycle'
+define('mixins/mixins',[
+  'mixins/toggle',
+  'mixins/dispatch',
+  'mixins/lifecycle'
 ],
-function(toggle, lifecycle) {
+function(toggle, dispatch, lifecycle) {
   
 
   return {
     toggle: toggle,
-    lifecycle: lifecycle
+    lifecycle: lifecycle,
+    dispatch: dispatch
   };
 
 });
+
 /**
  * @fileOverview
  * Accessor generator.
@@ -8992,36 +9042,6 @@ define('data/functions',[
 ], function (obj, accessors) {
   
 
-  /**
-   * Checks if the provided date is a valid date
-   * @param  {*|Object}  d
-   * @return {Boolean}
-   */
-  function isValidDate(d) {
-    if (!d instanceof Date) {
-      return false;
-    }
-    return !isNaN(d.getTime());
-  }
-
-  /** Converts the given value to utc date */
-  function convertToUTCDate(value) {
-    var date, dateUtc;
-    date = new Date(value);
-    if (isValidDate(date)) {
-      dateUtc = new Date(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        date.getUTCHours(),
-        date.getUTCMinutes(),
-        date.getUTCSeconds()
-      );
-      return dateUtc;
-    }
-    return value;
-  }
-
   return {
     /**
      * Gets the data using the dimension accessor.
@@ -9033,25 +9053,7 @@ define('data/functions',[
         return null;
       }
       return accessors.get(dimValue);
-    },
-
-    /**
-     * Converts given data into UTC date
-     * If it cannot be converted into a valid date
-     * then it returns the data
-     * @param  {Array|number|string} data
-     * @return {Array<Date>|Date}
-     */
-    toUTCDate: function(data) {
-      if (obj.isDefAndNotNull(data)) {
-        if (Array.isArray(data)) {
-          return data.map(convertToUTCDate);
-        }
-        return convertToUTCDate(data);
-      }
-      return data;
     }
-
   };
 
 });
@@ -9066,7 +9068,7 @@ define('components/line',[
   'core/object',
   'core/string',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'data/functions'
 ],
 function(array, config, obj, string, d3util, mixins, dataFns) {
@@ -9084,11 +9086,13 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       type: 'line',
       target: null,
       cid: null,
-      color: null,
+      color: '#000',
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
       interpolate: 'linear',
+      xScale: null,
+      yScale: null,
       opacity: 1,
       hiddenStates: null
     };
@@ -9128,10 +9132,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     function getX(data, index) {
       var x, dataConfig;
       dataConfig = line.data();
-      x = dataFns.dimension(dataConfig, 'x')(data, index);
-      if (d3util.isTimeScale(config_.xScale)) {
-        return dataFns.toUTCDate(x);
-      }
+      x = dataFns.dimension(
+        dataConfig,
+        'x'
+      )(data, index);
       return x;
     }
 
@@ -9156,6 +9160,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       ),
       mixins.lifecycle,
       mixins.toggle);
+
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    line.dispatch = mixins.dispatch();
 
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
@@ -9206,6 +9216,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         .data(dataConfig.data);
       update(selection);
       remove(selection);
+      line.dispatch.update.call(this);
       return line;
     };
 
@@ -9230,6 +9241,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         });
       }
       line.update();
+      line.dispatch.render.call(this);
       return line;
     };
 
@@ -9252,6 +9264,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      line.dispatch.destroy.call(this);
     };
 
     return line();
@@ -9269,7 +9282,7 @@ define('components/legend',[
   'core/config',
   'core/string',
   'd3-ext/util',
-  'components/mixins'
+  'mixins/mixins'
 ],
 function(obj, config, string, d3util, mixins) {
   
@@ -9409,6 +9422,12 @@ function(obj, config, string, d3util, mixins) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    legend.dispatch = mixins.dispatch();
+
+    /**
      * Apply post-render updates.
      * Insert/update/remove DOM for each key.
      */
@@ -9433,6 +9452,7 @@ function(obj, config, string, d3util, mixins) {
       update_(selection);
       root_.layout({type: config_.layout, gap: config_.gap});
       root_.position(config_.position);
+      legend.dispatch.update.call(this);
       return legend;
     };
 
@@ -9452,6 +9472,7 @@ function(obj, config, string, d3util, mixins) {
         });
       }
       legend.update();
+      legend.dispatch.render.call(this);
       return legend;
     };
 
@@ -9474,6 +9495,7 @@ function(obj, config, string, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      legend.dispatch.destroy.call(this);
     };
 
     return legend();
@@ -9489,7 +9511,7 @@ define('components/axis',[
   'core/object',
   'core/config',
   'core/string',
-  'components/mixins',
+  'mixins/mixins',
   'd3-ext/util'
 ],
 function(obj, config, string, mixins, d3util) {
@@ -9521,10 +9543,24 @@ function(obj, config, string, mixins, d3util) {
     };
 
     /**
+     * Translates the zero tick on the Y-axis by 10
+     * @private
+     */
+    function setZeroTickTranslate(selection) {
+      var transform, translate, x, y;
+      transform = selection.attr('transform');
+      translate = transform.split(',');
+      x = translate[0].split('(')[1];
+      y = translate[1].split(')')[0];
+      selection.attr('transform', 'translate(' + [x, y-10] + ')');
+    }
+
+    /**
      * Changes the default formatting of the d3 axis.
      * @private
      */
     function formatAxis() {
+      var zeroTick, zeroTickLabel;
       // remove boldness from default axis path
       root_.selectAll('path')
         .attr({
@@ -9540,16 +9576,13 @@ function(obj, config, string, mixins, d3util) {
 
       //Apply padding to the first tick on Y axis
       if (config_.axisType === 'y') {
-        var zeroTick, transform, zeroTickLabel;
-
         zeroTick = root_.select('g');
+
         if (zeroTick.node()) {
           zeroTickLabel = zeroTick.text() +
             (config_.unit ? ' ' + config_.unit : '');
           zeroTick.select('text').text(zeroTickLabel);
-          transform = d3.transform(zeroTick.attr('transform'));
-          transform.translate[1] -= 10;
-          zeroTick.attr('transform', transform.toString());
+          setZeroTickTranslate(zeroTick);
         }
       }
 
@@ -9611,7 +9644,6 @@ function(obj, config, string, mixins, d3util) {
       return axis;
     }
 
-
     // Apply mixins.
     obj.extend(
       axis,
@@ -9620,6 +9652,12 @@ function(obj, config, string, mixins, d3util) {
         'cid'),
       mixins.lifecycle,
       mixins.toggle);
+
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    axis.dispatch = mixins.dispatch();
 
     /**
      * Apply updates to the axis.
@@ -9645,6 +9683,7 @@ function(obj, config, string, mixins, d3util) {
 
       formatAxis();
       repositionDOM();
+      axis.dispatch.update.call(this);
       return axis;
     };
 
@@ -9665,6 +9704,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       axis.update();
+      axis.dispatch.render.call(this);
       return axis;
     };
 
@@ -9701,6 +9741,7 @@ function(obj, config, string, mixins, d3util) {
       config_ = null;
       defaults_ = null;
       d3axis_ = null;
+      axis.dispatch.destroy.call(this);
     };
 
     return axis();
@@ -9718,7 +9759,7 @@ define('components/label',[
   'core/string',
   'core/array',
   'd3-ext/util',
-  'components/mixins'
+  'mixins/mixins'
 ],
 function(obj, config, string, array, d3util, mixins) {
   
@@ -9779,6 +9820,12 @@ function(obj, config, string, array, d3util, mixins) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    label.dispatch = mixins.dispatch();
+
+    /**
      * Gets/Sets the data source to be used with the label.
      * Uses the configurable "text" accessor function to retrieve text.
      * @param {Object} data Any data source.
@@ -9809,7 +9856,7 @@ function(obj, config, string, array, d3util, mixins) {
         config_.text = d3.functor(text);
         return label;
       }
-      return d3.functor(config_.text)(label.data());
+      return d3.functor(config_.text).call(this);
     };
 
     /**
@@ -9834,6 +9881,7 @@ function(obj, config, string, array, d3util, mixins) {
         });
       }
       label.update();
+      label.dispatch.render.call(this);
       return label;
     };
 
@@ -9866,6 +9914,7 @@ function(obj, config, string, array, d3util, mixins) {
       })
       .text(text);
       root_.position(config_.position);
+      label.dispatch.update.call(this);
       return label;
     };
 
@@ -9888,6 +9937,7 @@ function(obj, config, string, array, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      label.dispatch.destroy.call(this);
     };
 
     return label();
@@ -9905,7 +9955,7 @@ define('components/overlay',[
   'core/config',
   'core/string',
   'components/label',
-  'components/mixins',
+  'mixins/mixins',
   'd3-ext/util'
 ],
 function(obj, config, string, label, mixins, d3util) {
@@ -9980,6 +10030,12 @@ function(obj, config, string, label, mixins, d3util) {
       mixins.lifecycle,
       mixins.toggle);
 
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    overlay.dispatch = mixins.dispatch();
+
     /*
      * Gets the root selection of this component.
      * @public
@@ -10009,6 +10065,7 @@ function(obj, config, string, label, mixins, d3util) {
         });
       }
       overlay.update();
+      overlay.dispatch.render.call(this);
       return overlay;
     };
 
@@ -10029,6 +10086,7 @@ function(obj, config, string, label, mixins, d3util) {
         root_.attr('gl-cid', config_.cid);
       }
       updateChildren_();
+      overlay.dispatch.update.call(this);
       return overlay;
     };
 
@@ -10047,6 +10105,7 @@ function(obj, config, string, label, mixins, d3util) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      overlay.dispatch.destroy.call(this);
     };
 
     return overlay();
@@ -10063,7 +10122,7 @@ define('components/asset',[
   'core/object',
   'core/config',
   'core/string',
-  'components/mixins',
+  'mixins/mixins',
   'd3-ext/util'
 ],
 function(obj, config, string, mixins, d3util) {
@@ -10103,6 +10162,12 @@ function(obj, config, string, mixins, d3util) {
       mixins.lifecycle,
       mixins.toggle);
 
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    asset.dispatch = mixins.dispatch();
+
     /*
      * Gets the root selection of this component.
      * @public
@@ -10129,6 +10194,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       asset.update();
+      asset.dispatch.render.call(this);
       return asset;
     };
 
@@ -10159,6 +10225,7 @@ function(obj, config, string, mixins, d3util) {
         'xlink:href': '#' + config_.assetId
       });
       root_.position(config_.position);
+      asset.dispatch.update.call(this);
       return asset;
     };
 
@@ -10173,6 +10240,7 @@ function(obj, config, string, mixins, d3util) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      asset.dispatch.destroy.call(this);
     };
 
     return asset();
@@ -10191,7 +10259,7 @@ define('components/area',[
   'core/object',
   'core/string',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'data/functions'
 ],
 function(array, config, obj, string, d3util, mixins, dataFns) {
@@ -10255,8 +10323,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         .x(function(d, i) {
           var value;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          return d3util.isTimeScale(config_.xScale) ?
-            config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
+          return config_.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -10266,8 +10333,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           value = dataFns.dimension(dataConfig, 'x')(d, i);
           if (config_.xScale) {
             minX = config_.xScale.range()[0];
-            value = d3util.isTimeScale(config_.xScale) ?
-              config_.xScale(dataFns.toUTCDate(value)) : config_.xScale(value);
+            value = config_.xScale(value);
           }
           return value >= minX;
         });
@@ -10298,6 +10364,12 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       ),
       mixins.lifecycle,
       mixins.toggle);
+
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    area.dispatch = mixins.dispatch();
 
     // TODO: this will be the same for all components
     // put this func somehwere else and apply as needed
@@ -10330,6 +10402,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           'opacity': config_.opacity,
           'd': config_.areaGenerator
         });
+      area.dispatch.update.call(this);
       return area;
     };
 
@@ -10353,6 +10426,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         });
       }
       area.update();
+      area.dispatch.render.call(this);
       return area;
     };
 
@@ -10374,6 +10448,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      area.dispatch.destroy.call(this);
     };
 
     return area();
@@ -10402,10 +10477,12 @@ function() {
      * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
      */
     timeDomainUTC: function(domain, optSuffix) {
-      var formatter;
+      var formatter, dateStart, dateEnd;
       formatter = d3.time.format.utc('%b %-e, %I:%M %p');
-      return formatter(domain[0]) + ' - ' +
-          formatter(domain[1]) + getSuffix(optSuffix);
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
     },
 
     /**
@@ -10419,10 +10496,12 @@ function() {
      * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
      */
     timeDomain: function(domain, optSuffix) {
-      var formatter;
+      var formatter, dateStart, dateEnd;
       formatter = d3.time.format('%b %-e, %I:%M %p');
-      return formatter(domain[0]) + ' - ' +
-          formatter(domain[1]) + getSuffix(optSuffix);
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
     },
 
     /**
@@ -10452,7 +10531,7 @@ define('components/domain-label',[
   'core/string',
   'core/format',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'components/label'
 ],
 function(obj, configMixin, string, format, d3util, mixins, label) {
@@ -10515,6 +10594,12 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
       mixins.toggle);
 
     /**
+     * Event dispatcher.
+     * @public
+     */
+    domainLabel.dispatch = mixins.dispatch();
+
+    /**
      * Gets/Sets the data source to be used with the domainLabel.
      * @param {Object} data Any data source.
      * @return {Object|components.domainLabel}
@@ -10549,6 +10634,7 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
         }
       }
       domainLabel.update();
+      domainLabel.dispatch.render.call(this);
       return domainLabel;
     };
 
@@ -10572,13 +10658,14 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
 
       if (dataCollection) {
         innerLabel.data(dataCollection)
-          .text(function(domainData) {
-            return config.formatter(domainData[config.dimension],
+          .text(function() {
+            return config.formatter(this.data()[config.dimension],
               config.suffix);
           });
       }
       innerLabel.update();
       root.position(config.position);
+      domainLabel.dispatch.update.call(this);
       return domainLabel;
     };
 
@@ -10611,6 +10698,7 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
       config = null;
       defaults = null;
       innerLabel.destroy();
+      domainLabel.dispatch.destroy.call(this);
     };
 
     return domainLabel();
@@ -11648,8 +11736,9 @@ define('data/collection',[
   'core/object',
   'core/array',
   'data/selection/selection',
+  'data/functions',
   'data/selection/diff-quotient'
-], function (obj, array, selection) {
+], function (obj, array, selection, dataFns) {
   
 
   function applyDerivation(dc, data) {
@@ -11675,6 +11764,15 @@ define('data/collection',[
 
   function isWildCard(id) {
     return id === '*' || id === '+';
+  }
+
+  function getExtents(sources) {
+    var tempArr = [];
+    sources.forEach(function(arr) {
+      tempArr = tempArr.concat(arr);
+    });
+
+    return d3.extent(tempArr);
   }
 
   /**
@@ -11713,7 +11811,9 @@ define('data/collection',[
   }
 
   function collection() {
-    var dataCollection = {};
+    var dataCollection;
+
+    dataCollection = {};
     return {
 
       /**
@@ -11834,6 +11934,41 @@ define('data/collection',[
        */
       isEmpty: function() {
         return Object.keys(dataCollection).length === 0;
+      },
+
+      /**
+       * Calculates the xExtents for the data collection
+       * @param  {Array<string>| string of comma-delimited ids |
+       *   wildcard (* for all non-derived sources)} sources
+       * @return {Array<number>}
+       */
+      xExtents: function(sources) {
+        var dataSelection;
+        dataSelection = this.select(sources ? sources : '*');
+        return getExtents(dataSelection.dim('x').extent().all());
+      },
+
+      /**
+       * Calculates the yExtents for the data collection
+       * @param  {Array<string>| string of comma-delimited ids |
+       *   wildcard (* for all non-derived sources)} sources
+       * @return {Array<number>}
+       */
+      yExtents: function(sources) {
+        var dataSelection, yExtentsSelection;
+        dataSelection = this.select(sources ? sources : '*');
+        yExtentsSelection = dataSelection.map(function(ds) {
+          return d3.extent(ds.data, function(d, i) {
+            var value = dataFns.dimension(ds, 'y')(d, i);
+            // If Y-baselines are used (stacked),
+            //   use the sum of the baseline and Y.
+            if (ds.dimensions.y0) {
+              value += dataFns.dimension(ds, 'y0')(d, i);
+            }
+            return value;
+          });
+        });
+        return getExtents(yExtentsSelection.all());
       }
     };
   }
@@ -11860,7 +11995,7 @@ define('graphs/graph',[
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
-  'components/mixins',
+  'mixins/mixins',
   'data/functions',
   'data/collection'
 ],
@@ -11876,23 +12011,14 @@ function(obj, config, array, assetLoader, componentManager, components,
     var config_,
       defaults_,
       root_,
-      configureXScale_,
-      configureYScale_,
       defaultXaccessor_,
       defaultYaccessor_,
-      renderDefs_,
-      renderPanel_,
-      renderSvg_,
-      updateScales_,
-      upsertData_,
-      showLoadingOverlay_,
-      showEmptyOverlay_,
-      showErrorOverlay_,
       dataCollection_,
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
-      componentManager_;
+      componentManager_,
+      isRendered;
 
     /**
      * @enum
@@ -11921,7 +12047,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       viewBoxHeight: 230,
       viewBoxWidth: 700,
       preserveAspectRatio: 'none',
-      xScale: d3.time.scale.utc(),
+      xScale: d3.time.scale.utc().domain([0, 0]),
       yScale: d3.scale.linear(),
       showLegend: true,
       xTicks: 7,
@@ -11934,7 +12060,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       colorPalette: d3.scale.category20().range(),
       xAxisUnit: null,
       yAxisUnit: null,
-      primaryContainer: 'gl-main'
+      primaryContainer: 'gl-main',
+      domainIntervalUnit: null
     };
 
     /**
@@ -11994,37 +12121,20 @@ function(obj, config, array, assetLoader, componentManager, components,
     }
 
     /**
-     * Get X-extents for provided data
-     * @param  {Object} componentData
-     * @return {Array}
-     */
-    function getXExtents(componentData) {
-      var extents = [];
-      extents = d3.extent(
-        componentData.data,
-        dataFns.dimension(componentData, 'x')
-      );
-      if (d3util.isTimeScale(config_.xScale)) {
-        return dataFns.toUTCDate(extents);
-      }
-      return extents;
-    }
-
-    /**
      * Appends defs
      * @private
      * @param  {d3.selection} selection
      */
-    renderDefs_ = function(selection) {
+    function renderDefs(selection) {
       return selection.append('defs');
-    };
+    }
 
     /**
      * Appends svg node to the selection
      * @private
      * @param  {d3.selection} selection
      */
-    renderSvg_ = function(selection) {
+    function renderSvg(selection) {
       root_ = selection.append('svg')
         .attr({
           'width': config_.width,
@@ -12037,103 +12147,62 @@ function(obj, config, array, assetLoader, componentManager, components,
           'preserveAspectRatio': config_.preserveAspectRatio
         });
       return root_;
-    };
+    }
 
     /**
      * Sets up the panel(svg)
      * @private
      * @param  {d3.selection} selection
      */
-    renderPanel_ = function(selection) {
-      root_ = renderSvg_(selection);
-      renderDefs_(root_);
+    function renderPanel(selection) {
+      root_ = renderSvg(selection);
+      renderDefs(root_);
       layoutManager.setLayout(
         config_.layout,
         root_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
-    };
-
-    /**
-     * configures the X scale
-     * @param  {Array} xExtents
-     */
-    configureXScale_ = function(xExtents) {
-      var max, min, offset, newMin;
-
-      if (config_.forceX) {
-        xExtents = xExtents.concat(config_.forceX);
-      }
-
-      max = d3.max(xExtents) || config_.xScale.domain()[1];
-      min = d3.min(xExtents) || config_.xScale.domain()[0];
-
-      if (d3util.isTimeScale(config_.xScale)) {
-        if (config_.domainIntervalUnit) {
-          offset = config_.domainIntervalUnit.offset(
-            max,
-            -(config_.domainIntervalPeriod || 1)
-          );
-          newMin = +min > +offset ? min : offset;
-          min = newMin;
-        }
-      }
-
-      xExtents = [min, max];
-      config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
-        .domain(xExtents);
-      return xExtents;
-    };
-
-    /**
-     * configures the Y scale
-     * @param  {Array} yExtents
-     */
-    configureYScale_ = function(yExtents) {
-      yExtents.push(Math.round(d3.max(yExtents) * config_.yDomainModifier));
-
-      if (config_.forceY) {
-        yExtents = yExtents.concat(config_.forceY);
-      }
-
-      yExtents = d3.extent(yExtents);
-      config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
-        .domain(yExtents);
-      return yExtents;
-    };
+    }
 
     /**
      * Updates the domain on the scales
      * @private
      */
-    updateScales_ = function() {
+    function updateScales() {
       var xExtents = [],
-        yExtents = [];
+        yExtents = [],
+        dataIds = [];
 
-      // TODO: Move this extent calculation into the data collection.
       componentManager_.get().forEach(function(component) {
         var componentData;
         if (component.data) {
           componentData = component.data();
           if (componentData && componentData.data && componentData.dimensions) {
-            xExtents = xExtents.concat(getXExtents(componentData));
-            yExtents = yExtents.concat(
-              d3.extent(componentData.data,
-                function(d, i) {
-                  var value = dataFns.dimension(componentData, 'y')(d, i);
-                  // If Y-baselines are used (stacked),
-                  //   use the sum of the baseline and Y.
-                  if (componentData.dimensions.y0) {
-                    value += dataFns.dimension(componentData, 'y0')(d, i);
-                  }
-                  return value;
-                })
-              );
+            dataIds.push(component.config('dataId'));
           }
         }
       });
-      xExtents = configureXScale_(xExtents);
-      yExtents = configureYScale_(yExtents);
+
+      if (dataIds.length > 0) {
+        xExtents = calculateXExtents(dataIds);
+        config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
+          .domain(xExtents);
+
+        yExtents = calculateYExtents(dataIds);
+        config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
+          .domain(yExtents);
+        updateDomain(xExtents, yExtents);
+      } else {
+        updateDomain([0,0], [0,0]);
+      }
+    }
+
+    /**
+     * Updates $domain in the data collection
+     * @param  {Array<number>} xExtents
+     * @param  {Array<number>} yExtents
+     */
+    function updateDomain(xExtents, yExtents) {
       dataCollection_.add({
         id: '$domain',
         sources: '',
@@ -12144,7 +12213,72 @@ function(obj, config, array, assetLoader, componentManager, components,
           };
         }
       });
-    };
+    }
+
+    /**
+     * Calculates the Y extents
+     * @param  {Array<string>} dataIds
+     * @return {Array<number>}
+     */
+    function calculateYExtents(dataIds) {
+      var yExtents;
+
+      yExtents = dataCollection_.yExtents(dataIds);
+
+      //TODO: move yDomainModifier and forceY to datacollection
+      yExtents.push(Math.round(d3.max(yExtents) * config_.yDomainModifier));
+      if (config_.forceY) {
+        yExtents = yExtents.concat(config_.forceY);
+      }
+      return d3.extent(yExtents);
+    }
+
+    /**
+     * Calculates the X extents
+     * @param  {Array<string>} dataIds
+     * @return {Array<number>}
+     */
+    function calculateXExtents(dataIds) {
+      var xExtents;
+
+      xExtents = dataCollection_.xExtents(dataIds);
+
+      //TODO: move domainIntervalPeriod and forceX to datacollection
+      if (config_.forceX) {
+        xExtents = xExtents.concat(config_.forceX);
+      }
+
+      if (d3util.isTimeScale(config_.xScale)) {
+        if (config_.domainIntervalUnit) {
+          xExtents = appyDomainIntervalPeriod(xExtents);
+        }
+      }
+      if (xExtents) {
+        return d3.extent(xExtents);
+      }
+      return [0, 0];
+    }
+
+    /**
+     * Applies domain interval period to the x domain
+     * @param  {Array} extents
+     * @return {Array}
+     */
+    function appyDomainIntervalPeriod(extents) {
+      var max, min, offset, newMin;
+
+      max = d3.max(extents) ? d3.max(extents) : config_.xScale.domain()[1];
+      min = d3.min(extents) ? d3.min(extents) : config_.xScale.domain()[0];
+
+      offset = config_.domainIntervalUnit.offset(
+        max,
+        -(config_.domainIntervalPeriod || 1)
+      );
+      newMin = +min > +offset ? min : offset;
+      min = newMin;
+
+      return [min, max];
+    }
 
     /**
      * Formats the keys for the legend and calls update on it
@@ -12191,7 +12325,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * Inserts/Updates object in data array
      * @param  {object} data
      */
-    upsertData_ = function(data) {
+    function upsertData(data) {
       //Set default x and y accessors.
       if(!data.dimensions) {
         data.dimensions = {};
@@ -12203,13 +12337,13 @@ function(obj, config, array, assetLoader, componentManager, components,
         data.dimensions.y = defaultYaccessor_;
       }
       dataCollection_.upsert(data);
-    };
+    }
 
     /**
      * Displays the empty message over the main container.
      * @private
      */
-    showEmptyOverlay_ = function() {
+    function showEmptyOverlay() {
       var labelTexts,
           labels,
           layoutConfig;
@@ -12241,13 +12375,13 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: labels
         });
       componentManager_.render(root_, 'gl-empty-overlay');
-    };
+    }
 
     /**
      * Displays the loading spinner and message over the main container.
      * @private
      */
-    showLoadingOverlay_ = function() {
+    function showLoadingOverlay() {
       var label,
           spinner;
 
@@ -12266,13 +12400,13 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: [spinner, label]
         });
       componentManager_.render(root_, 'gl-loading-overlay');
-    };
+    }
 
     /**
      * Displays the error icon and message over the main container.
      * @private
      */
-    showErrorOverlay_ = function() {
+    function showErrorOverlay() {
       var label,
           icon;
 
@@ -12291,13 +12425,32 @@ function(obj, config, array, assetLoader, componentManager, components,
           components: [icon, label]
         });
       componentManager_.render(root_, 'gl-error-overlay');
-    };
+    }
+
+    /**
+     * Determins if the domain is "empty" (both values are zero).
+     * TODO: Move to data collection when ready.
+     *
+     * @private
+     * @param {Array} domain A 2 element array.
+     * @return {Boolean}
+     */
+    function domainIsEmpty(domain) {
+      var d0, d1;
+
+      d0 = domain[0];
+      d1 = domain[1];
+      if (d0 instanceof Date && d1 instanceof Date) {
+        return d0.getTime() === 0 && d1.getTime() === 0;
+      }
+      return d0 === 0 && d1 === 0;
+    }
 
     /**
      * Adds/removes overlays & hides/shows components based on state.
      * @private
      */
-    function updateStateDisplay() {
+    function updateComponentVisibility() {
       componentManager_.destroy([
           'gl-empty-overlay',
           'gl-loading-overlay',
@@ -12312,13 +12465,20 @@ function(obj, config, array, assetLoader, componentManager, components,
       });
       switch (config_.state) {
         case STATES.EMPTY:
-          showEmptyOverlay_();
+          showEmptyOverlay();
           break;
         case STATES.LOADING:
-          showLoadingOverlay_();
+          showLoadingOverlay();
           break;
         case STATES.ERROR:
-          showErrorOverlay_();
+          showErrorOverlay();
+          break;
+        case STATES.NORMAL:
+          // Hide x-axis if theres no data.
+          if (domainIsEmpty(config_.xScale.domain())) {
+            componentManager_.first('gl-xaxis').hide();
+            componentManager_.first('gl-yaxis').hide();
+          }
           break;
       }
     }
@@ -12357,7 +12517,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       }
       componentManager_
         .registerSharedObject('xScale', config_.xScale, true)
-        .registerSharedObject('yScale', config_.yScale, true);
+        .registerSharedObject('yScale', config_.yScale, true)
+        .registerSharedObject('data', dataCollection_, true);
       coloredComponentsCount = 0;
       return graph;
     }
@@ -12368,6 +12529,12 @@ function(obj, config, array, assetLoader, componentManager, components,
       mixins.toggle);
 
     graph.STATES = STATES;
+
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    graph.dispatch = mixins.dispatch('state');
 
     /**
      * Configures the graph state and triggers overlays updates.
@@ -12382,8 +12549,9 @@ function(obj, config, array, assetLoader, componentManager, components,
       }
       config_.state = newState;
       if (graph.isRendered()) {
-        updateStateDisplay();
+        updateComponentVisibility();
       }
+      graph.dispatch.state.call(this);
       return graph;
     };
 
@@ -12401,14 +12569,12 @@ function(obj, config, array, assetLoader, componentManager, components,
         if (Array.isArray(data)) {
           var i, len = data.length;
           for (i = 0; i < len; i += 1) {
-            upsertData_(data[i]);
+            upsertData(data[i]);
           }
         } else {
-          upsertData_(data);
+          upsertData(data);
         }
-        componentManager_
-          .registerSharedObject('data', dataCollection_, true)
-          .applySharedObject('data');
+        componentManager_.applySharedObject('data');
         return graph;
       }
 
@@ -12457,12 +12623,13 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @return {graphs.graph}
      */
     graph.update = function() {
-      updateScales_();
+      updateScales();
       dataCollection_.updateDerivations();
       updateComponents();
       if (graph.isRendered()) {
-        updateStateDisplay();
+        updateComponentVisibility();
       }
+      graph.dispatch.update.call(this);
       return graph;
     };
 
@@ -12475,13 +12642,15 @@ function(obj, config, array, assetLoader, componentManager, components,
     graph.render = function(selector) {
       var selection = d3util.select(selector);
       assetLoader.loadAll();
-      renderPanel_(selection);
+      renderPanel(selection);
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.
       componentManager_.update(['gl-yaxis']);
       // Force state update.
-      updateStateDisplay();
+      updateComponentVisibility();
+      isRendered = true;
+      graph.dispatch.render.call(this);
       return graph;
     };
 
@@ -12490,7 +12659,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @return {Boolean}
      */
     graph.isRendered = function() {
-      return !!root_;
+      return isRendered;
     };
 
     /**
@@ -12500,10 +12669,14 @@ function(obj, config, array, assetLoader, componentManager, components,
     graph.destroy = function() {
       config_.state = STATES.DESTROYED;
       componentManager_.destroy();
-      graph.root().remove();
+      if (root_) {
+        root_.remove();
+        root_ = null;
+      }
       config_ = null;
       defaults_ = null;
       componentManager_ = null;
+      graph.dispatch.destroy.call(this);
     };
 
      /**
@@ -12717,17 +12890,18 @@ function(obj, array, string, d3util, graph) {
      * @param {graphs.graph} g
      */
     function addInternalComponents(g) {
-      var unit;
       INTERNAL_COMPONENTS_CONFIG.forEach(function(componentConfig) {
         g.component(componentConfig);
       });
-      unit = g.config('yAxisUnit') || '';
-      g.component('gl-stats').text(function(d) {
-        var values = {
+      g.component('gl-stats').text(function() {
+        var unit, values, d;
+        values = {
           avg: 0,
           min: 0,
           max: 0
         };
+        d = this.data();
+        unit = this.config().unit || '';
         if (d) {
           values.avg = d.avg || 0;
           values.min = d.min || 0;
@@ -12737,6 +12911,23 @@ function(obj, array, string, d3util, graph) {
                '    Min: ' +  values.min + unit +
                '    Max: ' + values.max + unit;
       });
+    }
+
+    /**
+     * Updates config for stats label
+     */
+    function updateStatsLabel() {
+      var graph, componentManager, statsLabel;
+      /*jshint validthis:true */
+      graph = this;
+      componentManager = graph.component();
+      statsLabel =  componentManager.first('gl-stats');
+      if (statsLabel) {
+        statsLabel.config({
+          unit: graph.config().yAxisUnit
+        });
+        componentManager.update('gl-stats');
+      }
     }
 
     /**
@@ -12777,6 +12968,7 @@ function(obj, array, string, d3util, graph) {
           layout: optLayout || 'default',
           yAxisUnit: 'ms'
         });
+      g.dispatch.on('update', updateStatsLabel);
       addInternalData(g);
       addInternalComponents(g);
 
@@ -13437,16 +13629,20 @@ define('core/core',[
   'graphs/graph',
   'graphs/graph-builder',
   'components/component',
+  'data/collection',
+  'core/asset-loader',
   'd3-ext/d3-ext'
 ],
-function(graph, graphBuilder, component) {
+function(graph, graphBuilder, component, collection, assets) {
   
 
   var core = {
-    version: '0.0.2',
+    version: '0.0.4',
     graphBuilder: graphBuilder,
     graph: graph,
-    components: component
+    components: component,
+    dataCollection: collection,
+    assetLoader :assets
   };
 
   return core;

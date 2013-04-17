@@ -1,6 +1,6 @@
 {
   "name": "glimpse.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Graphing library built on top of d3",
   "author": "Rackspace US, Inc.",
   "contributors": [
