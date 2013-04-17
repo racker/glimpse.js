@@ -38,10 +38,24 @@ function(obj, config, string, mixins, d3util) {
     };
 
     /**
+     * Translates the zero tick on the Y-axis by 10
+     * @private
+     */
+    function setZeroTickTranslate(selection) {
+      var transform, translate, x, y;
+      transform = selection.attr('transform');
+      translate = transform.split(',');
+      x = translate[0].split('(')[1];
+      y = translate[1].split(')')[0];
+      selection.attr('transform', 'translate(' + [x, y-10] + ')');
+    }
+
+    /**
      * Changes the default formatting of the d3 axis.
      * @private
      */
     function formatAxis() {
+      var zeroTick, zeroTickLabel;
       // remove boldness from default axis path
       root_.selectAll('path')
         .attr({
@@ -57,16 +71,13 @@ function(obj, config, string, mixins, d3util) {
 
       //Apply padding to the first tick on Y axis
       if (config_.axisType === 'y') {
-        var zeroTick, transform, zeroTickLabel;
-
         zeroTick = root_.select('g');
+
         if (zeroTick.node()) {
           zeroTickLabel = zeroTick.text() +
             (config_.unit ? ' ' + config_.unit : '');
           zeroTick.select('text').text(zeroTickLabel);
-          transform = d3.transform(zeroTick.attr('transform'));
-          transform.translate[1] -= 10;
-          zeroTick.attr('transform', transform.toString());
+          setZeroTickTranslate(zeroTick);
         }
       }
 

@@ -686,7 +686,10 @@ function(obj, config, array, assetLoader, componentManager, components,
     graph.destroy = function() {
       config_.state = STATES.DESTROYED;
       componentManager_.destroy();
-      graph.root().remove();
+      if (root_) {
+        root_.remove();
+        root_ = null;
+      }
       config_ = null;
       defaults_ = null;
       componentManager_ = null;

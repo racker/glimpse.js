@@ -673,6 +673,22 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
     });
 
+    describe('destroy', function() {
+      var selection;
+
+      beforeEach(function() {
+        setGraph();
+        selection = jasmine.htmlFixture();
+        testGraph.render(selection.node());
+        testGraph.destroy();
+      });
+
+      it('sets root to null', function() {
+        expect(testGraph.root()).toBe(null);
+      });
+
+    });
+
     describe('dispatch', function() {
       var renderSpy, newGraph;
 
