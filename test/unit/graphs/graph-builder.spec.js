@@ -30,7 +30,10 @@ function(graphBuilder, graph, format) {
 
       beforeEach(function() {
         testGraph = graphBuilder.create('line');
-        testGraph.config('xScale', d3.scale.linear());
+        testGraph.config({
+          'xScale': d3.scale.linear(),
+          'yAxisUnit': 'GB'
+        });
         testGraph.component('gl-domain-label')
           .config('formatter', format.standardDomain);
         testGraph.data(testData);
@@ -65,6 +68,11 @@ function(graphBuilder, graph, format) {
         var statsComponent;
         statsComponent = testGraph.component('gl-stats');
         expect(statsComponent).toBeDefined();
+      });
+
+      it('sets unit on stats label', function() {
+        testGraph.render(jasmine.htmlFixture());
+        expect(testGraph.component('gl-stats').config('unit')).toBe('GB');
       });
 
       it('removes corresponding components when data is removed', function() {

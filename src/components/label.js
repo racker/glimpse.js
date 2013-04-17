@@ -105,7 +105,7 @@ function(obj, config, string, array, d3util, mixins) {
         config_.text = d3.functor(text);
         return label;
       }
-      return d3.functor(config_.text)(label.data());
+      return d3.functor(config_.text).call(this);
     };
 
     /**

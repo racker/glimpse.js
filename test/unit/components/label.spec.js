@@ -168,19 +168,23 @@ function(label, dc) {
       });
 
       it('sets text as a function from data', function() {
-        var fn = function(d) { return d.text; };
+        var fn = function() { return this.data().text; };
         dataCollection.add({ id: 'testData', text: 'bang' });
         testLabel.data(dataCollection)
           .config('dataId', 'testData').text(fn).update();
         expect(root.select('text').text()).toBe('bang');
       });
 
-      it('applies the data function', function() {
-        var fn = function(d) { return d.text; };
+      it('has access to the config values', function() {
+        var fn = function() { return this.config().unit; };
         dataCollection.add({ id: 'testData', text: 'bang' });
         testLabel.data(dataCollection)
-          .config('dataId', 'testData').text(fn).update();
-        expect(testLabel.text()).toBe('bang');
+          .config({
+            'dataId': 'testData',
+            'unit': 'foo'
+          })
+          .text(fn).update();
+        expect(testLabel.text()).toBe('foo');
       });
 
     });

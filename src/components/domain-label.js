@@ -135,8 +135,8 @@ function(obj, configMixin, string, format, d3util, mixins, label) {
 
       if (dataCollection) {
         innerLabel.data(dataCollection)
-          .text(function(domainData) {
-            return config.formatter(domainData[config.dimension],
+          .text(function() {
+            return config.formatter(this.data()[config.dimension],
               config.suffix);
           });
       }

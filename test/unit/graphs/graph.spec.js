@@ -59,7 +59,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
         .component([
           { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
           { cid: 'testComponentWithColor', type: 'line',
-            dataId: 'fakeData', color: 'red' },
+            dataId: 'fakeData', color: 'red' }
         ]);
     }
 

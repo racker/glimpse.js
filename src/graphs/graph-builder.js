@@ -196,17 +196,18 @@ function(obj, array, string, d3util, graph) {
      * @param {graphs.graph} g
      */
     function addInternalComponents(g) {
-      var unit;
       INTERNAL_COMPONENTS_CONFIG.forEach(function(componentConfig) {
         g.component(componentConfig);
       });
-      unit = g.config('yAxisUnit') || '';
-      g.component('gl-stats').text(function(d) {
-        var values = {
+      g.component('gl-stats').text(function() {
+        var unit, values, d;
+        values = {
           avg: 0,
           min: 0,
           max: 0
         };
+        d = this.data();
+        unit = this.config().unit || '';
         if (d) {
           values.avg = d.avg || 0;
           values.min = d.min || 0;
@@ -216,6 +217,23 @@ function(obj, array, string, d3util, graph) {
                '    Min: ' +  values.min + unit +
                '    Max: ' + values.max + unit;
       });
+    }
+
+    /**
+     * Updates config for stats label
+     */
+    function updateStatsLabel() {
+      var graph, componentManager, statsLabel;
+      /*jshint validthis:true */
+      graph = this;
+      componentManager = graph.component();
+      statsLabel =  componentManager.first('gl-stats');
+      if (statsLabel) {
+        statsLabel.config({
+          unit: graph.config().yAxisUnit
+        });
+        componentManager.update('gl-stats');
+      }
     }
 
     /**
@@ -256,6 +274,7 @@ function(obj, array, string, d3util, graph) {
           layout: optLayout || 'default',
           yAxisUnit: 'ms'
         });
+      g.dispatch.on('update', updateStatsLabel);
       addInternalData(g);
       addInternalComponents(g);
 
