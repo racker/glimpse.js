@@ -13,11 +13,19 @@ function(graphBuilder, graph, format) {
   }
 
   describe('graphs.graphBuilder', function() {
-    var testGraph, testData;
+    var testGraph, testData, testData1;
 
     beforeEach(function() {
       testData = {
         id: 'test-data',
+        data: [{ x: 1, y: 1 }, { x: 2, y: 50 }, { x: 3, y: 100 }],
+        dimensions: {
+          x: 'x',
+          y: 'y'
+        }
+      },
+      testData1 = {
+        id: 'test-data1',
         data: [{ x: 1, y: 1 }, { x: 2, y: 50 }, { x: 3, y: 100 }],
         dimensions: {
           x: 'x',
@@ -93,7 +101,7 @@ function(graphBuilder, graph, format) {
 
         it('adds a line component for each data source added', function() {
           var lineComponents;
-          testGraph.data().add(testData);
+          testGraph.data().add(testData1);
           lineComponents = filterComponents(testGraph, 'line');
           expect(lineComponents.length).toBe(2);
         });
@@ -117,7 +125,7 @@ function(graphBuilder, graph, format) {
         it('adds a line component for each data source added', function() {
           var areaComponents;
           testGraph.data().add(testData);
-          testGraph.data().add(testData);
+          testGraph.data().add(testData1);
           areaComponents = filterComponents(testGraph, 'area');
           expect(areaComponents.length).toBe(2);
         });

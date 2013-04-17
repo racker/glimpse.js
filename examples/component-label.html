@@ -51,9 +51,8 @@
         labelComponent.data(dataCollection)
           .config('dataId', 'firstData');
 
-        // d - reference to data
         labelComponent.text(function(d, i) {
-          return d.id;
+          return this.data().id;
         });
             
         labelComponent.render('#container');

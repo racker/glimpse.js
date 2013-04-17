@@ -84,14 +84,26 @@ define([
     var dataCollection;
 
     dataCollection = {};
+
     return {
 
       /**
+      * Event dispatcher.
+      * @public
+      */
+      dispatch: d3.dispatch('error'),
+
+      /**
        * Add a data source.
+       * dispatch error event if id is not unique
        */
       add: function(data) {
         if (Array.isArray(data)) {
-          data.forEach(this.add);
+          data.forEach(this.add, this);
+          return;
+        }
+        if (dataCollection[data.id]) {
+          this.dispatch.error();
           return;
         }
         if (isDerivedDataConfig(data)) {

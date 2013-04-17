@@ -108,9 +108,9 @@ function(obj, array, string, d3util, graph) {
      */
     function componentExists(dataId, g) {
       var components, foundComponent;
-      components = g.component();
+      components = g.component().get();
       foundComponent = array.find(components, function(c) {
-        return c.dataId === dataId;
+        return c.config('dataId') === dataId;
       });
       return foundComponent ? true : false;
     }
