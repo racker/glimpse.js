@@ -64,7 +64,7 @@
 
         lineGraph = glimpse.graphBuilder.create('line')
           .config({
-            domainIntervalUnit: d3.time.week,
+            domainIntervalUnit: 'week',
           })
           .data(dataConfig)
           .render('#container');

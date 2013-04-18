@@ -6,9 +6,8 @@ define([
   'core/object',
   'core/array',
   'data/selection/selection',
-  'data/functions',
   'data/selection/diff-quotient'
-], function (obj, array, selection, dataFns) {
+], function (obj, array, selection) {
   'use strict';
 
   function applyDerivation(dc, data) {
@@ -34,15 +33,6 @@ define([
 
   function isWildCard(id) {
     return id === '*' || id === '+';
-  }
-
-  function getExtents(sources) {
-    var tempArr = [];
-    sources.forEach(function(arr) {
-      tempArr = tempArr.concat(arr);
-    });
-
-    return d3.extent(tempArr);
   }
 
   /**
@@ -81,9 +71,7 @@ define([
   }
 
   function collection() {
-    var dataCollection;
-
-    dataCollection = {};
+    var dataCollection = {};
 
     return {
 
@@ -105,6 +93,21 @@ define([
         if (dataCollection[data.id]) {
           this.dispatch.error();
           return;
+        }
+        if (isDerivedDataConfig(data)) {
+          dataCollection[data.id] = { glDerive: data };
+        } else {
+          dataCollection[data.id] = data;
+        }
+      },
+
+      /**
+       * Adds a data source if it doesn't exist.
+       * Replace a data source if it does.
+       */
+      upsert: function(data) {
+        if (!dataCollection[data.id]) {
+          this.add(data);
         }
         if (isDerivedDataConfig(data)) {
           dataCollection[data.id] = { glDerive: data };
@@ -140,9 +143,10 @@ define([
       },
 
       /**
-       * Update an item in place.
+       * Extend a data-source in place.
+       * If data source doesn't exist, it's added.
        */
-      upsert: function(data) {
+      extend: function(data) {
         var id = data.id;
         if (dataCollection[id]) {
           obj.extend(dataCollection[id], data);
@@ -216,41 +220,6 @@ define([
        */
       isEmpty: function() {
         return Object.keys(dataCollection).length === 0;
-      },
-
-      /**
-       * Calculates the xExtents for the data collection
-       * @param  {Array<string>| string of comma-delimited ids |
-       *   wildcard (* for all non-derived sources)} sources
-       * @return {Array<number>}
-       */
-      xExtents: function(sources) {
-        var dataSelection;
-        dataSelection = this.select(sources ? sources : '*');
-        return getExtents(dataSelection.dim('x').extent().all());
-      },
-
-      /**
-       * Calculates the yExtents for the data collection
-       * @param  {Array<string>| string of comma-delimited ids |
-       *   wildcard (* for all non-derived sources)} sources
-       * @return {Array<number>}
-       */
-      yExtents: function(sources) {
-        var dataSelection, yExtentsSelection;
-        dataSelection = this.select(sources ? sources : '*');
-        yExtentsSelection = dataSelection.map(function(ds) {
-          return d3.extent(ds.data, function(d, i) {
-            var value = dataFns.dimension(ds, 'y')(d, i);
-            // If Y-baselines are used (stacked),
-            //   use the sum of the baseline and Y.
-            if (ds.dimensions.y0) {
-              value += dataFns.dimension(ds, 'y0')(d, i);
-            }
-            return value;
-          });
-        });
-        return getExtents(yExtentsSelection.all());
       }
     };
   }

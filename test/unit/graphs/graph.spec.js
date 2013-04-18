@@ -311,7 +311,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
           var start, end;
 
           testGraph.config({
-            domainIntervalUnit: d3.time.day,
+            domainIntervalUnit: 'day',
             domainIntervalPeriod: 2
           });
           testGraph.update();

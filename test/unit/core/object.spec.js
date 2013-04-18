@@ -154,6 +154,16 @@ function (Obj) {
         expect(Obj.get(obj, ['a', 'x', 'y'])).toBe(null);
       });
 
+      it('returns null if path is null', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj, null)).toBe(null);
+      });
+
+      it('returns null if path is undefined', function() {
+        obj = { 'hi': 'bye' };
+        expect(Obj.get(obj)).toBe(null);
+      });
+
       it('returns the value even if its falsy', function() {
         obj = { 'a': { b: 0 }  };
         expect(Obj.get(obj, ['a', 'b'])).toBe(0);

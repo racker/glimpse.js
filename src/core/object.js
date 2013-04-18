@@ -43,6 +43,9 @@ function (array) {
     get: function(obj, path) {
       var currentObj;
       currentObj = obj;
+      if (!this.isDefAndNotNull(path)) {
+        return null;
+      }
       array.getArray(path).every(function(p) {
         currentObj = currentObj[p];
         return this.isDefAndNotNull(currentObj);

@@ -243,7 +243,7 @@ define([
 
     });
 
-    describe('.upsert()', function() {
+    describe('.extend()', function() {
 
       it('adds an data attribute in place', function() {
         var depX = {id: 'data1', data: [1, 2, 3] },
@@ -252,7 +252,7 @@ define([
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [1,2,3]
         });
-        dataCollection.upsert({ id: 'data1', 'title': 'What!!'});
+        dataCollection.extend({ id: 'data1', 'title': 'What!!'});
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [1,2,3], title: 'What!!'
         });
@@ -265,7 +265,7 @@ define([
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [1,2,3]
         });
-        dataCollection.upsert({ id: 'data1', 'title': 'What!!', color: 'blue'});
+        dataCollection.extend({ id: 'data1', 'title': 'What!!', color: 'blue'});
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [1,2,3], title: 'What!!', color: 'blue'
         });
@@ -278,10 +278,42 @@ define([
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [1,2,3]
         });
-        dataCollection.upsert({ id: 'data1', data: [4,5,6], 'title': 'What!!'});
+        dataCollection.extend({ id: 'data1', data: [4,5,6], 'title': 'What!!'});
         expect(dataCollection.get('data1')).toEqual({
           id: 'data1', data: [4,5,6], title: 'What!!'
         });
+      });
+
+    });
+
+    describe('.upsert()', function() {
+
+      it('replaces an existing data-source in place', function() {
+        var depX = {id: 'data1', data: [1, 2, 3] },
+            depY = {id: 'data2', data: [1, 2, 3] };
+        dataCollection.add([depX, depY]);
+        expect(dataCollection.get('data1')).toEqual({
+          id: 'data1', data: [1,2,3]
+        });
+        dataCollection.upsert({ id: 'data1', 'title': 'What!!'});
+        expect(dataCollection.get('data1')).toEqual({
+          id: 'data1', title: 'What!!'
+        });
+      });
+
+      it('adding data src that does exist doesnt delegate to add', function() {
+        var depX = {id: 'data1', data: [1, 2, 3] };
+        dataCollection.add(depX);
+        spyOn(dataCollection, 'add').andCallThrough();
+        dataCollection.upsert(depX);
+        expect(dataCollection.add).not.toHaveBeenCalled();
+      });
+
+      it('adding data src that does not exist delegates to add', function() {
+         spyOn(dataCollection, 'add').andCallThrough();
+        var depX = {id: 'data1', data: [1, 2, 3] };
+        dataCollection.upsert(depX);
+        expect(dataCollection.add).toHaveBeenCalled();
       });
 
     });
@@ -591,112 +623,6 @@ define([
         expect(input.D[1].get()).toBe('B');
         expect(input.D[2].get()).toBe('C');
       });
-
-    });
-
-    describe('extents', function() {
-      var fakeData, xExtents, yExtents;
-
-      fakeData = [
-        {
-          id:'fakeData1',
-          data: [
-            { x: 50, y: 10},
-            { x: 145, y: 20},
-            { x: 250, y: 40}
-          ]
-        },
-        {
-          id:'fakeData2',
-          data: [
-            { x: 10, y: 5},
-            { x: 100, y: 20},
-            { x: 200, y: 30}
-          ]
-        },
-        {
-          id:'fakeData3',
-          data: [
-            { x: 10, y: 50},
-            { x: 150, y: 45},
-            { x: 500, y: 35}
-          ]
-        }
-      ];
-
-      beforeEach(function() {
-        dataCollection.add([
-          {
-            id: 'data1',
-            data: fakeData[0].data,
-            dimensions: {
-              x: function(d) { return d.x; },
-              y: function(d) { return d.y; }
-            }
-          },
-          {
-            id: 'data2',
-            data: fakeData[1].data,
-            dimensions: {
-              x: function(d) { return d.x; },
-              y: function(d) { return d.y; }
-            }
-          },
-          {
-            id: 'data3',
-            data: fakeData[2].data,
-            dimensions: {
-              x: function(d) { return d.x; },
-              y: function(d) { return d.y; }
-            }
-          },
-          {
-            id: 'data4',
-            sources: '*',
-            derivation: function () {
-              return {
-                x: 1000,
-                y: 1000,
-              };
-            }
-          }
-        ]);
-      });
-
-      it('calculates the xExtents for the provided sources', function() {
-        xExtents = dataCollection.xExtents(['data1', 'data2']);
-        expect(xExtents).toEqual([10, 250]);
-      });
-
-
-      it('returns the xExtents of all non-derived sources if called with *',
-        function() {
-          dataCollection.xExtents('*');
-          expect(dataCollection.xExtents()).toEqual([10, 500]);
-        }
-      );
-
-      it('returns the xExtents of * if called without parameters', function() {
-        expect(dataCollection.xExtents()).toEqual([10, 500]);
-      });
-
-      it('calculates the yExtents for the provided sources', function() {
-        yExtents = dataCollection.yExtents(['data1', 'data2']);
-        expect(yExtents).toEqual([5, 40]);
-      });
-
-      it('returns the yExtents of all non-derived sources if called with *',
-        function() {
-          dataCollection.yExtents('*');
-          expect(dataCollection.yExtents()).toEqual([5, 50]);
-        }
-      );
-
-      it('returns the yExtents of * if called without parameters', function() {
-        dataCollection.yExtents(['data1', 'data2']);
-        expect(dataCollection.yExtents()).toEqual([5, 50]);
-      });
-
 
     });
 

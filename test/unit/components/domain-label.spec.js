@@ -12,7 +12,7 @@ function(domainLabel, format, dataFns, compUtil, dataCollection) {
     var testDomainLabel, domain, handlerSpy;
 
     function updateDomain(data) {
-      domain.upsert({ id: '$domain', x:data });
+      domain.extend({ id: '$domain', x:data });
     }
 
     beforeEach(function() {
