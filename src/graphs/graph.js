@@ -241,18 +241,19 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @private
      */
     function updateLegend() {
-      var legendConfig = [];
+      var legendKeys = [];
       componentManager_.get().forEach(function(c) {
         var cData = c.data ? c.data() : null;
         if (c.config('inLegend') && cData) {
-          legendConfig.push({
+          legendKeys.push({
+            dataId: c.config('dataId'),
             color: c.config('color'),
             label: c.data().title || ''
           });
         }
       });
       componentManager_.first('gl-legend')
-        .config({ keys: legendConfig })
+        .config({ keys: legendKeys })
         .update();
     }
 

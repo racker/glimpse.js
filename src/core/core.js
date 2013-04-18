@@ -5,9 +5,11 @@ define([
   'components/component',
   'data/collection',
   'core/asset-loader',
+  'events/pubsub',
+
   'd3-ext/d3-ext'
 ],
-function(graph, graphBuilder, component, collection, assets) {
+function(graph, graphBuilder, component, collection, assets, pubsub) {
   'use strict';
 
   var core = {
@@ -16,7 +18,10 @@ function(graph, graphBuilder, component, collection, assets) {
     graph: graph,
     components: component,
     dataCollection: collection,
-    assetLoader :assets
+    assetLoader :assets,
+    pubsub: pubsub,
+    // Singleton pubsub instance global to everything.
+    globalPubsub: pubsub.getSingleton()
   };
 
   return core;

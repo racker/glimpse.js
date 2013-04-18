@@ -1,7 +1,8 @@
 define([
-  'core/core'
+  'core/core',
+  'events/pubsub'
 ],
-function (core) {
+function(core, pubsub) {
   'use strict';
 
   describe('core.core', function () {
@@ -16,6 +17,15 @@ function (core) {
     it('should have data collection exposed', function () {
       expect(core.dataCollection).toBeDefined();
     });
+
+    it('should have pubsub exposed', function () {
+      expect(core.pubsub).toBeDefined();
+    });
+
+    it('should have the global pubsub exposed', function () {
+      expect(core.globalPubsub).toBe(pubsub.getSingleton());
+    });
+
   });
 
 });
