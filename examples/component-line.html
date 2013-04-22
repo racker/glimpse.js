@@ -45,7 +45,7 @@
 
         // 1. Line componenet with basic config.
         var timeScale =  d3.time.scale(),
-            linearScale = d3.scale.linear(), 
+            linearScale = d3.scale.linear(),
             dataCollection = glimpse.dataCollection.create(),
             lineComponent = glimpse.components.line(),
             x,
@@ -54,29 +54,30 @@
             lineComponent2;
 
         // needs x and y scale because there is no graph
-        x = timeScale.domain([0, oneHr*3]).range([0, 200]), 
+        x = timeScale.domain([0, oneHr*3]).range([0, 200]),
         y = linearScale.domain([0, 100]).range([100, 0]);
 
-        //bind data using dataCollection    
+        //bind data using dataCollection
         dataCollection.add(dataConfig);
 
 
         lineComponent.data(dataCollection).config({
-            'dataId' : 'latencyDfw', 
-            'xScale' : x, 
-            'yScale' : y
+            'dataId' : 'latencyDfw',
+            'xScale' : x,
+            'yScale' : y,
+            'color': '#000'
           });
-            
+
         lineComponent.render('#container');
-        
+
         //2. Line with wider stroke width and color
         lineComponent1 = glimpse.components.line();
 
         lineComponent1.data(dataCollection).config({
-            'dataId' : 'latencyDfw', 
+            'dataId' : 'latencyDfw',
             'color' : '#FF0000',
             'strokeWidth' : 4,
-            'xScale' : x, 
+            'xScale' : x,
             'yScale' : y
           });
 
@@ -86,12 +87,12 @@
         lineComponent2 = glimpse.components.line();
 
         lineComponent2.data(dataCollection).config({
-            'dataId' : 'latencyDfw', 
+            'dataId' : 'latencyDfw',
             'color' : '#FF0000',
             'interpolate' : 'step-after',
             'opacity' : .4,
             'strokeWidth' : 2,
-            'xScale' : x, 
+            'xScale' : x,
             'yScale' : y
           });
 

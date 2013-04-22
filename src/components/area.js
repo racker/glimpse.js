@@ -29,7 +29,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       xScale: null,
       yScale: null,
       cssClass: null,
-      color: 'steelBlue',
+      color: null,
       inLegend: true,
       areaGenerator: d3.svg.area(),
       opacity: 1,

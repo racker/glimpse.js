@@ -26,7 +26,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       type: 'line',
       target: null,
       cid: null,
-      color: '#000',
+      color: null,
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),

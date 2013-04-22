@@ -154,7 +154,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
       });
 
       it('has default colorPalette set', function() {
-        expect(config.colorPalette).toEqual(d3.scale.category20().range());
+        expect(config.colorPalette).toEqual(d3.scale.category10().range());
       });
 
     });
@@ -504,7 +504,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
       it('sets default color on component using colorPalette',
         function() {
-          expect(testComponent.config().color).toBe('#000');
+          expect(testComponent.config().color).toBe('green');
         }
       );
 

@@ -70,7 +70,7 @@ function(area, dc) {
         cid: null,
         xScale: null,
         yScale: null,
-        color: 'steelBlue',
+        color: null,
         inLegend: true,
         areaGenerator: d3.svg.area(),
         opacity: 1
@@ -179,6 +179,7 @@ function(area, dc) {
         setData();
         spyOn(testArea, 'update').andCallThrough();
         testArea.dispatch.on('render', handlerSpy);
+        testArea.config('color', 'green');
         testArea.render(selection);
       });
 
