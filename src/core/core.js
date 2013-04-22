@@ -18,7 +18,7 @@ function(graph, graphBuilder, component, collection, assets, pubsub) {
     graph: graph,
     components: component,
     dataCollection: collection,
-    assetLoader :assets,
+    assetLoader: assets,
     pubsub: pubsub,
     // Singleton pubsub instance global to everything.
     globalPubsub: pubsub.getSingleton()

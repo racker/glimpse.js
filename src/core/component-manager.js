@@ -112,7 +112,8 @@ function(obj, array, string, func, components) {
 
   function componentManager() {
     var componentList,
-        sharedObjects;
+        sharedObjects,
+        cidList;
 
     // Key value pair of all registered object refs shared across components.
     // Are in the format:
@@ -121,6 +122,9 @@ function(obj, array, string, func, components) {
 
     // Internal array of all the components.
     componentList= [];
+
+    //Internal obj of all ids
+    cidList = {};
 
     return obj.extend({
 
@@ -162,6 +166,12 @@ function(obj, array, string, func, components) {
       },
 
       /**
+      * Event dispatcher.
+      * @public
+      */
+      dispatch: d3.dispatch('error'),
+
+      /**
        * Adds a new component to the collection.
        *
        * Example:
@@ -180,8 +190,17 @@ function(obj, array, string, func, components) {
         } else {
           instances = array.getArray(instances);
         }
-        array.append(componentList, instances);
         validateCids(instances);
+
+        instances.forEach(function(c) {
+          if(cidList[c.cid()]){
+            this.dispatch.error();
+            return;
+          }
+          cidList[c.cid()] = true;
+          componentList.push(c);
+        }, this);
+        
         newCids = instances.map(cidMapper);
         this.applyAutoSharedObjects(newCids);
         return instances;
@@ -209,6 +228,7 @@ function(obj, array, string, func, components) {
 
       /**
        * Removes components from the collection (without destroying them).
+       * Also removes the cids from the the cidList.
        *
        * @param {Array|undefined} cids The cids of the comonents to remove.
        *    If not provided will remove all components.
@@ -216,6 +236,7 @@ function(obj, array, string, func, components) {
        */
       remove: function(cids) {
         array.remove(componentList, this.get(cids));
+        obj.remove(cidList, cids);
         return this;
       },
 

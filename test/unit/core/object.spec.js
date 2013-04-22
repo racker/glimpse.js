@@ -171,6 +171,40 @@ function (Obj) {
 
     });
 
+    describe('.remove()', function() {
+
+      var obj, res;
+
+      it('removes the item from object when passed in as string', function() {
+        obj = { 'hi': 'bye' };
+        Obj.remove(obj, 'hi');
+        expect(obj['hi']).not.toBeDefined();
+      });
+
+      it('removes the items from object when passed in as array', function() {
+        obj = { 'hi': 'bye', 'hello' : 'yeah', 'whatsup' : 'hey' };
+        Obj.remove(obj, ['hi', 'hello']);
+        expect(Object.keys(obj).length).toBe(1);
+        expect(obj['whatsup']).toBeDefined();
+      });
+
+      it('returns the object after the operation for chaining', function() {
+        obj = { 'hi': 'bye', 'hello' : 'yeah', 'whatsup' : 'hey' };
+        res = Obj.remove(obj, ['hi', 'hello']);
+        expect(res).toBe(obj);
+      });
+
+      it('does not remove anything if passed in null', function() {
+        obj = { 'hi': 'bye', 'hello' : 'yeah', 'whatsup' : 'hey' };
+        Obj.remove(obj, null);
+        expect(Object.keys(obj).length).toBe(3);
+        expect(obj['hi']).toBeDefined();
+        expect(obj['hello']).toBeDefined();
+        expect(obj['whatsup']).toBeDefined();
+      });
+
+    });
+
     describe('override()', function() {
       var baseObj, overrides, suprSpy;
 

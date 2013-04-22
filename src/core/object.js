@@ -57,6 +57,27 @@ function (array) {
     },
 
     /**
+     * Removes the list of items from the object
+     *
+     * @public
+     * @prarm {Object} obj The object to remove from.
+     * @param {String|Array} list The keys to remove
+     * @return {Object}
+     */
+    remove: function(obj, list) {
+      if (list) {
+          if (typeof list === 'string') {
+            delete obj[list];
+          } else {
+            list.forEach(function (l) {
+              delete obj[l];
+            });
+          }
+      }
+      return obj;
+    },
+
+    /**
      * Overrides a method on an object. Passes a reference to the original
      *  "super" method as the first argument to the new method. The "super"
      *  will be bound to the original o object.

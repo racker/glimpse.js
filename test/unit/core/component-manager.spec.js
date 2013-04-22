@@ -6,7 +6,8 @@ function(componentManager, lineComponent) {
   'use strict';
 
   describe('core.component-manager', function() {
-    var compMgr, line, result, fooLine, barLine, fooLineConfig, barLineConfig;
+    var compMgr, line, result, fooLine, barLine, fooLineConfig,
+        barLineConfig, handlerSpy;
 
     function cidMap(c) {
       return c.cid();
@@ -14,6 +15,7 @@ function(componentManager, lineComponent) {
 
     beforeEach(function() {
       compMgr = componentManager.create();
+      handlerSpy = jasmine.createSpy();
       line = lineComponent().config('cid', 'test-line');
       result = null;
       fooLineConfig = { type: 'line', cid: 'foo' };
@@ -107,7 +109,7 @@ function(componentManager, lineComponent) {
     });
 
     describe('.add()', function() {
-      var c1, c2;
+      var c1, c2, c3;
 
       beforeEach(function() {
         c1 = lineComponent().config({
@@ -116,6 +118,10 @@ function(componentManager, lineComponent) {
         c2 = lineComponent().config({
           cid: 'c2'
         });
+        c3 = lineComponent().config({
+          cid: 'c1'
+        });
+        compMgr.dispatch.on('error', handlerSpy);
       });
 
       it('adds a component instance', function() {
@@ -136,6 +142,25 @@ function(componentManager, lineComponent) {
         expect(compMgr.get().length).toBe(2);
         expect(compMgr.first('c1')).toBeDefined();
         expect(compMgr.first('c2')).toBeDefined();
+      });
+
+      it('dispatches an "error" event if cid is not unique', function() {
+        compMgr.remove();
+        compMgr.add([c1, c3]);
+        expect(handlerSpy).toHaveBeenCalledOnce();
+      });
+
+      it('does not dispatch "error" event if is cid unique', function() {
+        compMgr.remove();
+        compMgr.add([c1, c2]);
+        expect(handlerSpy).not.toHaveBeenCalled();
+      });
+
+      it('does not add cid to the componentManager', function() {
+        compMgr.remove();
+        compMgr.add([c1, c3]);
+        expect(compMgr.get().length).toBe(1);
+        expect(compMgr.first('c3')).toBe(null);
       });
 
       it('returns an array of multiple added components', function() {
