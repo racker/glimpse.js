@@ -8368,6 +8368,9 @@ function (array) {
     get: function(obj, path) {
       var currentObj;
       currentObj = obj;
+      if (!this.isDefAndNotNull(path)) {
+        return null;
+      }
       array.getArray(path).every(function(p) {
         currentObj = currentObj[p];
         return this.isDefAndNotNull(currentObj);
@@ -8376,6 +8379,27 @@ function (array) {
         return currentObj;
       }
       return null;
+    },
+
+    /**
+     * Removes the list of items from the object
+     *
+     * @public
+     * @prarm {Object} obj The object to remove from.
+     * @param {String|Array} list The keys to remove
+     * @return {Object}
+     */
+    remove: function(obj, list) {
+      if (list) {
+          if (typeof list === 'string') {
+            delete obj[list];
+          } else {
+            list.forEach(function (l) {
+              delete obj[l];
+            });
+          }
+      }
+      return obj;
     },
 
     /**
@@ -9086,7 +9110,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       type: 'line',
       target: null,
       cid: null,
-      color: '#000',
+      color: null,
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
@@ -10280,7 +10304,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       xScale: null,
       yScale: null,
       cssClass: null,
-      color: 'steelBlue',
+      color: null,
       inLegend: true,
       areaGenerator: d3.svg.area(),
       opacity: 1,
@@ -10846,7 +10870,8 @@ function(obj, array, string, func, components) {
 
   function componentManager() {
     var componentList,
-        sharedObjects;
+        sharedObjects,
+        cidList;
 
     // Key value pair of all registered object refs shared across components.
     // Are in the format:
@@ -10855,6 +10880,9 @@ function(obj, array, string, func, components) {
 
     // Internal array of all the components.
     componentList= [];
+
+    //Internal obj of all ids
+    cidList = {};
 
     return obj.extend({
 
@@ -10896,6 +10924,12 @@ function(obj, array, string, func, components) {
       },
 
       /**
+      * Event dispatcher.
+      * @public
+      */
+      dispatch: d3.dispatch('error'),
+
+      /**
        * Adds a new component to the collection.
        *
        * Example:
@@ -10914,8 +10948,17 @@ function(obj, array, string, func, components) {
         } else {
           instances = array.getArray(instances);
         }
-        array.append(componentList, instances);
         validateCids(instances);
+
+        instances.forEach(function(c) {
+          if(cidList[c.cid()]){
+            this.dispatch.error();
+            return;
+          }
+          cidList[c.cid()] = true;
+          componentList.push(c);
+        }, this);
+        
         newCids = instances.map(cidMapper);
         this.applyAutoSharedObjects(newCids);
         return instances;
@@ -10943,6 +10986,7 @@ function(obj, array, string, func, components) {
 
       /**
        * Removes components from the collection (without destroying them).
+       * Also removes the cids from the the cidList.
        *
        * @param {Array|undefined} cids The cids of the comonents to remove.
        *    If not provided will remove all components.
@@ -10950,6 +10994,7 @@ function(obj, array, string, func, components) {
        */
       remove: function(cids) {
         array.remove(componentList, this.get(cids));
+        obj.remove(cidList, cids);
         return this;
       },
 
@@ -11736,9 +11781,8 @@ define('data/collection',[
   'core/object',
   'core/array',
   'data/selection/selection',
-  'data/functions',
   'data/selection/diff-quotient'
-], function (obj, array, selection, dataFns) {
+], function (obj, array, selection) {
   
 
   function applyDerivation(dc, data) {
@@ -11764,15 +11808,6 @@ define('data/collection',[
 
   function isWildCard(id) {
     return id === '*' || id === '+';
-  }
-
-  function getExtents(sources) {
-    var tempArr = [];
-    sources.forEach(function(arr) {
-      tempArr = tempArr.concat(arr);
-    });
-
-    return d3.extent(tempArr);
   }
 
   /**
@@ -11811,18 +11846,43 @@ define('data/collection',[
   }
 
   function collection() {
-    var dataCollection;
+    var dataCollection = {};
 
-    dataCollection = {};
     return {
 
       /**
+      * Event dispatcher.
+      * @public
+      */
+      dispatch: d3.dispatch('error'),
+
+      /**
        * Add a data source.
+       * dispatch error event if id is not unique
        */
       add: function(data) {
         if (Array.isArray(data)) {
-          data.forEach(this.add);
+          data.forEach(this.add, this);
           return;
+        }
+        if (dataCollection[data.id]) {
+          this.dispatch.error();
+          return;
+        }
+        if (isDerivedDataConfig(data)) {
+          dataCollection[data.id] = { glDerive: data };
+        } else {
+          dataCollection[data.id] = data;
+        }
+      },
+
+      /**
+       * Adds a data source if it doesn't exist.
+       * Replace a data source if it does.
+       */
+      upsert: function(data) {
+        if (!dataCollection[data.id]) {
+          this.add(data);
         }
         if (isDerivedDataConfig(data)) {
           dataCollection[data.id] = { glDerive: data };
@@ -11858,9 +11918,10 @@ define('data/collection',[
       },
 
       /**
-       * Update an item in place.
+       * Extend a data-source in place.
+       * If data source doesn't exist, it's added.
        */
-      upsert: function(data) {
+      extend: function(data) {
         var id = data.id;
         if (dataCollection[id]) {
           obj.extend(dataCollection[id], data);
@@ -11934,41 +11995,6 @@ define('data/collection',[
        */
       isEmpty: function() {
         return Object.keys(dataCollection).length === 0;
-      },
-
-      /**
-       * Calculates the xExtents for the data collection
-       * @param  {Array<string>| string of comma-delimited ids |
-       *   wildcard (* for all non-derived sources)} sources
-       * @return {Array<number>}
-       */
-      xExtents: function(sources) {
-        var dataSelection;
-        dataSelection = this.select(sources ? sources : '*');
-        return getExtents(dataSelection.dim('x').extent().all());
-      },
-
-      /**
-       * Calculates the yExtents for the data collection
-       * @param  {Array<string>| string of comma-delimited ids |
-       *   wildcard (* for all non-derived sources)} sources
-       * @return {Array<number>}
-       */
-      yExtents: function(sources) {
-        var dataSelection, yExtentsSelection;
-        dataSelection = this.select(sources ? sources : '*');
-        yExtentsSelection = dataSelection.map(function(ds) {
-          return d3.extent(ds.data, function(d, i) {
-            var value = dataFns.dimension(ds, 'y')(d, i);
-            // If Y-baselines are used (stacked),
-            //   use the sum of the baseline and Y.
-            if (ds.dimensions.y0) {
-              value += dataFns.dimension(ds, 'y0')(d, i);
-            }
-            return value;
-          });
-        });
-        return getExtents(yExtentsSelection.all());
       }
     };
   }
@@ -11977,6 +12003,149 @@ define('data/collection',[
     create: function() {
       return collection();
     }
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Helper functions for computing the domain.
+ */
+define('data/domain',[
+  'd3',
+  'core/object'
+], function (d3, obj) {
+  
+
+  var computeFn = {
+
+    /**
+     * Computes the extent for the given dimension.
+     * Config arguments: none
+     */
+    'extent': function(sel, dim) {
+      return sel.dim(dim).concat().extent().get();
+    },
+
+    /**
+     * Computes the time interval.
+     * Config arguments:
+     * unit: may be 'day', 'month', 'year' etc
+     * period: an integer multiplier for the unit
+     */
+    'interval': function(sel, dim, config) {
+      var extent = computeFn.extent(sel, dim) || [0, 1],
+          isTimeScale = obj.get(config, 'isTimeScale'),
+          unitStr = obj.get(config, 'unit'),
+          unit = obj.get(d3.time, unitStr),
+          period = obj.get(config, 'period'),
+          offset;
+
+      if (isTimeScale && unit) {
+        offset = +unit.offset(
+          extent[1],
+          -(period || 1)
+        );
+        extent[0] = +extent[0] > +offset ? extent[0] : offset;
+      }
+      return extent;
+    }
+
+  };
+
+  /**
+   * Applies the appropriate compute function as specified
+   * in the config.
+   * If a compute function is not specified, the extents is
+   * computed.
+   */
+  function compute(dc, dim, domainConfig) {
+    var fnName = domainConfig.compute || 'extent',
+        fn = computeFn[fnName];
+    if (domainConfig.sources === '') {
+      return domainConfig['default'];
+    } else {
+      return fn(dc.select(domainConfig.sources), dim, domainConfig.args);
+    }
+  }
+
+  /**
+   * Applies the modifiers specified in the domain config.
+   * Modifiers may be force or maxMultiplier.
+   */
+  function modify(domain, domainConfig) {
+    var modifier = domainConfig.modifier;
+    if (modifier) {
+      if (modifier.force) {
+        if (Array.isArray(modifier.force)) {
+          domain = domain.concat(modifier.force);
+        } else {
+          domain.push(modifier.force);
+        }
+        domain = d3.extent(domain);
+      }
+      if (modifier.maxMultiplier) {
+        domain[1] = Math.round(domain[1] * modifier.maxMultiplier);
+      }
+    }
+    return domain;
+  }
+
+  /**
+   * Compute the overall data source dependencies for the domain.
+   * This is required to generate the correct dependency graph for
+   * domain evaluation.
+   */
+  function domainDeps(config) {
+    var deps = {};
+    Object.keys(config).forEach(function(dim) {
+      config[dim].sources.split(',').forEach(function(dep) {
+        deps[dep.trim()] = true;
+      });
+    });
+    return Object.keys(deps).join(',');
+  }
+
+  return {
+
+    /**
+     * Add compute function by name.
+     */
+    addComputeFn: function(name, computeFn) {
+      computeFn[name] = computeFn;
+    },
+
+    /*
+     * Remove compute function by name.
+     */
+    removeComputeFn: function(name) {
+      delete computeFn[name];
+    },
+
+    /**
+     * Compute domains based on configuration.
+     */
+    addDomainDerivation: function(config, dc) {
+      dc.upsert({
+        id: '$domain',
+        sources: domainDeps(config),
+        derivation: function() {
+          var domainObj = {};
+          Object.keys(config).forEach(function(dim) {
+            var domainConfig = config[dim],
+                domain;
+            domain = compute(dc, dim, domainConfig);
+            domain = modify(domain, domainConfig);
+            if (!domain) {
+              domain = domainConfig['default'];
+            }
+            domainObj[dim] = domain;
+          });
+          return domainObj;
+        }
+      });
+    }
+
   };
 
 });
@@ -11997,10 +12166,11 @@ define('graphs/graph',[
   'd3-ext/util',
   'mixins/mixins',
   'data/functions',
-  'data/collection'
+  'data/collection',
+  'data/domain'
 ],
 function(obj, config, array, assetLoader, componentManager, components,
-  layoutManager, d3util, mixins, dataFns, collection) {
+  layoutManager, d3util, mixins, dataFns, collection, domain) {
   
 
   return function() {
@@ -12057,7 +12227,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       errorMessage: 'Error loading graph data',
       state: 'normal',
       yDomainModifier: 1.2,
-      colorPalette: d3.scale.category20().range(),
+      colorPalette: d3.scale.category10().range(),
       xAxisUnit: null,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
@@ -12169,8 +12339,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @private
      */
     function updateScales() {
-      var xExtents = [],
-        yExtents = [],
+      var graphDomain,
         dataIds = [];
 
       componentManager_.get().forEach(function(component) {
@@ -12183,101 +12352,40 @@ function(obj, config, array, assetLoader, componentManager, components,
         }
       });
 
+      domain.addDomainDerivation({
+        x: {
+          sources: dataIds.join(','),
+          compute: 'interval',
+          args: {
+            isTimeScale: d3util.isTimeScale(config_.xScale),
+            unit: config_.domainIntervalUnit,
+            period: config_.domainIntervalPeriod
+          },
+          modifier: {
+            force: config_.forceX
+          },
+          'default': [0, 0]
+        },
+        y: {
+          sources: dataIds.join(','),
+          compute: 'extent',
+          modifier: {
+            force: config_.forceY,
+            maxMultiplier: config_.yDomainModifier
+          },
+          'default': [0, 0]
+        }
+      }, dataCollection_);
+
+      dataCollection_.updateDerivations();
+      graphDomain = dataCollection_.get('$domain');
       if (dataIds.length > 0) {
-        xExtents = calculateXExtents(dataIds);
         config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
-          .domain(xExtents);
+          .domain(graphDomain.x);
 
-        yExtents = calculateYExtents(dataIds);
         config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
-          .domain(yExtents);
-        updateDomain(xExtents, yExtents);
-      } else {
-        updateDomain([0,0], [0,0]);
+          .domain(graphDomain.y);
       }
-    }
-
-    /**
-     * Updates $domain in the data collection
-     * @param  {Array<number>} xExtents
-     * @param  {Array<number>} yExtents
-     */
-    function updateDomain(xExtents, yExtents) {
-      dataCollection_.add({
-        id: '$domain',
-        sources: '',
-        derivation: function() {
-          return {
-            x: xExtents,
-            y: yExtents
-          };
-        }
-      });
-    }
-
-    /**
-     * Calculates the Y extents
-     * @param  {Array<string>} dataIds
-     * @return {Array<number>}
-     */
-    function calculateYExtents(dataIds) {
-      var yExtents;
-
-      yExtents = dataCollection_.yExtents(dataIds);
-
-      //TODO: move yDomainModifier and forceY to datacollection
-      yExtents.push(Math.round(d3.max(yExtents) * config_.yDomainModifier));
-      if (config_.forceY) {
-        yExtents = yExtents.concat(config_.forceY);
-      }
-      return d3.extent(yExtents);
-    }
-
-    /**
-     * Calculates the X extents
-     * @param  {Array<string>} dataIds
-     * @return {Array<number>}
-     */
-    function calculateXExtents(dataIds) {
-      var xExtents;
-
-      xExtents = dataCollection_.xExtents(dataIds);
-
-      //TODO: move domainIntervalPeriod and forceX to datacollection
-      if (config_.forceX) {
-        xExtents = xExtents.concat(config_.forceX);
-      }
-
-      if (d3util.isTimeScale(config_.xScale)) {
-        if (config_.domainIntervalUnit) {
-          xExtents = appyDomainIntervalPeriod(xExtents);
-        }
-      }
-      if (xExtents) {
-        return d3.extent(xExtents);
-      }
-      return [0, 0];
-    }
-
-    /**
-     * Applies domain interval period to the x domain
-     * @param  {Array} extents
-     * @return {Array}
-     */
-    function appyDomainIntervalPeriod(extents) {
-      var max, min, offset, newMin;
-
-      max = d3.max(extents) ? d3.max(extents) : config_.xScale.domain()[1];
-      min = d3.min(extents) ? d3.min(extents) : config_.xScale.domain()[0];
-
-      offset = config_.domainIntervalUnit.offset(
-        max,
-        -(config_.domainIntervalPeriod || 1)
-      );
-      newMin = +min > +offset ? min : offset;
-      min = newMin;
-
-      return [min, max];
     }
 
     /**
@@ -12285,18 +12393,19 @@ function(obj, config, array, assetLoader, componentManager, components,
      * @private
      */
     function updateLegend() {
-      var legendConfig = [];
+      var legendKeys = [];
       componentManager_.get().forEach(function(c) {
         var cData = c.data ? c.data() : null;
         if (c.config('inLegend') && cData) {
-          legendConfig.push({
+          legendKeys.push({
+            dataId: c.config('dataId'),
             color: c.config('color'),
             label: c.data().title || ''
           });
         }
       });
       componentManager_.first('gl-legend')
-        .config({ keys: legendConfig })
+        .config({ keys: legendKeys })
         .update();
     }
 
@@ -12325,7 +12434,7 @@ function(obj, config, array, assetLoader, componentManager, components,
      * Inserts/Updates object in data array
      * @param  {object} data
      */
-    function upsertData(data) {
+    function extendData(data) {
       //Set default x and y accessors.
       if(!data.dimensions) {
         data.dimensions = {};
@@ -12336,7 +12445,7 @@ function(obj, config, array, assetLoader, componentManager, components,
       if (!data.dimensions.y) {
         data.dimensions.y = defaultYaccessor_;
       }
-      dataCollection_.upsert(data);
+      dataCollection_.extend(data);
     }
 
     /**
@@ -12505,7 +12614,8 @@ function(obj, config, array, assetLoader, componentManager, components,
           axisType: 'y',
           type: 'axis',
           orient: 'right',
-          tickPadding: 5
+          tickPadding: 5,
+          hiddenStates: ['empty', 'loading', 'error']
         }
       ]);
       if (config_.showLegend) {
@@ -12569,10 +12679,10 @@ function(obj, config, array, assetLoader, componentManager, components,
         if (Array.isArray(data)) {
           var i, len = data.length;
           for (i = 0; i < len; i += 1) {
-            upsertData(data[i]);
+            extendData(data[i]);
           }
         } else {
-          upsertData(data);
+          extendData(data);
         }
         componentManager_.applySharedObject('data');
         return graph;
@@ -12624,7 +12734,6 @@ function(obj, config, array, assetLoader, componentManager, components,
      */
     graph.update = function() {
       updateScales();
-      dataCollection_.updateDerivations();
       updateComponents();
       if (graph.isRendered()) {
         updateComponentVisibility();
@@ -12765,14 +12874,16 @@ function(obj, array, string, d3util, graph) {
         type: 'label',
         dataId: 'gl-stats',
         position: 'center-left',
-        target: 'gl-footer'
+        target: 'gl-footer',
+        hiddenStates: ['empty', 'error']
       },
       {
         cid: 'gl-domain-label',
         type: 'domainLabel',
         target: 'gl-footer',
         position: 'center-right',
-        suffix: 'UTC'
+        suffix: 'UTC',
+        hiddenStates: ['empty', 'error']
       }
     ];
 
@@ -12802,9 +12913,9 @@ function(obj, array, string, d3util, graph) {
      */
     function componentExists(dataId, g) {
       var components, foundComponent;
-      components = g.component();
+      components = g.component().get();
       foundComponent = array.find(components, function(c) {
-        return c.dataId === dataId;
+        return c.config('dataId') === dataId;
       });
       return foundComponent ? true : false;
     }
@@ -12983,6 +13094,135 @@ function(obj, array, string, d3util, graph) {
     };
 
     return graphBuilder();
+});
+
+define('events/pubsub',[
+  'core/array'
+],
+function(array) {
+  
+
+  /**
+   * A global singleton instance.
+   * @private
+   */
+  var globalInstance;
+
+  function broker() {
+    var callbackCache;
+
+    /**
+     * Cache object to hold all the topics and callback references.
+     * @private
+     */
+    callbackCache = {};
+
+    return {
+
+      /**
+       * Publishes an event for a topic.
+       * Also takes additional arguments to pass along to subscribers.
+       *
+       * @public
+       * @param {String} topic The topic/event name.
+       * @return {events.pubsub}
+       */
+      pub: function(topic) {
+        var args;
+
+        if (!callbackCache[topic]) {
+          return this;
+        }
+        args = array.convertArgs(arguments, 1);
+        callbackCache[topic].forEach(function(callback) {
+          callback.apply(this, args);
+        });
+        return this;
+      },
+
+      /**
+       * Subscribes to an event for a topic.
+       *
+       * @public
+       * @param {String} topic The topic/event name.
+       * @param {Function} callback
+       * @return {events.pubsub}
+       */
+      sub: function(topic, callback) {
+        if (!callbackCache[topic]) {
+          callbackCache[topic] = [];
+        }
+        callbackCache[topic].push(callback);
+        return this;
+      },
+
+      /**
+       * Unsubscribe all, or just particular, callbacks from a topic.
+       *
+       * @public
+       * @param {String} topic
+       * @param {Array|Function} optCallbacks
+       * @return {events.pubsub}
+       */
+      unsub: function(topic, optCallbacks) {
+        var subscribers;
+
+        // No callbacks specified, remove all for that topic.
+        if (!optCallbacks) {
+          delete callbackCache[topic];
+          return this;
+        }
+        subscribers = callbackCache[topic] || [];
+        // No subscribers to remove, return early.
+        if (!subscribers.length) {
+          return this;
+        }
+        // Only remove specified callbacks for topic.
+        array.remove(subscribers, optCallbacks);
+        return this;
+      },
+
+      /**
+       * Unsubscribe everything and reset the cache.
+       *
+       * @public
+       * @return {events.pubsub}
+       */
+      clearAll: function() {
+        callbackCache = {};
+        return this;
+      }
+    };
+  }
+
+  return {
+
+    /**
+     * Creates a new pubsub instance.
+     *
+     * @public
+     * @return {events.pubsub}
+     */
+    create: function() {
+      return broker();
+    },
+
+    /**
+     * Returns the global singleton instance if it exists, otherwise creates it.
+     *
+     * @public
+     * @return {events.pubsub}
+     */
+    getSingleton: function() {
+      if (globalInstance) {
+        return globalInstance;
+      }
+      globalInstance = this.create();
+      return globalInstance;
+    }
+
+  };
+
 });
 
 /**
@@ -13631,9 +13871,11 @@ define('core/core',[
   'components/component',
   'data/collection',
   'core/asset-loader',
+  'events/pubsub',
+
   'd3-ext/d3-ext'
 ],
-function(graph, graphBuilder, component, collection, assets) {
+function(graph, graphBuilder, component, collection, assets, pubsub) {
   
 
   var core = {
@@ -13642,7 +13884,10 @@ function(graph, graphBuilder, component, collection, assets) {
     graph: graph,
     components: component,
     dataCollection: collection,
-    assetLoader :assets
+    assetLoader: assets,
+    pubsub: pubsub,
+    // Singleton pubsub instance global to everything.
+    globalPubsub: pubsub.getSingleton()
   };
 
   return core;

@@ -1,3 +1,12 @@
+## 0.0.5 (April 22 2013)
+
+- Validation for ids for dataCollection
+- Domain refactor
+- Adds pub-sub
+- Fixes default color for components
+- Fixes hidden states for axis and legend
+- Validation cid for components
+
 ## 0.0.4 (April 17 2013)
 
 Bugfix release to address bugs reported by reach team
