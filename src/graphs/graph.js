@@ -462,7 +462,8 @@ function(obj, config, array, assetLoader, componentManager, components,
           axisType: 'y',
           type: 'axis',
           orient: 'right',
-          tickPadding: 5
+          tickPadding: 5,
+          hiddenStates: ['empty', 'loading', 'error']
         }
       ]);
       if (config_.showLegend) {

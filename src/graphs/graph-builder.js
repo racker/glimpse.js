@@ -71,14 +71,16 @@ function(obj, array, string, d3util, graph) {
         type: 'label',
         dataId: 'gl-stats',
         position: 'center-left',
-        target: 'gl-footer'
+        target: 'gl-footer',
+        hiddenStates: ['empty', 'error']
       },
       {
         cid: 'gl-domain-label',
         type: 'domainLabel',
         target: 'gl-footer',
         position: 'center-right',
-        suffix: 'UTC'
+        suffix: 'UTC',
+        hiddenStates: ['empty', 'error']
       }
     ];
 

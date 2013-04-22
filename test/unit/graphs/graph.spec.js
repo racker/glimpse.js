@@ -540,6 +540,18 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
           .not.toBeNull();
       });
 
+      it('hides x axis for empty state', function() {
+        testGraph.state('empty');
+        expect(compUtil.getByCid('gl-xaxis').node())
+          .toHaveAttr('display', 'none');
+      });
+
+      it('hides y axis for empty state', function() {
+        testGraph.state('empty');
+        expect(compUtil.getByCid('gl-yaxis').node())
+          .toHaveAttr('display', 'none');
+      });
+
       it('has no overlays for "normal" state', function() {
         testGraph.state('normal');
         expect(selection.selectAll('.gl-overlay'))
