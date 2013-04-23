@@ -93,29 +93,29 @@ module.exports = function(grunt) {
      */
     exec: {
       testWatch: {
-        command: 'testacular start test/testacular.conf.js',
+        command: 'karma start test/karma.conf.js',
         stdout: true
       },
       test: {
-        command: 'testacular start test/testacular.conf.js ' +
+        command: 'karma start test/karma.conf.js ' +
                  '--browsers="Chrome" ' +
                  '--singleRun=true',
         stdout: true
       },
       testAll: {
-        command: 'testacular start test/testacular.conf.js ' +
+        command: 'karma start test/karma.conf.js ' +
                  '--browsers="Chrome,Firefox,Safari" ' +
                  '--singleRun=true',
         stdout: true
       },
       testHeadless: {
-        command: 'testacular start test/testacular.conf.js ' +
+        command: 'karma start test/karma.conf.js ' +
                  '--browsers="PhantomJS" ' +
                  '--singleRun=true',
         stdout: true
       },
       testTravis: {
-        command: 'testacular start test/testacular.conf.js ' +
+        command: 'karma start test/karma.conf.js ' +
                  '--browsers="Firefox" ' +
                  '--singleRun=true',
         stdout: true
@@ -163,7 +163,7 @@ module.exports = function(grunt) {
           jshintrc: 'test/.jshintrc'
         },
         files: {
-          src: ['test/*.js', 'test/unit/**/*.js', '!test/testacular.conf.js']
+          src: ['test/*.js', 'test/unit/**/*.js', '!test/karma.conf.js']
         }
       }
     },

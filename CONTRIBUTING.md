@@ -3,7 +3,7 @@
 - Install [nodejs](http://nodejs.org)
 - Install [PhantomJS](http://phantomjs.org)
 - Install [grunt](http://gruntjs.com) `npm install -g grunt-cli`
-- Install [Testacular](https://github.com/testacular/testacular) `npm install -g testacular@0.5.10`
+- Install [Karma](https://github.com/karma-runner/karma) `npm install -g karma`
 - Install [Bower](https://github.com/twitter/bower) `npm install -g bower`
 - Install other build dependencies `npm install`
 - Install bower dependencies `bower install`
@@ -15,7 +15,7 @@
 - Run tests from the command line: `grunt test`
 - Look at coverage report generated in `/test/coverage` to ensure you maintain 100% test-coverage.
 - Optionally run `grunt testwatch` to auto-run tests when any file changes
-- See [Testacular](https://github.com/testacular/testacular) and [Jasmine](http://pivotal.github.com/jasmine/) for more details.
+- See [Karma](https://github.com/karma-runner/karma) and [Jasmine](http://pivotal.github.com/jasmine/) for more details.
 
 **Style Guide**
 
