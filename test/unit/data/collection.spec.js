@@ -35,6 +35,17 @@ define([
         expect(dataCollection.get('test')).toBe(data);
       });
 
+      it('returns null on invalid data ids', function() {
+        var data1 = {id: 'test1', data: 'nice' },
+            data2 = {id: 'test2', data: 'nice' };
+        dataCollection.add(data1);
+        dataCollection.add(data2);
+        expect(dataCollection.get()).toEqual([data1, data2]);
+        expect(dataCollection.get('pqr')).toBe(null);
+        expect(dataCollection.get('xyz')).toBe(null);
+      });
+
+
       it('returns dataset as array - when added individually', function() {
         var data1 = {id: 'test1', data: 'nice' },
             data2 = {id: 'test2', data: 'nice' };
@@ -53,6 +64,35 @@ define([
         expect(dataCollection.get('test1')).toBe(data1);
         expect(dataCollection.get('test2')).toBe(data2);
       });
+
+      it('returns errors string on getting an uncomputed derived source',
+        function() {
+          dataCollection.add({
+            id: 'newds',
+            sources: '',
+            derivation: function() {
+              return 'result';
+            }
+          });
+          expect(dataCollection.get('newds'))
+            .toBe('gl-error-not-computed');
+        }
+      );
+
+      it('returns computed value on gettting a derived source',
+        function() {
+          dataCollection.add({
+            id: 'newds',
+            sources: '',
+            derivation: function() {
+              return 'result';
+            }
+          });
+          dataCollection.updateDerivations();
+          expect(dataCollection.get('newds')).toBe('result');
+        }
+      );
+
 
     });
 
@@ -222,6 +262,135 @@ define([
 
     });
 
+    describe('tagging', function() {
+
+      var domain1, domain2, lat1, lat2, lat3;
+
+      beforeEach(function() {
+        domain1 = {id: 'd1', tags: ['#domain'], data: 'domainData1'};
+        domain2 = {id: 'd2', tags: ['#domain'], data: 'domainData2'};
+        lat1 = {id: 'l1', tags: ['#lat'], data: 'latData1'};
+        lat2 = {id: 'l2', tags: ['#lat'], data: 'latData2'};
+        lat3 = {id: 'l3', tags: ['#lat'], data: 'latData3'};
+        dataCollection.add([domain1, domain2, lat1, lat2, lat3]);
+      });
+
+      it('* source returns empty', function() {
+        expect(dataCollection.select('*')).toEqual(sel.create());
+      });
+
+      it('selection by tag #domain returns correct selection', function() {
+        expect(dataCollection.select('#domain'))
+          .toEqual(sel.create([domain1, domain2]));
+      });
+
+      it('selection of #domain by ids returns correct selection', function() {
+        expect(dataCollection.select('d1'))
+          .toEqual(sel.create(domain1));
+        expect(dataCollection.select('d2'))
+          .toEqual(sel.create(domain2));
+        expect(dataCollection.select('d1,d2'))
+          .toEqual(sel.create([domain1, domain2]));
+      });
+
+      it('selection by tag #lat returns correct selection', function() {
+        expect(dataCollection.select('#lat'))
+          .toEqual(sel.create([lat1, lat2, lat3]));
+      });
+
+      it('selection of #lat by ids returns correct selection', function() {
+        expect(dataCollection.select('l1'))
+          .toEqual(sel.create(lat1));
+        expect(dataCollection.select('l2'))
+          .toEqual(sel.create(lat2));
+        expect(dataCollection.select('l3'))
+          .toEqual(sel.create(lat3));
+        expect(dataCollection.select('l1,l2,l3'))
+          .toEqual(sel.create([lat1, lat2, lat3]));
+      });
+
+      it('returns empty sel if non-valid sources selected on dc', function() {
+        expect(dataCollection.select('ORD, DFW')).toEqual(sel.create());
+      });
+
+      it('selection by tag and id works', function() {
+        expect(dataCollection.select('#lat, d1'))
+          .toEqual(sel.create([lat1, lat2, lat3, domain1]));
+        expect(dataCollection.select('l1,#domain'))
+          .toEqual(sel.create([lat1, domain1, domain2]));
+      });
+
+      it('id and tag id collision resolution', function() {
+        var c = dc.create(),
+        dsId = {id: 'ds', tags: ['#domain'], data: 'domainData1'},
+        ds1 = {id: 'l1', tags: ['ds'], data: 'latData1'},
+        ds2 = {id: 'l2', tags: ['ds'], data: 'latData2'};
+        c.add([dsId, ds1, ds2]);
+        expect(c.select('ds'))
+          .toEqual(sel.create(dsId));
+      });
+
+      describe('default tags', function() {
+
+        var newDc;
+
+        beforeEach(function() {
+          newDc = dc.create();
+        });
+
+        it('adding non-derived src results in default tag of * and +',
+          function() {
+            newDc.add({id: 'test1', data: 'nothing'});
+            expect(newDc.get('test1')).toEqual({
+              id: 'test1', data: 'nothing', tags: ['*', '+']
+            });
+          }
+        );
+
+        it('specifying tags in non-derived src results in overriding default',
+          function() {
+            newDc.add({id: 'test1', tags: 'test', data: 'nothing'});
+            expect(newDc.get('test1')).toEqual({
+              id: 'test1', data: 'nothing', tags: 'test'
+            });
+          }
+        );
+
+
+        it('adding a derived src results in default tag of +',
+          function() {
+            newDc.add({
+              id: 'test1',
+              sources: '',
+              derivation: function() {
+                return { value: 'hello' };
+              }
+            });
+            newDc.updateDerivations();
+            expect(newDc.get('test1').tags).toEqual('+');
+          }
+        );
+
+        it('specifying tags in a derived src results in overriding default',
+          function() {
+            newDc.add({
+              id: 'test1',
+              sources: '',
+              tags: ['domain', 'test'],
+              derivation: function() {
+                return { value: 'hello' };
+              }
+            });
+            newDc.updateDerivations();
+            expect(newDc.get('test1').tags).toEqual(['domain', 'test']);
+          }
+        );
+
+      });
+
+    });
+
+
     describe('.append()', function() {
 
       it('appends the data to correct data source array by id', function() {
@@ -245,42 +414,46 @@ define([
 
     describe('.extend()', function() {
 
-      it('adds an data attribute in place', function() {
-        var depX = {id: 'data1', data: [1, 2, 3] },
-            depY = {id: 'data2', data: [1, 2, 3] };
+      it('adds a data attribute in place', function() {
+        var depX = {id: 'data1', tags: [], data: [1, 2, 3] },
+            depY = {id: 'data2', tags: [], data: [1, 2, 3] };
         dataCollection.add([depX, depY]);
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3]
+          id: 'data1', tags: [], data: [1,2,3]
         });
         dataCollection.extend({ id: 'data1', 'title': 'What!!'});
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3], title: 'What!!'
+          id: 'data1',  tags: [], data: [1,2,3], title: 'What!!'
         });
       });
 
      it('adds many data attributes in place', function() {
-        var depX = {id: 'data1', data: [1, 2, 3] },
-            depY = {id: 'data2', data: [1, 2, 3] };
+        var depX = {id: 'data1', tags: ['lat'], data: [1, 2, 3] },
+            depY = {id: 'data2', tags: ['lat'], data: [1, 2, 3] };
         dataCollection.add([depX, depY]);
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3]
+          id: 'data1', tags: ['lat'], data: [1,2,3]
         });
         dataCollection.extend({ id: 'data1', 'title': 'What!!', color: 'blue'});
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3], title: 'What!!', color: 'blue'
+          id: 'data1', tags: ['lat'],
+          data: [1,2,3], title: 'What!!', color: 'blue'
         });
       });
 
       it('replaces a data attribute in place', function() {
-        var depX = {id: 'data1', data: [1, 2, 3] },
-            depY = {id: 'data2', data: [1, 2, 3] };
+        var depX = {id: 'data1', tags: [], data: [1, 2, 3] },
+            depY = {id: 'data2', tags: [], data: [1, 2, 3] };
         dataCollection.add([depX, depY]);
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3]
+          id: 'data1', tags: [], data: [1,2,3]
         });
-        dataCollection.extend({ id: 'data1', data: [4,5,6], 'title': 'What!!'});
+        dataCollection.extend({
+          id: 'data1', tags: ['lat'],
+          data: [4,5,6], 'title': 'What!!'
+        });
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [4,5,6], title: 'What!!'
+          id: 'data1', tags:['lat'], data: [4,5,6], title: 'What!!'
         });
       });
 
@@ -289,15 +462,15 @@ define([
     describe('.upsert()', function() {
 
       it('replaces an existing data-source in place', function() {
-        var depX = {id: 'data1', data: [1, 2, 3] },
-            depY = {id: 'data2', data: [1, 2, 3] };
+        var depX = {id: 'data1', tags: [], data: [1, 2, 3] },
+            depY = {id: 'data2', tags: [], data: [1, 2, 3] };
         dataCollection.add([depX, depY]);
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', data: [1,2,3]
+          id: 'data1', tags: [], data: [1,2,3]
         });
-        dataCollection.upsert({ id: 'data1', 'title': 'What!!'});
+        dataCollection.upsert({ id: 'data1', tags: ['lat'], 'title': 'What!!'});
         expect(dataCollection.get('data1')).toEqual({
-          id: 'data1', title: 'What!!'
+          id: 'data1', tags: ['lat'], title: 'What!!'
         });
       });
 
@@ -512,6 +685,137 @@ define([
         expect(get('D')).toBe('D');
         expect(get('E')).toBe('E');
         expect(get('F')).toBe('F');
+      });
+
+    });
+
+    describe('tags', function() {
+
+      var newDc;
+
+      beforeEach(function() {
+        newDc = dc.create();
+        newDc.add({
+          id: 'test',
+          title: 'test',
+          tags: [],
+          data: {'key': 'test'}
+        });
+      });
+
+      describe('getTags/setTags()', function() {
+
+        it('gets correct tag from the set', function() {
+          newDc.addTags('test', 'hello');
+          expect(newDc.getTags('test')).toEqual(['hello']);
+        });
+
+        it('gets correct tags from the set', function() {
+          newDc.addTags('test', ['hello', 'bye']);
+          expect(newDc.getTags('test')).toEqual(['hello', 'bye']);
+        });
+
+        it('sets a tag', function() {
+          newDc.setTags('test', 'hello');
+          expect(newDc.getTags('test')).toEqual(['hello']);
+        });
+
+        it('sets multiple tags', function() {
+          newDc.setTags('test', ['hello', 'bye']);
+          expect(newDc.getTags('test')).toEqual(['hello', 'bye']);
+        });
+
+        it('duplicate tags are not added using setTags', function() {
+          newDc.setTags('test', ['hello', 'bye', 'bye', 'zebra']);
+          expect(newDc.getTags('test')).toEqual(['hello', 'bye', 'zebra']);
+        });
+
+      });
+
+
+      describe('addTags()', function() {
+
+        it('adds an element to the set', function() {
+          newDc.addTags('test', 'hello');
+          expect(newDc.getTags('test')).toEqual(['hello']);
+        });
+
+        it('adds elements to the set', function() {
+          newDc.addTags('test', ['hello', 'bye']);
+          expect(newDc.getTags('test')).toEqual(['hello', 'bye']);
+        });
+
+        it('duplicate elements are not added to the set', function() {
+          newDc.addTags('test', ['hello', 'bye']);
+          newDc.addTags('test', ['bye', 'zebra']);
+          expect(newDc.getTags('test')).toEqual(['hello', 'bye', 'zebra']);
+        });
+
+      });
+
+      describe('removeTags()', function() {
+
+        beforeEach(function() {
+          newDc.addTags('test', ['abc', 'def', 'ghi']);
+        });
+
+        it('removes an element from the set', function() {
+          newDc.removeTags('test', 'def');
+          expect(newDc.getTags('test')).toEqual(['abc', 'ghi']);
+          newDc.removeTags('test', 'ghi');
+          expect(newDc.getTags('test')).toEqual(['abc']);
+          newDc.removeTags('test', 'abc');
+          expect(newDc.getTags('test')).toEqual([]);
+        });
+
+        it('removes elements from the set', function() {
+          newDc.removeTags('test', ['abc', 'ghi']);
+          expect(newDc.getTags('test')).toEqual(['def']);
+        });
+
+        it('no-op on removing non-existent elements', function() {
+          newDc.removeTags('test', ['hello', 'bye']);
+          expect(newDc.getTags('test')).toEqual(['abc', 'def', 'ghi']);
+        });
+
+      });
+
+      describe('toggleTags()', function() {
+
+        beforeEach(function() {
+          newDc.addTags('test', ['USA', 'Canada', 'Mexico']);
+        });
+
+        it('toggles one element resulting in removal', function() {
+          newDc.toggleTags('test', 'USA');
+          expect(newDc.getTags('test')).toEqual(['Canada', 'Mexico']);
+        });
+
+        it('toggles multiple elements resulting in removal', function() {
+          newDc.toggleTags('test', ['USA', 'Mexico']);
+          expect(newDc.getTags('test')).toEqual(['Canada']);
+        });
+
+        it('toggles one element resulting in addition', function() {
+          newDc.toggleTags('test', 'Zambia');
+          expect(newDc.getTags('test'))
+            .toEqual(['USA', 'Canada', 'Mexico', 'Zambia']);
+        });
+
+        it('toggles multiple elements resulting in additon', function() {
+          newDc.toggleTags('test', ['Spain', 'Zambia']);
+          expect(newDc.getTags('test'))
+            .toEqual(['USA', 'Canada', 'Mexico', 'Spain', 'Zambia']);
+        });
+
+        it('toggles multiple elements resulting in addition & removal',
+           function() {
+            newDc.toggleTags('test', ['USA', 'Spain']);
+            expect(newDc.getTags('test'))
+              .toEqual(['Canada', 'Mexico', 'Spain']);
+           }
+        );
+
       });
 
     });

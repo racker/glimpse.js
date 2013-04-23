@@ -5,11 +5,16 @@
 define([
   'core/object',
   'core/array',
+  'core/set',
   'data/selection/selection',
   'data/selection/diff-quotient'
-], function (obj, array, selection) {
+], function (obj, array, set, selection) {
   'use strict';
 
+  /**
+   * Computes the derivation by calling the
+   * derivation function with the sources it needs.
+   */
   function applyDerivation(dc, data) {
     var dataSelections, derivedData;
     dataSelections = array.getArray(data.sources).map(function(d) {
@@ -23,6 +28,10 @@ define([
     return derivedData;
   }
 
+  /**
+   * A data config is determined to derived config if
+   * it contains a sources or derivation field.
+   */
   function isDerivedDataConfig(data) {
     if (data) {
       return  obj.isDef(data.sources) ||
@@ -31,8 +40,24 @@ define([
     return false;
   }
 
-  function isWildCard(id) {
-    return id === '*' || id === '+';
+  /**
+   * Adds a data source.
+   * Tags non-derived sources with * and +.
+   * Tags derived sources with +.
+   */
+  function addDataSource(dataCollection, data) {
+    var id = data.id;
+    if (isDerivedDataConfig(data)) {
+      if (!obj.isDef(data.tags)) {
+        data.tags = '+';
+      }
+      dataCollection[id] = { glDerive: data };
+    } else {
+      if (!obj.isDef(data.tags)) {
+        data.tags = ['*', '+'];
+      }
+      dataCollection[id] = data;
+    }
   }
 
   /**
@@ -60,8 +85,7 @@ define([
     visited.push(id);
     sources = [];
     array.getArray(d.glDerive.sources).forEach(function(s) {
-      sources = sources.concat(
-        s.split(',').filter(function(id) { return !isWildCard(id); }));
+      sources = sources.concat(s.split(','));
     });
     sources.forEach(function(id) {
       deriveDataById(id.trim(), data, deps, dataCollection, visited);
@@ -94,11 +118,7 @@ define([
           this.dispatch.error();
           return;
         }
-        if (isDerivedDataConfig(data)) {
-          dataCollection[data.id] = { glDerive: data };
-        } else {
-          dataCollection[data.id] = data;
-        }
+        addDataSource(dataCollection, data);
       },
 
       /**
@@ -109,11 +129,7 @@ define([
         if (!dataCollection[data.id]) {
           this.add(data);
         }
-        if (isDerivedDataConfig(data)) {
-          dataCollection[data.id] = { glDerive: data };
-        } else {
-          dataCollection[data.id] = data;
-        }
+        addDataSource(dataCollection, data);
       },
 
       isDerived: function(id) {
@@ -170,19 +186,80 @@ define([
       },
 
       /**
+       * Returns the tag(s) of the datasource speciifed by its id.
+       */
+      getTags: function(id) {
+        if (this.isDerived(id)) {
+          return obj.get(dataCollection, [id, 'glDerive', 'tags']);
+        }
+        return obj.get(dataCollection, [id, 'tags']);
+
+      },
+
+      /**
+       * Sets the tag(s) of the datasource speciifed by its id.
+       */
+      setTags: function(id, tags) {
+        tags = set.create(tags).toArray();
+        if (this.isDerived(id)) {
+          dataCollection[id].glDerive.tags = tags;
+        }
+        dataCollection[id].tags = tags;
+      },
+
+
+      /**
+       * Adds tag(s) to a datasource by id.
+       * If tag is already present, no operation is performed.
+       */
+      addTags: function(id, tags) {
+        var tagSet = set.create(this.getTags(id));
+        tagSet.add(tags);
+        this.setTags(id, tagSet.toArray());
+      },
+
+      /**
+       * Removes tag(s) from a datasource by id.
+       * If tag isn't present, no operation is performed.
+       */
+      removeTags: function(id, tags) {
+        var tagSet = set.create(this.getTags(id));
+        tagSet.remove(tags);
+        this.setTags(id, tagSet.toArray());
+      },
+
+      /**
+       * Togggles the presence the of the given tags with the
+       * datasource with the associated id.
+       * In other words,
+       * Adds a tag if it isn't present.
+       * Removes a tag if it is present.
+       */
+      toggleTags: function(id, tags) {
+        var tagSet = set.create(this.getTags(id));
+        tags = array.getArray(tags);
+        tagSet.toggle(tags);
+        this.setTags(id, tagSet.toArray());
+      },
+
+      /**
        * Get data source by id.
        */
       get: function(id) {
-        if (id) {
-          if (dataCollection[id]) {
-            return dataCollection[id].glDerivation || dataCollection[id];
+        if (obj.get(dataCollection, id)) {
+          if (this.isDerived(id)) {
+            return dataCollection[id].glDerivation ||
+                   'gl-error-not-computed';
           }
-          return  null;
+          return dataCollection[id];
         }
-        return Object.keys(dataCollection).map(function(k) {
-          var data = dataCollection[k];
-          return data.glDerivation || data;
-        });
+        if (arguments.length === 0) {
+          return Object.keys(dataCollection).map(function(k) {
+            var data = dataCollection[k];
+            return data.glDerivation || data;
+          });
+        }
+        return null;
       },
 
       /**
@@ -197,17 +274,21 @@ define([
           ids = ids.concat(s.split(','));
         });
         ids.forEach(function(id) {
-          if(isWildCard(id)) {
+          id = id.trim();
+          if(dataCollection[id]) {
+            dataList.push(this.get(id));
+          } else {
             Object.keys(dataCollection).forEach(function(k) {
-              if(!this.isDerived(k) || sources === '+') {
+              var data;
+              if(this.isDerived(k)) {
+                data = dataCollection[k].glDerive;
+              } else {
+                data = dataCollection[k];
+              }
+              if(array.contains(data.tags, id)) {
                 dataList.push(this.get(k));
               }
             }, this);
-          } else {
-              id = id.trim();
-              if(dataCollection[id]) {
-                dataList.push(this.get(id));
-              }
           }
         }, this);
         dataSelection.add(dataList);
@@ -225,6 +306,10 @@ define([
   }
 
   return {
+
+    /**
+     * Creates a new collection.
+     */
     create: function() {
       return collection();
     }
