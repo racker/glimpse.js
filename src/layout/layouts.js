@@ -19,6 +19,7 @@ define(function () {
           name: 'gl-main',
           clip: true,
           border: 1,
+          paddingTop: 4,
           borderColor: '#999',
           backgroundColor: '#fff'
         },
