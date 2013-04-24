@@ -15,10 +15,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-lexicon');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadTasks('grunt/tasks/');
+  grunt.loadNpmTasks('grunt-conventional-changelog');
+  grunt.loadNpmTasks('grunt-bumpup');
+  grunt.loadNpmTasks('grunt-tagrelease');
 
   // Project configuration.
   grunt.initConfig({
-    pkg: '<json:package.json>',
+    pkg: grunt.file.readJSON('package.json'),
 
     /**
      * Cleans out the "build" directory.
@@ -146,6 +149,12 @@ module.exports = function(grunt) {
       }
     },
 
+    'bumpup-core': {
+      options: {
+        file: 'src/core/core.js'
+      }
+    },
+
     jshint: {
       // Defaults
       options: {
@@ -187,7 +196,29 @@ module.exports = function(grunt) {
           separator: '\n\n* * *  \n\n'
         }
       }
-    }
+    },
+    /*
+      Bumps the version, date and other properties in
+      specified json files.
+     */
+    bumpup: {
+        files: ['package.json', 'component.json']
+    },
+    /*
+      Generates a complete changelog
+     */
+    changelog: {
+      options: {
+        dest: 'changelog.full.md',
+        templateFile: 'changelog.tpl.md'
+      }
+    },
+    /*
+      Commit the changes and tag the last commit with
+      a version from provided JSON file.
+      If there is nothing to commit, the task will tag the current last commit.
+     */
+    tagrelease: 'package.json'
 
   });
 
@@ -206,8 +237,23 @@ module.exports = function(grunt) {
     'clean:build',
     'requirejs:amdBuild']);
   grunt.registerTask('compile', 'compile-static');
-  grunt.registerTask('release', ['jshint', 'assets', 'exec:testAll', 'compile',
-    'copy:release']);
+  // Task for updating the pkg config property.
+  grunt.registerTask('updatepkg', function () {
+    grunt.config.set('pkg', grunt.file.readJSON('component.json'));
+  });
+  grunt.registerTask('release', function(type) {
+    type = type ? type : 'patch';
+    grunt.task.run('jshint');
+    grunt.task.run('assets');
+    grunt.task.run('exec:testAll');
+    grunt.task.run('compile');
+    grunt.task.run('copy:release');
+    grunt.task.run('bumpup:' + type);
+    grunt.task.run('updatepkg');
+    grunt.task.run('bumpup-core');
+  });
+  grunt.registerTask('tagrelease', 'tagrelease');
+  grunt.registerTask('changelog', 'changelog');
   grunt.registerTask('travis', ['jshint', 'assets', 'exec:testTravis']);
   grunt.registerTask('default', ['jshint', 'assets', 'exec:test']);
 };
