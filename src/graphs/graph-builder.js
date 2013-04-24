@@ -72,7 +72,7 @@ function(obj, array, string, d3util, graph) {
         dataId: 'gl-stats',
         position: 'center-left',
         target: 'gl-footer',
-        hiddenStates: ['empty', 'error']
+        hiddenStates: ['empty', 'loading', 'error']
       },
       {
         cid: 'gl-domain-label',
@@ -80,7 +80,7 @@ function(obj, array, string, d3util, graph) {
         target: 'gl-footer',
         position: 'center-right',
         suffix: 'UTC',
-        hiddenStates: ['empty', 'error']
+        hiddenStates: ['empty',  'loading', 'error']
       }
     ];
 
