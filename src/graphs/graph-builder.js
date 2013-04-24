@@ -9,10 +9,11 @@ define([
   'core/object',
   'core/array',
   'core/string',
+  'core/format',
   'd3-ext/util',
   'graphs/graph'
 ],
-function(obj, array, string, d3util, graph) {
+function(obj, array, string, format, d3util, graph) {
   'use strict';
 
     var defaults,
@@ -22,7 +23,7 @@ function(obj, array, string, d3util, graph) {
       GRAPH_TYPES;
 
     defaults = {
-      layout: 'default',
+      layout: 'default'
     };
 
     config = {};
@@ -76,10 +77,10 @@ function(obj, array, string, d3util, graph) {
       },
       {
         cid: 'gl-domain-label',
-        type: 'domainLabel',
-        target: 'gl-footer',
+        type: 'label',
+        dataId: '$domain',
         position: 'center-right',
-        suffix: 'UTC',
+        target: 'gl-footer',
         hiddenStates: ['empty',  'loading', 'error']
       }
     ];
@@ -218,6 +219,13 @@ function(obj, array, string, d3util, graph) {
         return 'Avg: ' + values.avg + unit +
                '    Min: ' +  values.min + unit +
                '    Max: ' + values.max + unit;
+      });
+      g.component('gl-domain-label').text(function() {
+        var domain = this.data();
+        if (domain) {
+          return format.timeDomainUTC(domain.x, 'UTC');
+        }
+        return '';
       });
     }
 

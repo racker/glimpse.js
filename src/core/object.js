@@ -43,7 +43,7 @@ function (array) {
     get: function(obj, path) {
       var currentObj;
       currentObj = obj;
-      if (!this.isDefAndNotNull(path)) {
+      if (!(this.isDefAndNotNull(path) && this.isDefAndNotNull(obj))) {
         return null;
       }
       array.getArray(path).every(function(p) {

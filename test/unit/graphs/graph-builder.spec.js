@@ -1,9 +1,8 @@
 define([
   'graphs/graph-builder',
-  'graphs/graph',
-  'core/format'
+  'graphs/graph'
 ],
-function(graphBuilder, graph, format) {
+function(graphBuilder, graph) {
   'use strict';
 
   function filterComponents(g, type) {
@@ -42,15 +41,13 @@ function(graphBuilder, graph, format) {
           'xScale': d3.scale.linear(),
           'yAxisUnit': 'GB'
         });
-        testGraph.component('gl-domain-label')
-          .config('formatter', format.standardDomain);
         testGraph.data(testData);
       });
 
-      it('adds the domain label', function() {
+      it('adds two labels (domain range and stats label)', function() {
         var selection = jasmine.htmlFixture();
         testGraph.render(selection);
-        expect(selection.selectAll('.gl-domain-label')).toBeSelectionLength(1);
+        expect(selection.selectAll('.gl-label')).toBeSelectionLength(2);
       });
 
       it('reports the available buildable types', function() {

@@ -5,10 +5,9 @@ define([
   'components/label',
   'components/overlay',
   'components/asset',
-  'components/area',
-  'components/domain-label'
+  'components/area'
 ],
-function(line, legend, axis, label, overlay, asset, area, domainLabel) {
+function(line, legend, axis, label, overlay, asset, area) {
   'use strict';
 
   return {
@@ -18,8 +17,7 @@ function(line, legend, axis, label, overlay, asset, area, domainLabel) {
     label: label,
     overlay: overlay,
     asset: asset,
-    area: area,
-    domainLabel: domainLabel
+    area: area
   };
 
 });
