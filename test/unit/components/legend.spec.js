@@ -17,8 +17,12 @@ function(legend) {
 
     beforeEach(function() {
       testLegend = legend();
-      key1 = { color: 'blue', label: 'blue label' };
-      key2 = { color: function() { return 'green'; }, label: 'green label' };
+      key1 = { dataId: 'key1', color: 'blue', label: 'blue label' };
+      key2 = {
+        dataId: 'key2',
+        color: function() { return 'green'; },
+        label: 'green label'
+      };
       keys = [key1, key2];
       testLegend.keys(keys);
       svgNode = jasmine.svgFixture().node();
@@ -72,6 +76,10 @@ function(legend) {
 
       it('calls update()', function() {
         expect(testLegend.update).toHaveBeenCalled();
+      });
+
+      it('renders adds a legend-key for each key', function() {
+        expect(selectAll('.gl-legend .gl-legend-key')[0].length).toBe(2);
       });
 
       describe('legend keys', function() {
@@ -155,6 +163,14 @@ function(legend) {
           testLegend.keys().splice(0, 1);
           testLegend.update();
           expect(selectAll('.gl-legend .gl-legend-key')[0].length).toBe(1);
+        });
+
+        it('updates existing key with same color', function() {
+          var key3;
+          key3 = { color: 'blue', label: 'second blue label' };
+          keys.push(key3);
+          testLegend.update();
+          expect(selectAll('.gl-legend .gl-legend-key')[0].length).toBe(3);
         });
 
         it('updates existing key labels', function() {
