@@ -55,7 +55,8 @@ function(d3, object, line, dc) {
         'lineGenerator',
         'show',
         'hide',
-        'destroy'
+        'destroy',
+        'rootId'
       );
     });
 

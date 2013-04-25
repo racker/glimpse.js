@@ -9,6 +9,7 @@ define([
   'core/array',
   'core/asset-loader',
   'core/component-manager',
+  'core/string',
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
@@ -17,7 +18,7 @@ define([
   'data/collection',
   'data/domain'
 ],
-function(obj, config, array, assetLoader, componentManager, components,
+function(obj, config, array, assetLoader, componentManager, string, components,
   layoutManager, d3util, mixins, dataFns, collection, domain) {
   'use strict';
 
@@ -79,7 +80,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       xAxisUnit: null,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
-      domainIntervalUnit: null
+      domainIntervalUnit: null,
+      id: string.random()
     };
 
     /**
@@ -180,6 +182,7 @@ function(obj, config, array, assetLoader, componentManager, components,
         root_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
+      root_.select('g').attr('gl-id', config_.id);
     }
 
     /**
@@ -600,6 +603,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       var selection = d3util.select(selector);
       assetLoader.loadAll();
       renderPanel(selection);
+      componentManager_.registerSharedObject('rootId', config_.id, true);
+      componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.

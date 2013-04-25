@@ -34,7 +34,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       xScale: null,
       yScale: null,
       opacity: 1,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -96,7 +97,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         'xScale',
         'yScale',
         'lineGenerator',
-        'color'
+        'color',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);

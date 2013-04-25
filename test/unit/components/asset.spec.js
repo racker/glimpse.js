@@ -16,7 +16,13 @@ function(asset) {
 
     it('adds all convenience functions', function() {
       expect(testAsset)
-        .toHaveProperties('cid', 'target', 'cssClass', 'assetId');
+        .toHaveProperties(
+          'cid',
+          'target',
+          'cssClass',
+          'assetId',
+          'rootId'
+        );
     });
 
     describe('root()', function() {

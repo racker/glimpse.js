@@ -17,8 +17,14 @@ function(overlay, componentUtil) {
     });
 
     it('adds all convenience functions', function() {
-      expect(testOverlay).toHaveProperties('cid', 'target', 'cssClass',
-          'opacity', 'backgroundColor', 'layoutConfig');
+      expect(testOverlay).toHaveProperties(
+        'cid',
+        'target',
+        'cssClass',
+        'opacity',
+        'backgroundColor',
+        'layoutConfig',
+        'rootId');
     });
 
     describe('root()', function() {

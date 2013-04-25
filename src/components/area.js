@@ -33,7 +33,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       inLegend: true,
       areaGenerator: d3.svg.area(),
       opacity: 1,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -109,7 +110,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator'
+        'areaGenerator',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);

@@ -34,7 +34,8 @@ function(obj, config, string, mixins, d3util) {
       textBgSize: 3,
       tickSize: 0,
       ticks: 3,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -144,7 +145,7 @@ function(obj, config, string, mixins, d3util) {
       axis,
       config.mixin(
         config_,
-        'cid'),
+        'cid', 'rootId'),
       mixins.lifecycle,
       mixins.toggle);
 

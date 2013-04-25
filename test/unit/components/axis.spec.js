@@ -28,7 +28,8 @@ function(axisComponent) {
       expect(axis).toHaveProperties(
         'show',
         'hide',
-        'destroy'
+        'destroy',
+        'rootId'
       );
     });
 

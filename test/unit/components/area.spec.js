@@ -59,7 +59,8 @@ function(area, dc) {
         'root',
         'destroy',
         'show',
-        'hide'
+        'hide',
+        'rootId'
       );
     });
 

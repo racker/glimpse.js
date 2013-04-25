@@ -32,7 +32,8 @@ function(label, dc) {
           'fontWeight',
           'show',
           'hide',
-          'destroy'
+          'destroy',
+          'rootId'
         );
       });
 

@@ -157,6 +157,10 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
         expect(config.colorPalette).toEqual(d3.scale.category10().range());
       });
 
+      it('has default id set', function() {
+        expect(config.id).toBeDefinedAndNotNull();
+      });
+
     });
 
     describe('data()', function() {
@@ -382,7 +386,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
     });
 
     describe('render()', function() {
-      var selection, panel, testLineComponent;
+      var selection, panel, testLineComponent, componentManager;
 
       beforeEach(function() {
         setGraph();
@@ -391,6 +395,9 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
         testLineComponent = lineComponent();
         spyOn(testLineComponent, 'show');
         testGraph.component(testLineComponent);
+        testGraph.config('id', 'test');
+        componentManager = testGraph.component();
+        spyOn(componentManager, 'applySharedObject');
         testGraph.render(selection.node());
         panel = selection.select('svg');
       });
@@ -436,6 +443,11 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
       it('calls render on test component', function() {
         expect(testComponent.render).toHaveBeenCalled();
+      });
+
+      it('updates rootId on components', function() {
+        expect(componentManager.applySharedObject)
+          .toHaveBeenCalledWith('rootId', componentManager.cids());
       });
 
       it('calls render on legend component', function() {

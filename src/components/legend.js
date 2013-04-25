@@ -41,7 +41,8 @@ function(obj, config, string, d3util, mixins) {
       layout: 'horizontal',
       gap: 20,
       keys: [],
-      hiddenStates: ['loading']
+      hiddenStates: ['loading'],
+      rootId: null
     };
 
     /**
@@ -142,7 +143,8 @@ function(obj, config, string, d3util, mixins) {
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight'
+        'indicatorHeight',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);

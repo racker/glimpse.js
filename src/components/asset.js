@@ -25,7 +25,8 @@ function(obj, config, string, mixins, d3util) {
       assetId: null,
       target: null,
       cssClass: null,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     function asset() {
@@ -41,7 +42,8 @@ function(obj, config, string, mixins, d3util) {
         'cid',
         'assetId',
         'target',
-        'cssClass'
+        'cssClass',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);

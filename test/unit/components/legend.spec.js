@@ -44,7 +44,8 @@ function(legend) {
             'indicatorWidth',
             'indicatorHeight',
             'show',
-            'hide'
+            'hide',
+            'rootId'
           );
       });
 
