@@ -1,11 +1,13 @@
 define([
-  'components/legend'
+  'components/legend',
+  'data/collection'
 ],
-function(legend) {
+function(legend, dc) {
   'use strict';
 
   describe('components.legend', function() {
-    var testLegend, svgNode, rootNode, key1, key2, keys, handlerSpy;
+    var testLegend, svgNode, rootNode, key1, key2, keys,
+    handlerSpy, dataCollection;
 
     function select(selector) {
       return jasmine.svgFixture().select(selector);
@@ -16,6 +18,7 @@ function(legend) {
     }
 
     beforeEach(function() {
+      dataCollection = dc.create();
       testLegend = legend();
       key1 = { dataId: 'key1', color: 'blue', label: 'blue label' };
       key2 = {
@@ -136,6 +139,15 @@ function(legend) {
 
         });
 
+      });
+
+    });
+
+    describe('data()', function() {
+
+      it('gets/sets data and datacollection available in Legend', function() {
+        testLegend.data(dataCollection);
+        expect(testLegend.data()).toBe(dataCollection);
       });
 
     });

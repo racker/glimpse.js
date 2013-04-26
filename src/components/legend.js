@@ -22,7 +22,8 @@ function(obj, config, string, d3util, mixins) {
       root_,
       enter_,
       update_,
-      remove_;
+      remove_,
+      dataCollection_;
 
     config_ = {};
 
@@ -154,6 +155,23 @@ function(obj, config, string, d3util, mixins) {
      * @public
      */
     legend.dispatch = mixins.dispatch();
+
+
+    /**
+     * Gets/Sets the data to be used with the legend.
+     * @param {Object} data Any data source.
+     * @return {Object|dataCollection}
+     */
+    legend.data = function(data) {
+      if (data) {
+        dataCollection_ = data;
+        return legend;
+      }
+      if (!dataCollection_) {
+        return null;
+      }
+      return dataCollection_;
+    };
 
     /**
      * Apply post-render updates.
