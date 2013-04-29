@@ -246,11 +246,11 @@ module.exports = function(grunt) {
     grunt.task.run('jshint');
     grunt.task.run('assets');
     grunt.task.run('exec:testAll');
-    grunt.task.run('compile');
-    grunt.task.run('copy:release');
     grunt.task.run('bumpup:' + type);
     grunt.task.run('updatepkg');
     grunt.task.run('bumpup-core');
+    grunt.task.run('compile');
+    grunt.task.run('copy:release');
   });
   grunt.registerTask('tagrelease', 'tagrelease');
   grunt.registerTask('changelog', 'changelog');
