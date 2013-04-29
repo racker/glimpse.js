@@ -79,25 +79,6 @@ function(d3util) {
 
     });
 
-    describe('isTimeScale', function() {
-      it('returns true for time scale', function() {
-        expect(d3util.isTimeScale(d3.time.scale())).toBe(true);
-      });
-
-      it('returns false for linear scale', function() {
-        expect(d3util.isTimeScale(d3.scale.linear())).toBe(false);
-      });
-
-      it('returns false for null', function() {
-         expect(d3util.isTimeScale(null)).toBe(false);
-      });
-
-      it('returns false for undefined', function() {
-         expect(d3util.isTimeScale(undefined)).toBe(false);
-      });
-
-    });
-
   });
 
 });

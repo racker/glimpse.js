@@ -81,7 +81,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
       domainIntervalUnit: null,
-      id: string.random()
+      id: string.random(),
+      domainSources: null,
+      domainConfig: null
     };
 
     /**
@@ -185,30 +187,12 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       root_.select('g').attr('gl-id', config_.id);
     }
 
-    /**
-     * Updates the domain on the scales
-     * @private
-     */
-    function updateScales() {
-      var graphDomain,
-        dataIds = [];
-
-      componentManager_.get().forEach(function(component) {
-        var componentData;
-        if (component.data) {
-          componentData = component.data();
-          if (componentData && componentData.data && componentData.dimensions) {
-            dataIds.push(component.config('dataId'));
-          }
-        }
-      });
-
-      domain.addDomainDerivation({
+    function getDomainConfig(sources) {
+      return {
         x: {
-          sources: dataIds.join(','),
+          sources: sources,
           compute: 'interval',
           args: {
-            isTimeScale: d3util.isTimeScale(config_.xScale),
             unit: config_.domainIntervalUnit,
             period: config_.domainIntervalPeriod
           },
@@ -218,7 +202,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           'default': [0, 0]
         },
         y: {
-          sources: dataIds.join(','),
+          sources: sources,
           compute: 'extent',
           modifier: {
             force: config_.forceY,
@@ -226,11 +210,28 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           },
           'default': [0, 0]
         }
-      }, dataCollection_);
+      };
+    }
+
+    /**
+     * Updates the domain on the scales
+     * @private
+     */
+    function updateScales() {
+      var graphDomain,
+          domainSources,
+          domainConfig;
+
+      domainSources = config_.domainSources || '*';
+      domainConfig = getDomainConfig(domainSources);
+      if (config_.domainConfig) {
+        domainConfig = obj.extend(domainConfig, config_.domainConfig);
+      }
+      domain.addDomainDerivation(domainConfig, dataCollection_);
 
       dataCollection_.updateDerivations();
       graphDomain = dataCollection_.get('$domain');
-      if (dataIds.length > 0) {
+      if (dataCollection_.select(domainSources).length() > 0) {
         config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
           .domain(graphDomain.x);
 

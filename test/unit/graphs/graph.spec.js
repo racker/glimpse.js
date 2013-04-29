@@ -3,9 +3,10 @@ define([
   'core/asset-loader',
   'data/collection',
   'test-util/component',
-  'components/line'
+  'components/line',
+  'data/domain'
 ],
-function(graph, assetLoader, dc, compUtil, lineComponent) {
+function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
   'use strict';
 
   describe('graphs.graph', function() {
@@ -381,6 +382,50 @@ function(graph, assetLoader, dc, compUtil, lineComponent) {
 
       it('calls update on test component', function() {
         expect(testComponent.update).toHaveBeenCalled();
+      });
+
+    });
+
+    describe('domain', function() {
+      var selection;
+
+      function setupTest(sources) {
+        setGraph();
+        selection = jasmine.htmlFixture();
+        spyOn(domain, 'addDomainDerivation').andCallThrough();
+        if (sources) {
+          testGraph.config({
+            domainSources: sources
+          });
+        }
+        testGraph.render(selection.node());
+      }
+
+      it('update delegates to domain for x and y', function() {
+        setupTest();
+        expect(domain.addDomainDerivation).toHaveBeenCalledOnce();
+      });
+
+      it('uses correct defaults such as source of * for x and y', function() {
+        setupTest();
+        expect(domain.addDomainDerivation).toHaveBeenCalledWith({
+          x : { sources : '*', compute : 'interval',
+            args : { unit : null, period : undefined },
+            modifier : { force : undefined }, 'default' : [ 0, 0 ] },
+          y : { sources : '*', compute : 'extent', modifier : {
+            force : undefined, maxMultiplier : 1.2 }, 'default' : [ 0, 0 ] }
+        }, testGraph.data());
+      });
+
+      it('sets sources for domain evaluation', function() {
+        setupTest('DFW,ORD');
+        expect(domain.addDomainDerivation).toHaveBeenCalledWith({
+          x : { sources : 'DFW,ORD', compute : 'interval',
+            args : { unit : null, period : undefined },
+            modifier : { force : undefined }, 'default' : [ 0, 0 ] },
+          y : { sources : 'DFW,ORD', compute : 'extent', modifier : {
+            force : undefined, maxMultiplier : 1.2 }, 'default' : [ 0, 0 ] }
+        }, testGraph.data());
       });
 
     });

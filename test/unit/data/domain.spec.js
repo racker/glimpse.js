@@ -261,7 +261,6 @@ define([
               sources: '*',
               compute: 'interval',
               args: {
-                isTimeScale: true,
                 unit: 'day',
                 period: 1
               },
@@ -279,7 +278,6 @@ define([
               sources: '*',
               compute: 'interval',
               args: {
-                isTimeScale: true,
                 unit: 'day',
                 period: 3
               },
@@ -297,7 +295,6 @@ define([
               sources: '*',
               compute: 'interval',
               args: {
-                isTimeScale: true,
                 unit: 'week',
                 period: 1
               },
@@ -315,7 +312,6 @@ define([
               sources: '*',
               compute: 'interval',
               args: {
-                isTimeScale: true,
                 unit: 'week',
                 period: 4
               },
@@ -334,7 +330,6 @@ define([
               sources: '*',
               compute: 'interval',
               args: {
-                isTimeScale: true,
                 unit: 'month',
                 period: 1
               },

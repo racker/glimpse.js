@@ -52,6 +52,10 @@ define([
     });
   };
 
+  Selection.prototype.length = function() {
+    return this.dataSources_.length;
+  };
+
   Selection.prototype.map = function(fn) {
     return new Selection(this.dataSources_.map(fn));
   };

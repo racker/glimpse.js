@@ -45,23 +45,6 @@ function() {
         return null;
       }
       return fn.call(component, target);
-    },
-
-    /**
-    * Returns the type of scale
-    * @param  {d3.scale|d3.time.scale} scale
-    * @return {string}
-    */
-    isTimeScale: function(scale) {
-      var scaleFn;
-      if (scale) {
-        scaleFn = scale.toString();
-        //TODO: Find a better way of comparing scale types
-        if (scaleFn === d3.time.scale().toString()) {
-          return true;
-        }
-      }
-      return false;
     }
 
   };

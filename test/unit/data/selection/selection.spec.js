@@ -100,6 +100,28 @@ function (selection) {
 
     });
 
+    describe('.length()', function() {
+
+      it('returns length 0 on empty selection', function() {
+        expect(sel.length()).toBe(0);
+      });
+
+      it('returns length 1 on single selection', function() {
+        var source = {id: 'ORD', data: [1,2,3]};
+        sel.add(source);
+        expect(sel.length()).toBe(1);
+      });
+
+      it('returns correct length for multiple selections', function() {
+        var sources = [
+          {id: 'ORD', data: [1,2,3]},
+          {id: 'DFW', data: [5,6,7]}];
+        sel.add(sources);
+        expect(sel.length()).toBe(2);
+      });
+
+    });
+
     describe('.dim()', function() {
 
       beforeEach(function() {
