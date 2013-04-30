@@ -121,6 +121,15 @@ function(array) {
       }
       globalInstance = this.create();
       return globalInstance;
+    },
+
+    scope: function() {
+      var scope =  arguments[0];
+      return function() {
+        var newArgs = array.convertArgs(arguments);
+        newArgs.unshift(scope + ':' + newArgs.shift());
+        return newArgs;
+      };
     }
 
   };

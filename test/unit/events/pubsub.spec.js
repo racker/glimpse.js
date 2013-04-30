@@ -137,6 +137,25 @@ function(pubsubModule) {
 
     });
 
+    describe('.scope()', function () {
+
+      var scopeFn;
+
+      beforeEach(function() {
+        scopeFn = pubsubModule.scope('foo');
+      });
+
+      it('correctly prefixes the scope to the first arg', function () {
+        expect(scopeFn('foo')[0]).toBe('foo:foo');
+      });
+
+      it('retains the remaining args', function () {
+        var arr = scopeFn('foo', 'foo.foo');
+        expect(arr.length).toBe(2);
+      });
+
+    });
+
   });
 
 });
