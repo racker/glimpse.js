@@ -730,6 +730,16 @@ define([
           expect(newDc.getTags('test')).toEqual(['hello', 'bye', 'zebra']);
         });
 
+        it('returns array even if tags is specified as a string', function() {
+          newDc.add({
+            id: 'abc',
+            title: 'test',
+            tags: 'testtag',
+            data: {'key': 'test'}
+          });
+          expect(newDc.getTags('abc')).toEqual(['testtag']);
+        });
+
       });
 
 
@@ -749,6 +759,46 @@ define([
           newDc.addTags('test', ['hello', 'bye']);
           newDc.addTags('test', ['bye', 'zebra']);
           expect(newDc.getTags('test')).toEqual(['hello', 'bye', 'zebra']);
+        });
+
+      });
+
+      describe('hasTags()', function() {
+
+        it('returns true for a single tag', function() {
+          newDc.addTags('test', 'hello');
+          expect(newDc.hasTags('test', 'hello')).toBe(true);
+        });
+
+       it('returns false if data source does not have tag', function() {
+          newDc.addTags('test', 'hello');
+          expect(newDc.hasTags('test', 'bye')).toBe(false);
+        });
+
+        it('returns true if data source the correct tags', function() {
+          newDc.addTags('test', ['hello', 'bye']);
+          expect(newDc.hasTags('test', ['hello', 'bye'])).toBe(true);
+        });
+
+        it('returns true if data src the correct subset of tags', function() {
+          newDc.addTags('test', ['hello', 'bye', 'good', 'bad']);
+          expect(newDc.hasTags('test', ['hello', 'bye'])).toBe(true);
+          expect(newDc.hasTags('test', ['bye', 'good'])).toBe(true);
+          expect(newDc.hasTags('test', ['bad', 'good'])).toBe(true);
+          expect(newDc.hasTags('test', 'bad')).toBe(true);
+        });
+
+        it('returns false even if one tag is not valid', function() {
+          newDc.addTags('test', ['hello', 'bye', 'good', 'bad']);
+          expect(newDc.hasTags('test', ['hello', 'bye1'])).toBe(false);
+          expect(newDc.hasTags('test', ['bye', 'good2'])).toBe(false);
+          expect(newDc.hasTags('test', ['bad2', 'good'])).toBe(false);
+          expect(newDc.hasTags('test', 'blog')).toBe(false);
+        });
+
+        it('duplicate elements are not added to the set', function() {
+          newDc.addTags('test', ['bye']);
+          expect(newDc.hasTags('test', ['bye'])).toBe(true);
         });
 
       });
@@ -821,16 +871,79 @@ define([
     });
 
     describe('isEmpty', function() {
+
+      function addDefaultData() {
+        dataCollection.add([{
+          id: 'A',
+          data: 'A'
+        }]);
+        dataCollection.add([{
+          id: 'B',
+          data: 'B'
+        }]);
+      }
+
+      function addDerivedData() {
+        dataCollection.add([{
+          id: 'C',
+          sources: '',
+          derivation: function() {}
+        }]);
+        dataCollection.add([{
+          id: 'D',
+          sources: '',
+          derivation: function() {}
+        }]);
+      }
+
+      function addTaggedData() {
+        dataCollection.add([{
+          id: 'E',
+          sources: '',
+          tags: 'tag123',
+          derivation: function() {}
+        }]);
+        dataCollection.add([{
+          id: 'D',
+          sources: '',
+          tags: 'tag123',
+          derivation: function() {}
+        }]);
+      }
+
+
       it('returns true if dataCollection is empty', function(){
         expect(dataCollection.isEmpty()).toBe(true);
       });
 
-      it('returns false if dataCollection is not empty', function(){
-        dataCollection.add([{
-          id: 'A',
-          sources: 'B'
-        }]);
+      it('returns true if * is empty', function(){
+        expect(dataCollection.isEmpty('*')).toBe(true);
+      });
+
+      it('returns true if + is empty', function(){
+        expect(dataCollection.isEmpty('+')).toBe(true);
+      });
+
+      it('returns false if dataCollection selection is not empty', function(){
+        addDefaultData();
         expect(dataCollection.isEmpty()).toBe(false);
+        expect(dataCollection.isEmpty('*')).toBe(false);
+        expect(dataCollection.isEmpty('+')).toBe(false);
+      });
+
+      it('* is empty and + is not if only derived sources exist', function(){
+        addDerivedData();
+        expect(dataCollection.isEmpty('*')).toBe(true);
+        expect(dataCollection.isEmpty('+')).toBe(false);
+      });
+
+      it('selection of non-existent tag name is empty', function() {
+        expect(dataCollection.isEmpty('tag123')).toBe(true);
+      });
+
+      it('selection of valid tag name is not empty', function() {
+        addTaggedData();
+        expect(dataCollection.isEmpty('tag123')).toBe(false);
       });
 
     });

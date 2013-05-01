@@ -189,11 +189,13 @@ define([
        * Returns the tag(s) of the datasource speciifed by its id.
        */
       getTags: function(id) {
+        var tags;
         if (this.isDerived(id)) {
-          return obj.get(dataCollection, [id, 'glDerive', 'tags']);
+          tags = obj.get(dataCollection, [id, 'glDerive', 'tags']);
+        } else {
+          tags = obj.get(dataCollection, [id, 'tags']);
         }
-        return obj.get(dataCollection, [id, 'tags']);
-
+        return array.getArray(tags);
       },
 
       /**
@@ -226,6 +228,15 @@ define([
         var tagSet = set.create(this.getTags(id));
         tagSet.remove(tags);
         this.setTags(id, tagSet.toArray());
+      },
+
+     /**
+       * Checks if tag(s) belong to a datasource by id.
+       */
+      hasTags: function(id, tags) {
+        return array.getArray(tags).every(function(tag) {
+          return array.contains(this.getTags(id), tag);
+        }, this);
       },
 
       /**
@@ -279,13 +290,7 @@ define([
             dataList.push(this.get(id));
           } else {
             Object.keys(dataCollection).forEach(function(k) {
-              var data;
-              if(this.isDerived(k)) {
-                data = dataCollection[k].glDerive;
-              } else {
-                data = dataCollection[k];
-              }
-              if(array.contains(data.tags, id)) {
+              if(this.hasTags(k, id)) {
                 dataList.push(this.get(k));
               }
             }, this);
@@ -299,7 +304,10 @@ define([
        * Checks whether dataCollection is empty
        * @return {Boolean}
        */
-      isEmpty: function() {
+      isEmpty: function(optSel) {
+        if (optSel) {
+          return this.select(optSel).length() === 0;
+        }
         return Object.keys(dataCollection).length === 0;
       }
     };
