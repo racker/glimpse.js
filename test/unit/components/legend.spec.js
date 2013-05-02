@@ -7,7 +7,20 @@ function(legend, dc) {
 
   describe('components.legend', function() {
     var testLegend, svgNode, rootNode, key1, key2, keys,
-    handlerSpy, dataCollection;
+    handlerSpy, dataCollection, data;
+
+     data = [{
+      id:'key1',
+      data: [
+        { x: 13, y: 106},
+        { x: 15, y: 56},
+        { x: 17, y: 100}
+      ],
+      dimensions: {
+        x: function(d) { return d.x + 1; },
+        y: function(d) { return d.y + 1; }
+      }
+    }];
 
     function select(selector) {
       return jasmine.svgFixture().select(selector);
@@ -15,6 +28,13 @@ function(legend, dc) {
 
     function selectAll(selector) {
       return jasmine.svgFixture().selectAll(selector);
+    }
+
+    function fireClickEvent(elem) {
+      var evt = document.createEvent('MouseEvents');
+      evt.initMouseEvent('click',
+       true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      elem.dispatchEvent(evt);
     }
 
     beforeEach(function() {
@@ -30,6 +50,7 @@ function(legend, dc) {
       testLegend.keys(keys);
       svgNode = jasmine.svgFixture().node();
       spyOn(testLegend, 'update').andCallThrough();
+      spyOn(dataCollection, 'toggleTags').andCallThrough();
       handlerSpy = jasmine.createSpy();
     });
 
@@ -84,6 +105,43 @@ function(legend, dc) {
 
       it('renders adds a legend-key for each key', function() {
         expect(selectAll('.gl-legend .gl-legend-key')[0].length).toBe(2);
+      });
+
+      describe('onClick handler', function() {
+        var legendNode, selectorLabel, labelNode,
+        selectorInd, indicatorNode;
+
+        beforeEach(function () {
+          dataCollection.add(data);
+          testLegend.data(dataCollection);
+          legendNode = select('.gl-legend-key').node();
+          //indicator and label for checking colors
+          selectorLabel = '.gl-legend .gl-legend-key .gl-legend-key-label';
+          selectorInd = '.gl-legend .gl-legend-key .gl-legend-key-indicator';
+          indicatorNode = select(selectorInd)[0];
+          labelNode = select(selectorLabel)[0];
+
+        });
+
+        it('checks the datatag and sets it to inactive color for onClick',
+         function() {
+          fireClickEvent(legendNode);
+          expect(indicatorNode[0]).toHaveAttr('fill', 'grey');
+          expect(labelNode[0]).toHaveAttr('fill', 'grey');
+        });
+
+        it('makes sure they are not inactive after another onClick',
+         function() {
+          fireClickEvent(legendNode);
+          expect(indicatorNode[0]).not.toHaveAttr('fill', 'grey');
+          expect(labelNode[0]).not.toHaveAttr('fill', 'grey');
+        });
+
+        it('calls the dataToggle method when onClick', function() {
+          fireClickEvent(legendNode);
+          expect(dataCollection.toggleTags).toHaveBeenCalledOnce();
+        });
+
       });
 
       describe('legend keys', function() {

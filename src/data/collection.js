@@ -7,8 +7,9 @@ define([
   'core/array',
   'core/set',
   'data/selection/selection',
+  'events/pubsub',
   'data/selection/diff-quotient'
-], function (obj, array, set, selection) {
+], function (obj, array, set, selection, pubsub) {
   'use strict';
 
   /**
@@ -95,7 +96,8 @@ define([
   }
 
   function collection() {
-    var dataCollection = {};
+    var dataCollection = {},
+        globalPubsub = pubsub.getSingleton();
 
     return {
 
@@ -245,12 +247,15 @@ define([
        * In other words,
        * Adds a tag if it isn't present.
        * Removes a tag if it is present.
+       * @param  {@Object} scope/rootid
        */
-      toggleTags: function(id, tags) {
+       //todo: functional approach for scoping
+      toggleTags: function(id, tags, scope) {
         var tagSet = set.create(this.getTags(id));
         tags = array.getArray(tags);
         tagSet.toggle(tags);
         this.setTags(id, tagSet.toArray());
+        globalPubsub.pub(scope+':data-toggle', id);
       },
 
       /**

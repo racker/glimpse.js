@@ -7,10 +7,12 @@ define([
   'core/object',
   'core/config',
   'core/string',
+  'core/array',
   'd3-ext/util',
-  'mixins/mixins'
+  'mixins/mixins',
+  'events/pubsub'
 ],
-function(obj, config, string, d3util, mixins) {
+function(obj, config, string, array, d3util, mixins, pubsub) {
   'use strict';
 
   return function() {
@@ -23,7 +25,10 @@ function(obj, config, string, d3util, mixins) {
       enter_,
       update_,
       remove_,
-      dataCollection_;
+      dataCollection_,
+      onClickHandler,
+      globalPubsub;
+
 
     config_ = {};
 
@@ -40,10 +45,32 @@ function(obj, config, string, d3util, mixins) {
       fontWeight: 'bold',
       fontSize: 13,
       layout: 'horizontal',
+      inactiveColor: 'grey',
       gap: 20,
       keys: [],
       hiddenStates: ['loading'],
       rootId: null
+    };
+
+    globalPubsub = pubsub.getSingleton();
+
+    /**
+     * Handles the click event on legend.
+     */
+    onClickHandler = function(d) {
+      var sel = d3.select(this),
+      inactive = config_.inactiveColor,
+      fontColor = config_.fontColor;
+
+      if (dataCollection_.hasTags(d.dataId, 'inactive')) {
+        sel.select('text').attr('fill', fontColor);
+        sel.select('rect').attr('fill', d.color);
+      } else {
+        sel.select('text').attr('fill', inactive);
+        sel.select('rect').attr('fill', inactive);
+      }
+      // toggles data's tag on the data collection
+      dataCollection_.toggleTags(d.dataId, 'inactive', config_.rootId);
     };
 
     /**
@@ -57,7 +84,8 @@ function(obj, config, string, d3util, mixins) {
         .enter()
           .append('g')
           .attr({
-            'class': 'gl-legend-key'
+            'class': 'gl-legend-key',
+            'gl-dataId': function(d) { return d.dataId; }
           });
 
       // Add new key indicator.
@@ -78,7 +106,11 @@ function(obj, config, string, d3util, mixins) {
           'text-anchor': 'start',
           'stroke': 'none'
         });
-    };
+
+      // Handle click event- toggle data inactive
+      enterSelection
+        .on('click', onClickHandler);
+      };
 
     /**
      * Apply updates to the update selection.
@@ -88,7 +120,6 @@ function(obj, config, string, d3util, mixins) {
       // The outer <g> element for each key.
       selection
         .attr({
-          'class': 'gl-legend-key',
           'font-family': config_.fontFamily,
           'font-size': config_.fontSize,
           'font-weight': config_.fontWeight

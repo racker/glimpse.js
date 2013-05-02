@@ -9,10 +9,12 @@ define([
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
-  'data/functions'
+  'data/functions',
+  'events/pubsub'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns) {
+function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
   'use strict';
+
 
   return function() {
 
@@ -20,7 +22,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_;
+      root_,
+      globalPubsub = pubsub.getSingleton();
 
     defaults_ = {
       type: 'line',
@@ -163,6 +166,23 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     };
 
     /**
+     * Handles the sub of data-toggle event.
+     * Checks presence of inactive tag
+     * to show/hide the line component
+     * @param  {string} dataId
+     */
+     line.handleDataToggle_ = function (args) {
+      var id = config_.dataId;
+      if (args === id) {
+        if (dataCollection_.hasTags(id, 'inactive')) {
+          line.hide();
+        } else {
+          line.show();
+        }
+      }
+    };
+
+    /**
      * Renders the line component
      * @param  {d3.selection|Node|string} selection
      * @return {components.line}
@@ -182,6 +202,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           return root;
         });
       }
+      globalPubsub.sub(config_.rootId+':data-toggle', line.handleDataToggle_);
       line.update();
       line.dispatch.render.call(this);
       return line;
@@ -203,6 +224,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       if (root_) {
         root_.remove();
       }
+      globalPubsub.unsub(config_.rootId+':data-toggle', line.handleDataToggle_);
       root_ = null;
       config_ = null;
       defaults_ = null;
