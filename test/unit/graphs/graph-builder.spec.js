@@ -51,7 +51,7 @@ function(graphBuilder, graph) {
       });
 
       it('reports the available buildable types', function() {
-        expect(graphBuilder.types()).toEqual(['line', 'area']);
+        expect(graphBuilder.types()).toEqual(['line', 'area', 'stacked-area']);
       });
 
       it('creates a graph', function() {
@@ -125,6 +125,99 @@ function(graphBuilder, graph) {
           testGraph.data().add(testData1);
           areaComponents = filterComponents(testGraph, 'area');
           expect(areaComponents.length).toBe(2);
+        });
+
+      });
+
+      describe('create("stacked-area")', function() {
+
+        beforeEach(function() {
+          testGraph = graphBuilder.create('stacked-area');
+        });
+
+        function addCpuSysData() {
+          testGraph.data().add({
+            'id' : 'cpu-sys',
+            'title' : 'sys',
+            'data': [
+              { 'x': 1317279600000, 'y': 30 },
+              { 'x': 1317695968421, 'y': 31 },
+              { 'x': 1318112336842, 'y': 30 },
+              { 'x': 1318528705263, 'y': 30 },
+              { 'x': 1318945073684, 'y': 40 },
+              { 'x': 1319361442105, 'y': 30 }
+            ],
+            dimensions: {
+              x: 'x', y: 'y'
+            }
+          });
+        }
+
+        function addCpuUserData() {
+          testGraph.data().add({
+            'id': 'cpu-user',
+            'title': 'user',
+            'data': [
+              { 'x': 1317279600000, 'y': 20 },
+              { 'x': 1317695968421, 'y': 19 },
+              { 'x': 1318112336842, 'y': 21 },
+              { 'x': 1318528705263, 'y': 21 },
+              { 'x': 1318945073684, 'y': 21 },
+              { 'x': 1319361442105, 'y': 21 }
+            ],
+            dimensions: {
+              x: 'x', y: 'y'
+            }
+          });
+        }
+
+        it('adds a single stacked-area derived data source', function() {
+          addCpuUserData();
+          expect(testGraph.data().get('cpu-user-stack'))
+            .toBe('gl-error-not-computed');
+         expect(testGraph.data().get('cpu-sys-stack'))
+            .toBe(null);
+        });
+
+        it('adds a single stacked-area component', function() {
+          var areaComponents;
+          addCpuUserData();
+          areaComponents = filterComponents(testGraph, 'area');
+          expect(areaComponents.length).toBe(1);
+          expect(areaComponents[0].cid()).toBe('cpu-user-stack');
+        });
+
+        it('adds multiple stacked-area derived data sources', function() {
+          addCpuSysData();
+          addCpuUserData();
+          expect(testGraph.data().get('cpu-user-stack'))
+            .toBe('gl-error-not-computed');
+          expect(testGraph.data().get('cpu-sys-stack'))
+            .toBe('gl-error-not-computed');
+        });
+
+        it('adds multiple stacked-area components', function() {
+          var areaComponents;
+          addCpuSysData();
+          addCpuUserData();
+          areaComponents = filterComponents(testGraph, 'area');
+          expect(areaComponents.length).toBe(2);
+          expect(areaComponents[0].cid()).toBe('cpu-sys-stack');
+          expect(areaComponents[1].cid()).toBe('cpu-user-stack');
+        });
+
+        it('computes stack data correctly for cpu-user', function() {
+          var renderTarget = jasmine.htmlFixture();
+          addCpuSysData();
+          addCpuUserData();
+          testGraph.render(renderTarget);
+          expect(testGraph.data().get('cpu-user-stack').data).toEqual([
+            { x : 1317279600000, y : 20, y0 : 30 },
+            { x : 1317695968421, y : 19, y0 : 31 },
+            { x : 1318112336842, y : 21, y0 : 30 },
+            { x : 1318528705263, y : 21, y0 : 30 },
+            { x : 1318945073684, y : 21, y0 : 40 },
+            { x : 1319361442105, y : 21, y0 : 30 }]);
         });
 
       });

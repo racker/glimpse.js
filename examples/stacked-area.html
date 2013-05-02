@@ -18,118 +18,78 @@
 
         var sampleData = [
           {
-            "name": "sys",
-            "values": [
+            "id" : "cpu-sys",
+            "title" : "sys",
+            "data": [
               { "x": 1317279600000, "y": 30 },
               { "x": 1317695968421, "y": 31 },
               { "x": 1318112336842, "y": 30 },
               { "x": 1318528705263, "y": 30 },
               { "x": 1318945073684, "y": 40 },
               { "x": 1319361442105, "y": 30 }
-            ]
+            ],
+            dimensions: { x: 'x', y: 'y' }
           },
           {
-            "name": "user",
-            "values": [
+            "id": "cpu-user",
+            "title": "user",
+            "data": [
               { "x": 1317279600000, "y": 20 },
               { "x": 1317695968421, "y": 19 },
               { "x": 1318112336842, "y": 21 },
               { "x": 1318528705263, "y": 21 },
               { "x": 1318945073684, "y": 21 },
               { "x": 1319361442105, "y": 21 }
-            ]
+            ],
+            dimensions: { x: 'x', y: 'y' }
           },
           {
-            "name": "stolen",
-            "values": [
+            "id": "cpu-stolen",
+            "title": "stolen",
+            "data": [
               { "x": 1317279600000, "y": 1 },
               { "x": 1317695968421, "y": 1 },
               { "x": 1318112336842, "y": 0 },
               { "x": 1318528705263, "y": 0 },
               { "x": 1318945073684, "y": 0 },
               { "x": 1319361442105, "y": 0 }
-            ]
+            ],
+            dimensions: { x: 'x', y: 'y' }
           },
           {
-            "name": "wait",
-            "values": [
+            "id": "cpu-wait",
+            "title": "wait",
+            "data": [
               { "x": 1317279600000, "y": 9 },
               { "x": 1317695968421, "y": 9 },
               { "x": 1318112336842, "y": 9 },
               { "x": 1318528705263, "y": 9 },
               { "x": 1318945073684, "y": 9 },
               { "x": 1319361442105, "y": 9 }
-            ]
+            ],
+            dimensions: { x: 'x', y: 'y' }
           },
           {
-            "name": "idle",
-            "values": [
+            "id": "cpu-idle",
+            "title": "idle",
+            "data": [
               { "x": 1317279600000, "y": 40 },
               { "x": 1317695968421, "y": 40 },
               { "x": 1318112336842, "y": 40 },
               { "x": 1318528705263, "y": 40 },
               { "x": 1318945073684, "y": 30 },
               { "x": 1319361442105, "y": 40 }
-            ]
+            ],
+            dimensions: { x: 'x', y: 'y' }
           }
         ];
 
-        // Create copy for mutating.
-        var mappedData = sampleData.concat();
-
-        // d3 stack function to calculate Y-baselines and Y-offsets.
-        var stack = d3.layout.stack()
-          .values(function(d) {
-            return d.values;
-          });
-        stack(mappedData);
-
-        // Utility for accessing individual data series.
-        function filterData(processName) {
-          return mappedData.filter(function(d) {
-            return d.name === processName;
-          })[0].values;
-        }
-
-        var areaGraph = glimpse.graph()
+        var areaGraph = glimpse.graphBuilder().create('stacked-area')
           .config({
             'forceY': [0, 100],
             'yDomainModifier': 1
           })
-          .data([
-            { id: 'cpu-sys',
-              title: 'System',
-              data: filterData('sys'),
-              dimensions: { y0: 'y0' }
-            },
-            { id: 'cpu-user',
-              title: 'User',
-              data: filterData('user'),
-              dimensions: { y0: 'y0' }
-            },
-            { id: 'cpu-idle',
-              title: 'Idle',
-              data: filterData('idle'),
-              dimensions: { y0: 'y0' }
-            },
-            { id: 'cpu-wait',
-              title: 'Wait',
-              data: filterData('wait'),
-              dimensions: { y0: 'y0' }
-            },
-            { id: 'cpu-stolen',
-              title: 'Stolen',
-              data: filterData('stolen'),
-              dimensions: { y0: 'y0' }
-            }
-          ])
-          .component([
-            { cid: 'idle', type: 'area', dataId: 'cpu-idle', color: '#EFEFEF' },
-            { cid: 'user', type: 'area', dataId: 'cpu-user', color: '#89D6FF' },
-            { cid: 'sys', type: 'area', dataId: 'cpu-sys', color: '#FFB578' },
-            { cid: 'wait', type: 'area', dataId: 'cpu-wait', color: '#F5F692' },
-            { cid: 'stolen', type: 'area', dataId: 'cpu-stolen', color: '#FF5A86' }
-          ])
+          .data(sampleData)
           .render('#container');
 
 

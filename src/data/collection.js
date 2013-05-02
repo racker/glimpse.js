@@ -8,7 +8,8 @@ define([
   'core/set',
   'data/selection/selection',
   'events/pubsub',
-  'data/selection/diff-quotient'
+  'data/selection/diff-quotient',
+  'data/selection/stack'
 ], function (obj, array, set, selection, pubsub) {
   'use strict';
 

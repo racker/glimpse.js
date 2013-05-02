@@ -31,7 +31,7 @@ function(obj, array, string, format, d3util, graph) {
     /**
      * The supported types of pre-configured graphs.
      */
-    GRAPH_TYPES = ['line', 'area'];
+    GRAPH_TYPES = ['line', 'area', 'stacked-area'];
 
     /**
      * Dataset configurations automatically applied to graphs.
@@ -127,14 +127,20 @@ function(obj, array, string, format, d3util, graph) {
      * @param {String} componentType
      * @param {graphs.graph} g
      */
-    function addComponentsForDataSources(dataSources, componentType, g) {
+    function addComponentsForDataSources(dataSources, componentType,
+          g, isStacked) {
+      var id;
       array.getArray(dataSources).forEach(function(dataSource) {
+        id = dataSource.id;
+        if (isStacked) {
+          id += '-stack';
+        }
         if (!isInternalData(dataSource.id) &&
             !componentExists(dataSource.id, g)) {
           g.component({
             type: componentType,
-            dataId: dataSource.id,
-            cid: dataSource.id,
+            dataId: id,
+            cid: id,
             color: dataSource.color || null
           });
         }
@@ -169,13 +175,27 @@ function(obj, array, string, format, d3util, graph) {
      * @param {String} componentType
      * @param {graphs.graph} g
      */
-    function overrideAddDataFn(componentType, g) {
+    function overrideAddDataFn(componentType, g, isStacked) {
       var dataCollection = g.data();
+      isStacked = isStacked || false;
       obj.override(dataCollection, 'add', function(supr, data) {
         var args, retVal;
         args = array.convertArgs(arguments, 1);
         retVal = supr.apply(dataCollection, args);
-        addComponentsForDataSources(data, componentType, g);
+        if (isStacked) {
+          array.getArray(data).forEach(function(ds) {
+            supr.apply(dataCollection, [{
+              id: ds.id + '-stack',
+              sources: 'stacks',
+              derivation: function(sources) {
+                return sources.get().filter(function(source) {
+                  return source.id === ds.id + '-stack';
+                })[0];
+              }
+            }]);
+          });
+        }
+        addComponentsForDataSources(data, componentType, g, isStacked);
         return retVal;
       });
     }
@@ -190,6 +210,20 @@ function(obj, array, string, format, d3util, graph) {
       INTERNAL_DATA_CONFIG.forEach(function(dataConfig) {
         g.data().add(dataConfig);
       });
+    }
+
+    /**
+     * TODO: Add capability to derivation to create sources.
+     */
+    function addStackedData(g) {
+      var dataSources = [{
+        id: 'stacks',
+        sources: '*',
+        derivation: function(sources) {
+          return sources.stack().all();
+        }
+      }];
+      g.data().add(dataSources);
     }
 
     /**
@@ -272,16 +306,19 @@ function(obj, array, string, format, d3util, graph) {
      * Build and return a new graph of the specified type.
      *
      * @param {String} type A valid pre-configured graph type.
-     * @param {layout.layouts} layout The layout to use.
+     * @param {Object?} options Options for the pre-configured graph type.
      * @return {graphs.graph}
      */
-    graphBuilder.create = function(type, optLayout) {
-      var g;
+    graphBuilder.create = function(type, options) {
+      var g, layout;
+
+      options = options || {};
+      layout = options.layout || 'default';
 
       g = graph()
         .config({
           forceY: [0],
-          layout: optLayout || 'default',
+          layout: layout,
           yAxisUnit: 'ms'
         });
       g.dispatch.on('update', updateStatsLabel);
@@ -293,6 +330,11 @@ function(obj, array, string, format, d3util, graph) {
         case 'area':
           overrideRemoveDataFn(g);
           overrideAddDataFn(type, g);
+          break;
+        case 'stacked-area':
+          addStackedData(g);
+          overrideRemoveDataFn(g);
+          overrideAddDataFn('area', g, true);
           break;
       }
       return g;
