@@ -124,11 +124,9 @@ function(array) {
     },
 
     scope: function() {
-      var scope =  arguments[0];
+      var scope =  arguments[0] ? arguments[0] + ':' : '';
       return function() {
-        var newArgs = array.convertArgs(arguments);
-        newArgs.unshift(scope + ':' + newArgs.shift());
-        return newArgs;
+        return scope + arguments[0];
       };
     }
 

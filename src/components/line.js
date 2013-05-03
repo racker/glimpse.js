@@ -23,6 +23,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       defaults_,
       dataCollection_,
       root_,
+      scope_ = null,
       globalPubsub = pubsub.getSingleton();
 
     defaults_ = {
@@ -188,6 +189,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.line}
      */
     line.render = function(selection) {
+      var scope;
       if (!root_) {
         root_ = d3util.applyTarget(line, selection, function(target) {
           var root = target.append('g')
@@ -202,7 +204,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           return root;
         });
       }
-      globalPubsub.sub(config_.rootId+':data-toggle', line.handleDataToggle_);
+      scope = line.scope();
+      globalPubsub.sub(scope('data-toggle'), line.handleDataToggle_);
       line.update();
       line.dispatch.render.call(this);
       return line;
@@ -216,15 +219,27 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       return root_;
     };
 
+    /** Defines the rootId for line */
+    //TODO create a mixin for scope
+    line.scope = function() {
+      if (!scope_) {
+        scope_ = pubsub.scope(config_.rootId);
+      }
+      return scope_;
+    };
+
     /**
      * Destroys the line and removes everything from the DOM.
      * @public
      */
     line.destroy = function() {
+      var scope;
+
       if (root_) {
         root_.remove();
       }
-      globalPubsub.unsub(config_.rootId+':data-toggle', line.handleDataToggle_);
+      scope = line.scope();
+      globalPubsub.unsub(scope('data-toggle'), line.handleDataToggle_);
       root_ = null;
       config_ = null;
       defaults_ = null;

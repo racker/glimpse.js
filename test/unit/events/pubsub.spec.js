@@ -146,14 +146,13 @@ function(pubsubModule) {
       });
 
       it('correctly prefixes the scope to the first arg', function () {
-        expect(scopeFn('foo')[0]).toBe('foo:foo');
+        expect(scopeFn('foo')).toBe('foo:foo');
       });
 
-      it('retains the remaining args', function () {
-        var arr = scopeFn('foo', 'foo.foo');
-        expect(arr.length).toBe(2);
+      it('does not apply scope if no scope is set', function () {
+        scopeFn = pubsubModule.scope();
+        expect(scopeFn('foo')).toBe('foo');
       });
-
     });
 
   });

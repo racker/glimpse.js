@@ -30,6 +30,10 @@ define([
     return derivedData;
   }
 
+  function getScopeFn(scope) {
+    return pubsub.scope(scope);
+  }
+
   /**
    * A data config is determined to derived config if
    * it contains a sources or derivation field.
@@ -252,11 +256,13 @@ define([
        */
        //todo: functional approach for scoping
       toggleTags: function(id, tags, scope) {
-        var tagSet = set.create(this.getTags(id));
+        var tagSet, scopeFn;
+        tagSet = set.create(this.getTags(id));
+        scopeFn = getScopeFn(scope);
         tags = array.getArray(tags);
         tagSet.toggle(tags);
         this.setTags(id, tagSet.toArray());
-        globalPubsub.pub(scope+':data-toggle', id);
+        globalPubsub.pub(scopeFn('data-toggle'), id);
       },
 
       /**
