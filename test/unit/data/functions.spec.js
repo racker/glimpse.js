@@ -30,16 +30,20 @@ define([
 
     describe('.dimension()', function() {
 
-      it('returns the dimension function', function() {
+      it('returns the dimension function if alias is specified', function() {
         expect(typeof dataFns.dimension(dataSource, 'time')).toBe('function');
         expect(typeof dataFns.dimension(dataSource, 'latency'))
           .toBe('function');
       });
 
-      it('returns null if invalid dimension', function() {
-        expect(dataFns.dimension(dataSource, 'abc')).toBe(null);
-        expect(dataFns.dimension(dataSource, 'def')).toBe(null);
-        expect(dataFns.dimension(dataSource, '123')).toBe(null);
+      it('returns accessor of string if dimension lookup failed', function() {
+        var abcFn = dataFns.dimension(dataSource, 'abc'),
+            defFn = dataFns.dimension(dataSource, 'def');
+
+        expect(abcFn).toBeDefined();
+        expect(defFn).toBeDefined();
+        expect(abcFn({'abc': 123})).toBe(123);
+        expect(defFn({'def': 123})).toBe(123);
       });
 
       it('returns correct dimension function', function() {

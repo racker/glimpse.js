@@ -42,15 +42,13 @@
             {
               id: 'latencyDfw',
               title: 'Time to Connect (DFW)',
-              data: latencyData[0].data,
-              dimensions: { x: 'x', y: 'y' }
+              data: latencyData[0].data
             },
             {
               id: 'latencyLon',
               title: 'Time to Connect (LON)',
               data: latencyData[0].data,
               dimensions: {
-                x: 'x',
                 y: function(d, i) { return d.y + Math.random()*10; }
               }
             }

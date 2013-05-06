@@ -16,7 +16,7 @@ define([
       var dimValue;
       dimValue = obj.get(data, ['dimensions', dim]);
       if (!dimValue) {
-        return null;
+        return accessors.get(dim);
       }
       return accessors.get(dimValue);
     }
