@@ -122,6 +122,12 @@ module.exports = function(grunt) {
                  '--browsers="Firefox" ' +
                  '--singleRun=true',
         stdout: true
+      },
+      testWindows: {
+        command: 'karma start test/karma.conf.js ' +
+                 '--browsers="IE" ' +
+                 '--singleRun=true',
+        stdout: true
       }
     },
 
@@ -225,6 +231,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', 'exec:test');
   grunt.registerTask('testwatch', 'exec:testWatch');
   grunt.registerTask('testheadless', 'exec:testHeadless');
+  grunt.registerTask('testwin', 'exec:testWindows');
   grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
   grunt.registerTask('docs',
     ['clean:docs', 'lexicon', 'concat:docs', 'clean:docs']);
