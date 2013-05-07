@@ -36,8 +36,8 @@ function(d3, string) {
     if (clipPath.empty()) {
       clipPath = defs.append('clipPath')
         .attr({
-          class: 'gl-clip-path',
-          id: 'gl-clip-path-' + string.random(),
+          'class': 'gl-clip-path',
+          id: 'gl-clip-path-' + string.random()
         });
     }
 

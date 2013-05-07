@@ -21,8 +21,15 @@ beforeEach(function() {
     return actualAttrValue === attrValue.toString();
   }
 
+  function compare(node1, node2) {
+    var retValue = 0;
+    retValue = node1.name.toLowerCase() < node2.name.toLowerCase() ? -1 : 1;
+    return retValue;
+  }
+
   function serializeXML (node, output) {
-    var nodeType = node.nodeType, attrMap, attrNode, i, len, childNodes;
+    var nodeType = node.nodeType, attrMap, attrMapArr = [],
+      i, len, childNodes;
     if (nodeType === 3) { // TEXT nodes.
       // Replace special XML characters with their entities.
       output.push(node.textContent.replace(/&/, '&amp;')
@@ -33,9 +40,14 @@ beforeEach(function() {
       if (node.hasAttributes()) {
         attrMap = node.attributes;
         for (i = 0, len = attrMap.length; i < len; i += 1) {
-          attrNode = attrMap.item(i);
-          output.push(' ', attrNode.name, '="', attrNode.value, '"');
+          attrMapArr.push(attrMap.item(i));
         }
+        //Order the namedNodeMap so that is doesnt break in
+        //different browsers
+        attrMapArr.sort(compare);
+        attrMapArr.forEach(function(attrNode) {
+          output.push(' ', attrNode.name, '="', attrNode.value, '"');
+        });
       }
       if (node.hasChildNodes()) {
         output.push('>');

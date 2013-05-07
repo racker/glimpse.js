@@ -26,8 +26,9 @@ function () {
       });
 
       it('sets the <g> clip-path attr to the <clippath> id', function() {
-        var cpValue = 'url(#' + clipPath.getAttribute('id') + ')';
-        expect(gNode).toHaveAttr('clip-path', cpValue);
+        var value = gSelection.attr('clip-path');
+        //Fix to make it match in IE
+        expect(value).toContain(clipPath.getAttribute('id'));
       });
 
       it('adds a layout <rect> node if it doesnt exist', function() {

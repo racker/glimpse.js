@@ -171,7 +171,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
             });
           root.append('path')
             .attr({
-              'class': string.classes('path'),
+              'class': string.classes('path')
             });
           return root;
         });

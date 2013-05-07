@@ -43,12 +43,10 @@ function(obj, config, string, mixins, d3util) {
      * @private
      */
     function setZeroTickTranslate(selection) {
-      var transform, translate, x, y;
-      transform = selection.attr('transform');
-      translate = transform.split(',');
-      x = translate[0].split('(')[1];
-      y = translate[1].split(')')[0];
-      selection.attr('transform', 'translate(' + [x, y-10] + ')');
+      var transform;
+      transform = d3.transform(selection.attr('transform'));
+      transform.translate[1] -= 10;
+      selection.attr('transform', transform.toString());
     }
 
     /**

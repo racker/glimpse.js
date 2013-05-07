@@ -27,7 +27,7 @@ define(['d3'], function(d3) {
     if (layoutRect.empty()) {
       layoutRect = selection.append('rect')
         .attr({
-          class: 'gl-layout',
+          'class': 'gl-layout',
           fill: 'none'
         });
     }
