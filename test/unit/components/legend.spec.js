@@ -7,7 +7,7 @@ function(legend, dc) {
 
   describe('components.legend', function() {
     var testLegend, svgNode, rootNode, key1, key2, keys,
-    handlerSpy, dataCollection, data;
+    handlerSpy, dataCollection, data, inactiveColor;
 
      data = [{
       id:'key1',
@@ -48,6 +48,9 @@ function(legend, dc) {
       };
       keys = [key1, key2];
       testLegend.keys(keys);
+      dataCollection.add(data);
+      testLegend.data(dataCollection);
+      inactiveColor = testLegend.config('inactiveColor');
       svgNode = jasmine.svgFixture().node();
       spyOn(testLegend, 'update').andCallThrough();
       spyOn(dataCollection, 'toggleTags').andCallThrough();
@@ -112,8 +115,6 @@ function(legend, dc) {
         selectorInd, indicatorNode;
 
         beforeEach(function () {
-          dataCollection.add(data);
-          testLegend.data(dataCollection);
           legendNode = select('.gl-legend-key').node();
           //indicator and label for checking colors
           selectorLabel = '.gl-legend .gl-legend-key .gl-legend-key-label';
@@ -126,20 +127,22 @@ function(legend, dc) {
         it('checks the datatag and sets it to inactive color for onClick',
          function() {
           fireClickEvent(legendNode);
-          expect(indicatorNode[0]).toHaveAttr('fill', 'grey');
-          expect(labelNode[0]).toHaveAttr('fill', 'grey');
+          expect(indicatorNode[0]).toHaveAttr('fill', inactiveColor);
+          expect(labelNode[0]).toHaveAttr('fill', inactiveColor);
         });
 
         it('makes sure they are not inactive after another onClick',
          function() {
           fireClickEvent(legendNode);
-          expect(indicatorNode[0]).not.toHaveAttr('fill', 'grey');
-          expect(labelNode[0]).not.toHaveAttr('fill', 'grey');
+          expect(indicatorNode[0]).not.toHaveAttr('fill', inactiveColor);
+          expect(labelNode[0]).not.toHaveAttr('fill', inactiveColor);
         });
 
         it('calls the dataToggle method when onClick', function() {
           fireClickEvent(legendNode);
           expect(dataCollection.toggleTags).toHaveBeenCalledOnce();
+          //make legend active again for other tests below
+          fireClickEvent(legendNode);
         });
 
       });
@@ -151,12 +154,17 @@ function(legend, dc) {
             .toBe(2);
         });
 
+        afterEach(function(){
+            dataCollection.removeTags('key1', 'inactive');
+        });
+
         describe('indicators', function() {
-          var indicatorNodes;
+          var indicatorNodes, selector;
 
           beforeEach(function() {
-            var selector = '.gl-legend .gl-legend-key .gl-legend-key-indicator';
+            selector = '.gl-legend .gl-legend-key .gl-legend-key-indicator';
             indicatorNodes = selectAll(selector)[0];
+
           });
 
           it('adds key indicators', function() {
@@ -171,13 +179,20 @@ function(legend, dc) {
             expect(indicatorNodes[1]).toHaveAttr('fill', 'green');
           });
 
+          it('sets inactive initial color if data inactive', function() {
+            var indicatorNode =  select(selector)[0];
+            dataCollection.addTags('key1', 'inactive');
+            testLegend.update();
+            expect(indicatorNode[0]).toHaveAttr('fill', inactiveColor);
+          });
+
         });
 
         describe('labels', function() {
-          var labelNodes;
+          var labelNodes, selector;
 
           beforeEach(function() {
-            var selector = '.gl-legend .gl-legend-key .gl-legend-key-label';
+            selector = '.gl-legend .gl-legend-key .gl-legend-key-label';
             labelNodes = selectAll(selector)[0];
           });
 
@@ -195,6 +210,13 @@ function(legend, dc) {
             expect(labelNodes[1].textContent).toBe(key2.label);
           });
 
+          it('sets inactive initial label color if data inactive', function() {
+            var labelNode = select(selector)[0];
+            dataCollection.addTags('key1', 'inactive');
+            testLegend.update();
+            expect(labelNode[0]).toHaveAttr('fill', inactiveColor);
+          });
+
         });
 
       });
@@ -202,7 +224,6 @@ function(legend, dc) {
     });
 
     describe('data()', function() {
-
       it('gets/sets data and datacollection available in Legend', function() {
         testLegend.data(dataCollection);
         expect(testLegend.data()).toBe(dataCollection);

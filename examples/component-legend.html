@@ -25,24 +25,44 @@
             key1 = { color: 'blue', label: 'blue label' },
             key2 = { color: function() { return 'green'; }, label: 'green label' },
             keys = [key1, key2],
-            legendComponent1;
-            
-        // bind keys to the legend.  
+            legendComponent1,
+            dataCollection = glimpse.dataCollection.create(),
+            data = [{
+                    id:'key1',
+                    data: [
+                        { x: 13, y: 106},
+                        { x: 15, y: 56},
+                        { x: 17, y: 100}
+                    ],
+                    dimensions: {
+                    x: function(d) { return d.x + 1; },
+                    y: function(d) { return d.y + 1; }
+                    }
+            }];
+
+
+        // bind keys to the legend.
         legendComponent.keys(keys);
-            
+
+        //make the datacollection available
+        dataCollection.add(data);
+        legendComponent.data(dataCollection);
+
+
         legendComponent.render('#container');
-        
+
         //2. Legend with vertical layout and differet spacing, font, color, gap, etc. configurations.
         legendComponent1 = glimpse.components.legend();
+        legendComponent1.data(dataCollection);
 
         legendComponent1.keys(keys);
         legendComponent1.config({
-            'cid' : 'legend-2', 
-            'fontColor' : '#FF0000', 
+            'cid' : 'legend-2',
+            'fontColor' : '#FF0000',
             'layout' : 'vertical',
             'position': 'left',
-            'fontSize': 18, 
-            'fontFamily': 'verdana', 
+            'fontSize': 18,
+            'fontFamily': 'verdana',
             'fontWeight': 'bold',
             'gap': 10,
             'indicatorWidth': 15,

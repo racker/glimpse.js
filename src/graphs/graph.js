@@ -417,8 +417,10 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           'gl-loading-overlay',
           'gl-error-overlay']);
       componentManager_.get().forEach(function(c) {
-        var hiddenStates = c.config('hiddenStates');
-        if (array.contains(hiddenStates, config_.state)) {
+        var hiddenStates = c.config('hiddenStates'),
+            dataId = c.config('dataId');
+        if (array.contains(hiddenStates, config_.state) ||
+              (dataId && dataCollection_.hasTags(dataId, 'inactive'))) {
           c.hide();
         } else {
           c.show();

@@ -117,6 +117,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * @param {d3.selection} selection
      */
     update_ = function(selection) {
+      var inactive, color;
+
       // The outer <g> element for each key.
       selection
         .attr({
@@ -131,7 +133,9 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
           'width': config_.indicatorWidth,
           'height': config_.indicatorHeight,
           'fill': function(d) {
-            return d3.functor(d.color)();
+            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
+            color = inactive ? config_.inactiveColor : d3.functor(d.color)();
+            return color;
           }
         });
 
@@ -141,7 +145,11 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         .attr({
           'x': config_.indicatorWidth + config_.indicatorSpacing,
           'y': config_.indicatorHeight,
-          'fill': config_.fontColor
+          'fill': function(d) {
+            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
+            color = inactive ? config_.inactiveColor : config_.fontColor;
+            return color;
+          }
         });
     };
 
@@ -209,7 +217,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * Insert/update/remove DOM for each key.
      */
     legend.update = function() {
-      var selection;
+      var selection, dataConfig;
 
       // Return early if no data or render() hasn't been called yet.
       if (!config_.keys || !root_) {
@@ -218,6 +226,13 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
+
+      dataConfig = legend.data();
+      // Return early if there's no data.
+      if (!dataConfig) {
+        return legend;
+      }
+
       // The selection of legend keys.
       selection = root_
         .selectAll('.gl-legend-key')

@@ -89,6 +89,8 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       spyOn(testComponent, 'update');
       spyOn(xAxis, 'update');
       spyOn(yAxis, 'update');
+      spyOn(yAxis, 'hide');
+      spyOn(xAxis, 'hide');
       spyOn(legend, 'update');
       spyOn(xScale, 'domain').andCallThrough();
       spyOn(yScale, 'domain').andCallThrough();
@@ -382,6 +384,33 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
 
       it('calls update on test component', function() {
         expect(testComponent.update).toHaveBeenCalled();
+      });
+
+      describe('components initial state after update/add', function() {
+        var lineComponent, lineComponent1;
+
+        beforeEach(function() {
+            dataCollection = testGraph.data();
+            lineComponent = testGraph.component('testComponent');
+            lineComponent1 = testGraph.component('testComponentWithColor');
+            spyOn(lineComponent, 'hide');
+            spyOn(lineComponent1, 'hide');
+        });
+
+        it('does not hide components without a dataId', function() {
+          dataCollection.toggleTags('fakeData', 'inactive');
+          testGraph.update();
+          expect(yAxis.hide).not.toHaveBeenCalled();
+          expect(xAxis.hide).not.toHaveBeenCalled();
+        });
+
+        it('does not show components with dataId if inactive', function() {
+          dataCollection.toggleTags('fakeData', 'inactive');
+          testGraph.update();
+          expect(lineComponent.hide).toHaveBeenCalled();
+          expect(lineComponent1.hide).toHaveBeenCalled();
+        });
+
       });
 
     });
