@@ -52,6 +52,21 @@ define([
     });
   };
 
+  /**
+   * Filters the datasources by tags.
+   * returns datasources which do not contain tags.
+   * @param  {array|string} tags
+   */
+  Selection.prototype.filterByTags = function (tags) {
+    return new Selection(this.dataSources_.filter(
+      function(dataSource) {
+        return array.getArray(tags).every(function(tag) {
+          return !array.contains(dataSource.tags, tag);
+        });
+      })
+    );
+  };
+
   Selection.prototype.length = function() {
     return this.dataSources_.length;
   };

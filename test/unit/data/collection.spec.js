@@ -840,6 +840,7 @@ define([
           newDc.addTags('test', ['USA', 'Canada', 'Mexico']);
           fooHandler = jasmine.createSpy();
           pubsub.sub('foo:data-toggle', fooHandler);
+          spyOn(newDc, 'updateDerivations');
         });
 
         it('toggles one element resulting in removal', function() {
@@ -876,8 +877,14 @@ define([
           function() {
            newDc.toggleTags('test', 'USA', 'foo');
            expect(fooHandler).toHaveBeenCalledOnce();
-          }
-        );
+        });
+
+        it('updates the derivations after toggling the data tag',
+          function() {
+           newDc.toggleTags('test', 'USA', 'foo');
+           expect(newDc.updateDerivations).toHaveBeenCalledOnce();
+        });
+
       });
 
     });

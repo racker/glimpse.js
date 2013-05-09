@@ -75,6 +75,18 @@ function(graphBuilder, graph) {
         expect(statsComponent).toBeDefined();
       });
 
+      // TODO: Remove this once we have total config-based comopnents.
+      it('recalculates avg/min/max on data-toggle event', function() {
+        var statsData, dc;
+        testGraph.render(jasmine.htmlFixture());
+        dc = testGraph.data();
+        dc.toggleTags('test-data', 'inactive');
+        statsData = testGraph.data().get('gl-stats');
+        expect(statsData.min).toBe(0);
+        expect(statsData.avg).toBe(0);
+        expect(statsData.max).toBe(0);
+      });
+
       it('sets unit on stats label', function() {
         testGraph.render(jasmine.htmlFixture());
         expect(testGraph.component('gl-stats').config('unit')).toBe('GB');

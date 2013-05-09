@@ -255,6 +255,7 @@ define([
        * @param  {@Object} scope/rootid
        */
        //todo: functional approach for scoping
+       //XXX: optimize update derivations
       toggleTags: function(id, tags, scope) {
         var tagSet, scopeFn;
         tagSet = set.create(this.getTags(id));
@@ -262,6 +263,7 @@ define([
         tags = array.getArray(tags);
         tagSet.toggle(tags);
         this.setTags(id, tagSet.toArray());
+        this.updateDerivations();
         globalPubsub.pub(scopeFn('data-toggle'), id);
       },
 
