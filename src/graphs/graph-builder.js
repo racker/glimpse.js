@@ -20,7 +20,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     var defaults,
       config,
       globalPubsub,
-      INTERNAL_DATA_CONFIG,
+      internalDataConfig,
       INTERNAL_COMPONENTS_CONFIG,
       GRAPH_TYPES;
 
@@ -40,31 +40,33 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     /**
      * Dataset configurations automatically applied to graphs.
      */
-    INTERNAL_DATA_CONFIG = [{
-      id: 'gl-stats',
-      sources: ['*', '$domain'],
-      derivation: function(sources, domain) {
-        var xDomain, points, pointValues, result;
+    function getInternalDataConfig(domainSources) {
+      return [{
+        id: 'gl-stats',
+        sources: [domainSources, '$domain'],
+        derivation: function(sources, domain) {
+          var xDomain, points, pointValues, result;
 
-        result = {
-          min: 0,
-          max: 0,
-          avg: 0
-        };
-        sources = sources.filterByTags('inactive');
-        if (sources.all().length) {
-          xDomain = domain.get().x;
-          points = sources.filter('x', xDomain).dim('y').concat();
-          pointValues = points.get();
-          if (pointValues && pointValues.length) {
-            result.min = points.min().round().get();
-            result.max = points.max().round().get();
-            result.avg = points.avg().round().get();
+          result = {
+            min: 0,
+            max: 0,
+            avg: 0
+          };
+          sources = sources.filterByTags('inactive');
+          if (sources.all().length) {
+            xDomain = domain.get().x;
+            points = sources.filter('x', xDomain).dim('y').concat();
+            pointValues = points.get();
+            if (pointValues && pointValues.length) {
+              result.min = points.min().round().get();
+              result.max = points.max().round().get();
+              result.avg = points.avg().round().get();
+            }
           }
+          return result;
         }
-        return result;
-      }
-    }];
+      }];
+    }
 
     /**
      * Component configurations automatically applied to graphs.
@@ -100,7 +102,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      */
     function isInternalData(dataId) {
       var foundData;
-      foundData = array.find(INTERNAL_DATA_CONFIG, function(d) {
+      foundData = array.find(internalDataConfig, function(d) {
         return d.id === dataId;
       });
       return foundData || string.startsWith(dataId, '$') ? true : false;
@@ -133,7 +135,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      * @param {graphs.graph} g
      */
     function addComponentsForDataSources(dataSources, componentType,
-          g, isStacked) {
+          g, sources, isStacked) {
       var id;
       array.getArray(dataSources).forEach(function(dataSource) {
         id = dataSource.id;
@@ -142,12 +144,16 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         }
         if (!isInternalData(dataSource.id) &&
             !componentExists(dataSource.id, g)) {
-          g.component({
-            type: componentType,
-            dataId: id,
-            cid: id,
-            color: dataSource.color || null
-          });
+          // If no sources are specified, add all data ids
+          // else add the specified ones.
+          if(sources.length === 0 || array.contains(sources, dataSource.id)) {
+            g.component({
+              type: componentType,
+              dataId: id,
+              cid: id,
+              color: dataSource.color || null
+            });
+          }
         }
       });
     }
@@ -180,7 +186,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      * @param {String} componentType
      * @param {graphs.graph} g
      */
-    function overrideAddDataFn(componentType, g, isStacked) {
+    function overrideAddDataFn(componentType, g, sources, isStacked) {
       var dataCollection = g.data();
       isStacked = isStacked || false;
       obj.override(dataCollection, 'add', function(supr, data) {
@@ -200,7 +206,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
             }]);
           });
         }
-        addComponentsForDataSources(data, componentType, g, isStacked);
+        addComponentsForDataSources(data, componentType, g, sources, isStacked);
         return retVal;
       });
     }
@@ -212,7 +218,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      * @param {graphs.graph} g
      */
     function addInternalData(g) {
-      INTERNAL_DATA_CONFIG.forEach(function(dataConfig) {
+      internalDataConfig.forEach(function(dataConfig) {
         g.data().add(dataConfig);
       });
     }
@@ -312,19 +318,25 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      *
      * @param {String} type A valid pre-configured graph type.
      * @param {Object?} options Options for the pre-configured graph type.
+     * @param {(Array.<string>|string)?} options.sources Definite list of
+     *   sources that have corresponding graph components.
      * @return {graphs.graph}
      */
     graphBuilder.create = function(type, options) {
-      var g, layout, scopeFn;
+      var g, layout, sources, domainSources, scopeFn;
 
       options = options || {};
       layout = options.layout || 'default';
+      sources = array.getArray(options.sources);
+      domainSources = sources.join(',') || '*';
+      internalDataConfig = getInternalDataConfig(domainSources);
 
       g = graph()
         .config({
           forceY: [0],
           layout: layout,
-          yAxisUnit: 'ms'
+          yAxisUnit: 'ms',
+          domainSources: domainSources
         });
 
       g.dispatch.on('update', updateStatsLabel);
@@ -341,12 +353,12 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         case 'line':
         case 'area':
           overrideRemoveDataFn(g);
-          overrideAddDataFn(type, g);
+          overrideAddDataFn(type, g, sources, false);
           break;
         case 'stacked-area':
           addStackedData(g);
           overrideRemoveDataFn(g);
-          overrideAddDataFn('area', g, true);
+          overrideAddDataFn('area', g, sources, true);
           break;
       }
       return g;

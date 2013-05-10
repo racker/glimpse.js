@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Rate of Change Graph</h1>
+    <h3>This example illustrates how to derive the rate of change from a data set</h3>
+    <div id="container"></div>
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        d3.json('data/network.json', function(data) {
+          drawGraph(data);
+        });
+
+        function drawGraph(data) {
+          // Configure which data to show.
+          var dataConfig = [
+            {
+              id: 'latencyDfw',
+              title: 'Time to Connect (DFW)',
+              data: data,
+              dimensions: {
+                x: 'timestamp',
+                y: function(d) { return d.average/1024; }
+              }
+            },
+            {
+              id: 'latencyDfwROC',
+              title: 'Rate of Change (DFW)',
+              sources: 'latencyDfw',
+              derivation: function(sources) {
+                return sources.diffQuotient( { interval: 'second' })
+                              // Filter negative values
+                              .filter('y', [0, Infinity])
+                              .get();
+              }
+            }
+          ];
+
+          // Create and render a line graph.
+          var lineGraph = glimpse.graphBuilder().create('line', { sources: 'latencyDfwROC' })
+            .data(dataConfig)
+            .config('yAxisUnit', 'KB/s')
+            .render('#container');
+
+          // for debugging
+          window.graph = lineGraph;
+          window.gl = glimpse;
+        }
+      });
+    </script>
+  </body>
+</html>

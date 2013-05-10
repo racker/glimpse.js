@@ -28,6 +28,13 @@ function () {
     },
 
     /**
+     * Convenience function to string.
+     */
+    isString: function (item) {
+      return typeof item === 'string';
+    },
+
+    /**
      * Determins if a string starts with a prefix or not.
      *
      * @param {String} str The string to check.

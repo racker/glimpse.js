@@ -47,10 +47,10 @@
           },
           {
             id: 'latencyDfwROC',
-            title: 'Rate of Chagne (DFW)',
+            title: 'Rate of Change (DFW)',
             sources: 'latencyDfw',
             derivation: function(sources) {
-              return sources.diffQuotient().get();
+              return sources.diffQuotient({ interval: 'day' }).get();
             }
           }
         ];
