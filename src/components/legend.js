@@ -92,6 +92,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       enterSelection
         .append('rect')
         .attr({
+          'style': 'cursor:pointer;',
           'class': 'gl-legend-key-indicator',
           'stroke': 'none',
           'x': 0,
@@ -102,6 +103,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       enterSelection
         .append('text')
         .attr({
+          'style': 'cursor:pointer;',
           'class': 'gl-legend-key-label',
           'text-anchor': 'start',
           'stroke': 'none'

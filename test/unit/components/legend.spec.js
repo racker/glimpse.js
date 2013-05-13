@@ -121,7 +121,6 @@ function(legend, dc) {
           selectorInd = '.gl-legend .gl-legend-key .gl-legend-key-indicator';
           indicatorNode = select(selectorInd)[0];
           labelNode = select(selectorLabel)[0];
-
         });
 
         it('checks the datatag and sets it to inactive color for onClick',
@@ -326,6 +325,27 @@ function(legend, dc) {
 
       it('removes all the dom nodes', function() {
         expect(selection.selectAll('*')).toBeEmptySelection();
+      });
+
+    });
+
+    describe('style', function() {
+      var indicator, label;
+
+      beforeEach(function() {
+        testLegend.render('#svg-fixture');
+        indicator = select(
+          '.gl-legend .gl-legend-key .gl-legend-key-indicator');
+        label = select(
+          '.gl-legend .gl-legend-key .gl-legend-key-label');
+      });
+
+      it('uses a cursor pointer on key text', function() {
+        expect(label.attr('style')).toBe('cursor:pointer;');
+      });
+
+      it('uses a cursor pointer on key indicator', function() {
+        expect(indicator.attr('style')).toBe('cursor:pointer;');
       });
 
     });
