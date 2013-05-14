@@ -105,9 +105,15 @@ module.exports = function(grunt) {
                  '--singleRun=true',
         stdout: true
       },
-      testAll: {
+      testFirefox: {
         command: 'karma start test/karma.conf.js ' +
-                 '--browsers="Chrome,Firefox,Safari" ' +
+                 '--browsers="Firefox" ' +
+                 '--singleRun=true',
+        stdout: true
+      },
+      testSafari: {
+        command: 'karma start test/karma.conf.js ' +
+                 '--browsers="Safari" ' +
                  '--singleRun=true',
         stdout: true
       },
@@ -252,7 +258,9 @@ module.exports = function(grunt) {
     type = type ? type : 'patch';
     grunt.task.run('jshint');
     grunt.task.run('assets');
-    grunt.task.run('exec:testAll');
+    grunt.task.run('exec:test');
+    grunt.task.run('exec:testFirefox');
+    grunt.task.run('exec:testSafari');
     grunt.task.run('bumpup:' + type);
     grunt.task.run('updatepkg');
     grunt.task.run('bumpup-core');
