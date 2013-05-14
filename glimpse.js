@@ -8368,7 +8368,7 @@ function (array) {
     get: function(obj, path) {
       var currentObj;
       currentObj = obj;
-      if (!this.isDefAndNotNull(path)) {
+      if (!(this.isDefAndNotNull(path) && this.isDefAndNotNull(obj))) {
         return null;
       }
       array.getArray(path).every(function(p) {
@@ -8738,6 +8738,13 @@ function () {
     },
 
     /**
+     * Convenience function to string.
+     */
+    isString: function (item) {
+      return typeof item === 'string';
+    },
+
+    /**
      * Determins if a string starts with a prefix or not.
      *
      * @param {String} str The string to check.
@@ -8847,23 +8854,6 @@ function() {
         return null;
       }
       return fn.call(component, target);
-    },
-
-    /**
-    * Returns the type of scale
-    * @param  {d3.scale|d3.time.scale} scale
-    * @return {string}
-    */
-    isTimeScale: function(scale) {
-      var scaleFn;
-      if (scale) {
-        scaleFn = scale.toString();
-        //TODO: Find a better way of comparing scale types
-        if (scaleFn === d3.time.scale().toString()) {
-          return true;
-        }
-      }
-      return false;
     }
 
   };
@@ -9074,10 +9064,146 @@ define('data/functions',[
       var dimValue;
       dimValue = obj.get(data, ['dimensions', dim]);
       if (!dimValue) {
-        return null;
+        return accessors.get(dim);
       }
       return accessors.get(dimValue);
     }
+  };
+
+});
+
+define('events/pubsub',[
+  'core/array'
+],
+function(array) {
+  
+
+  /**
+   * A global singleton instance.
+   * @private
+   */
+  var globalInstance;
+
+  function broker() {
+    var callbackCache;
+
+    /**
+     * Cache object to hold all the topics and callback references.
+     * @private
+     */
+    callbackCache = {};
+
+    return {
+
+      /**
+       * Publishes an event for a topic.
+       * Also takes additional arguments to pass along to subscribers.
+       *
+       * @public
+       * @param {String} topic The topic/event name.
+       * @return {events.pubsub}
+       */
+      pub: function(topic) {
+        var args;
+
+        if (!callbackCache[topic]) {
+          return this;
+        }
+        args = array.convertArgs(arguments, 1);
+        callbackCache[topic].forEach(function(callback) {
+          callback.apply(this, args);
+        });
+        return this;
+      },
+
+      /**
+       * Subscribes to an event for a topic.
+       *
+       * @public
+       * @param {String} topic The topic/event name.
+       * @param {Function} callback
+       * @return {events.pubsub}
+       */
+      sub: function(topic, callback) {
+        if (!callbackCache[topic]) {
+          callbackCache[topic] = [];
+        }
+        callbackCache[topic].push(callback);
+        return this;
+      },
+
+      /**
+       * Unsubscribe all, or just particular, callbacks from a topic.
+       *
+       * @public
+       * @param {String} topic
+       * @param {Array|Function} optCallbacks
+       * @return {events.pubsub}
+       */
+      unsub: function(topic, optCallbacks) {
+        var subscribers;
+
+        // No callbacks specified, remove all for that topic.
+        if (!optCallbacks) {
+          delete callbackCache[topic];
+          return this;
+        }
+        subscribers = callbackCache[topic] || [];
+        // No subscribers to remove, return early.
+        if (!subscribers.length) {
+          return this;
+        }
+        // Only remove specified callbacks for topic.
+        array.remove(subscribers, optCallbacks);
+        return this;
+      },
+
+      /**
+       * Unsubscribe everything and reset the cache.
+       *
+       * @public
+       * @return {events.pubsub}
+       */
+      clearAll: function() {
+        callbackCache = {};
+        return this;
+      }
+    };
+  }
+
+  return {
+
+    /**
+     * Creates a new pubsub instance.
+     *
+     * @public
+     * @return {events.pubsub}
+     */
+    create: function() {
+      return broker();
+    },
+
+    /**
+     * Returns the global singleton instance if it exists, otherwise creates it.
+     *
+     * @public
+     * @return {events.pubsub}
+     */
+    getSingleton: function() {
+      if (globalInstance) {
+        return globalInstance;
+      }
+      globalInstance = this.create();
+      return globalInstance;
+    },
+
+    scope: function() {
+      var scope =  arguments[0] ? arguments[0] + ':' : '';
+      return function() {
+        return scope + arguments[0];
+      };
+    }
+
   };
 
 });
@@ -9093,10 +9219,12 @@ define('components/line',[
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
-  'data/functions'
+  'data/functions',
+  'events/pubsub'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns) {
+function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
   
+
 
   return function() {
 
@@ -9104,7 +9232,9 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     var config_ = {},
       defaults_,
       dataCollection_,
-      root_;
+      root_,
+      scope_ = null,
+      globalPubsub = pubsub.getSingleton();
 
     defaults_ = {
       type: 'line',
@@ -9118,7 +9248,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       xScale: null,
       yScale: null,
       opacity: 1,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -9180,7 +9311,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         'xScale',
         'yScale',
         'lineGenerator',
-        'color'
+        'color',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -9245,11 +9377,29 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     };
 
     /**
+     * Handles the sub of data-toggle event.
+     * Checks presence of inactive tag
+     * to show/hide the line component
+     * @param  {string} dataId
+     */
+     line.handleDataToggle_ = function (args) {
+      var id = config_.dataId;
+      if (args === id) {
+        if (dataCollection_.hasTags(id, 'inactive')) {
+          line.hide();
+        } else {
+          line.show();
+        }
+      }
+    };
+
+    /**
      * Renders the line component
      * @param  {d3.selection|Node|string} selection
      * @return {components.line}
      */
     line.render = function(selection) {
+      var scope;
       if (!root_) {
         root_ = d3util.applyTarget(line, selection, function(target) {
           var root = target.append('g')
@@ -9264,6 +9414,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
           return root;
         });
       }
+      scope = line.scope();
+      globalPubsub.sub(scope('data-toggle'), line.handleDataToggle_);
       line.update();
       line.dispatch.render.call(this);
       return line;
@@ -9277,14 +9429,27 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       return root_;
     };
 
+    /** Defines the rootId for line */
+    //TODO create a mixin for scope
+    line.scope = function() {
+      if (!scope_) {
+        scope_ = pubsub.scope(config_.rootId);
+      }
+      return scope_;
+    };
+
     /**
      * Destroys the line and removes everything from the DOM.
      * @public
      */
     line.destroy = function() {
+      var scope;
+
       if (root_) {
         root_.remove();
       }
+      scope = line.scope();
+      globalPubsub.unsub(scope('data-toggle'), line.handleDataToggle_);
       root_ = null;
       config_ = null;
       defaults_ = null;
@@ -9305,10 +9470,12 @@ define('components/legend',[
   'core/object',
   'core/config',
   'core/string',
+  'core/array',
   'd3-ext/util',
-  'mixins/mixins'
+  'mixins/mixins',
+  'events/pubsub'
 ],
-function(obj, config, string, d3util, mixins) {
+function(obj, config, string, array, d3util, mixins, pubsub) {
   
 
   return function() {
@@ -9320,7 +9487,11 @@ function(obj, config, string, d3util, mixins) {
       root_,
       enter_,
       update_,
-      remove_;
+      remove_,
+      dataCollection_,
+      onClickHandler,
+      globalPubsub;
+
 
     config_ = {};
 
@@ -9337,9 +9508,33 @@ function(obj, config, string, d3util, mixins) {
       fontWeight: 'bold',
       fontSize: 13,
       layout: 'horizontal',
+      inactiveColor: 'grey',
       gap: 20,
       keys: [],
-      hiddenStates: ['loading']
+      hiddenStates: ['loading'],
+      rootId: null,
+      hideOnClick: true
+    };
+
+    globalPubsub = pubsub.getSingleton();
+
+    /**
+     * Handles the click event on legend.
+     */
+    onClickHandler = function(d) {
+      var sel = d3.select(this),
+      inactive = config_.inactiveColor,
+      fontColor = config_.fontColor;
+
+      if (dataCollection_.hasTags(d.dataId, 'inactive')) {
+        sel.select('text').attr('fill', fontColor);
+        sel.select('rect').attr('fill', d.color);
+      } else {
+        sel.select('text').attr('fill', inactive);
+        sel.select('rect').attr('fill', inactive);
+      }
+      // toggles data's tag on the data collection
+      dataCollection_.toggleTags(d.dataId, 'inactive', config_.rootId);
     };
 
     /**
@@ -9353,7 +9548,8 @@ function(obj, config, string, d3util, mixins) {
         .enter()
           .append('g')
           .attr({
-            'class': 'gl-legend-key'
+            'class': 'gl-legend-key',
+            'gl-dataId': function(d) { return d.dataId; }
           });
 
       // Add new key indicator.
@@ -9374,6 +9570,7 @@ function(obj, config, string, d3util, mixins) {
           'text-anchor': 'start',
           'stroke': 'none'
         });
+
     };
 
     /**
@@ -9381,10 +9578,20 @@ function(obj, config, string, d3util, mixins) {
      * @param {d3.selection} selection
      */
     update_ = function(selection) {
+      var inactive, color;
+
+      // Handle click event- toggle data inactive
+      if(config_.hideOnClick) {
+        selection
+          .on('click', onClickHandler);
+      } else {
+        selection
+          .on('click', null);
+      }
+
       // The outer <g> element for each key.
       selection
         .attr({
-          'class': 'gl-legend-key',
           'font-family': config_.fontFamily,
           'font-size': config_.fontSize,
           'font-weight': config_.fontWeight
@@ -9395,8 +9602,13 @@ function(obj, config, string, d3util, mixins) {
         .attr({
           'width': config_.indicatorWidth,
           'height': config_.indicatorHeight,
+          'style': function() {
+            return config_.hideOnClick ? 'cursor:pointer;' : null;
+          },
           'fill': function(d) {
-            return d3.functor(d.color)();
+            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
+            color = inactive ? config_.inactiveColor : d3.functor(d.color)();
+            return color;
           }
         });
 
@@ -9406,7 +9618,14 @@ function(obj, config, string, d3util, mixins) {
         .attr({
           'x': config_.indicatorWidth + config_.indicatorSpacing,
           'y': config_.indicatorHeight,
-          'fill': config_.fontColor
+          'style': function() {
+            return config_.hideOnClick ? 'cursor:pointer;' : null;
+          },
+          'fill': function(d) {
+            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
+            color = inactive ? config_.inactiveColor : config_.fontColor;
+            return color;
+          }
         });
     };
 
@@ -9440,7 +9659,8 @@ function(obj, config, string, d3util, mixins) {
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight'
+        'indicatorHeight',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -9451,12 +9671,29 @@ function(obj, config, string, d3util, mixins) {
      */
     legend.dispatch = mixins.dispatch();
 
+
+    /**
+     * Gets/Sets the data to be used with the legend.
+     * @param {Object} data Any data source.
+     * @return {Object|dataCollection}
+     */
+    legend.data = function(data) {
+      if (data) {
+        dataCollection_ = data;
+        return legend;
+      }
+      if (!dataCollection_) {
+        return null;
+      }
+      return dataCollection_;
+    };
+
     /**
      * Apply post-render updates.
      * Insert/update/remove DOM for each key.
      */
     legend.update = function() {
-      var selection;
+      var selection, dataConfig;
 
       // Return early if no data or render() hasn't been called yet.
       if (!config_.keys || !root_) {
@@ -9465,11 +9702,18 @@ function(obj, config, string, d3util, mixins) {
       if (config_.cid) {
         root_.attr('gl-cid', config_.cid);
       }
+
+      dataConfig = legend.data();
+      // Return early if there's no data.
+      if (!dataConfig) {
+        return legend;
+      }
+
       // The selection of legend keys.
       selection = root_
         .selectAll('.gl-legend-key')
         .data(config_.keys, function(d) {
-          return d3.functor(d.color)();
+          return d.dataId;
         });
       remove_(selection);
       enter_(selection);
@@ -9563,7 +9807,8 @@ function(obj, config, string, mixins, d3util) {
       textBgSize: 3,
       tickSize: 0,
       ticks: 3,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -9571,12 +9816,10 @@ function(obj, config, string, mixins, d3util) {
      * @private
      */
     function setZeroTickTranslate(selection) {
-      var transform, translate, x, y;
-      transform = selection.attr('transform');
-      translate = transform.split(',');
-      x = translate[0].split('(')[1];
-      y = translate[1].split(')')[0];
-      selection.attr('transform', 'translate(' + [x, y-10] + ')');
+      var transform;
+      transform = d3.transform(selection.attr('transform'));
+      transform.translate[1] -= 10;
+      selection.attr('transform', transform.toString());
     }
 
     /**
@@ -9673,7 +9916,7 @@ function(obj, config, string, mixins, d3util) {
       axis,
       config.mixin(
         config_,
-        'cid'),
+        'cid', 'rootId'),
       mixins.lifecycle,
       mixins.toggle);
 
@@ -9813,7 +10056,8 @@ function(obj, config, string, array, d3util, mixins) {
       fontFamily: 'Arial, sans-serif',
       fontWeight: 'normal',
       fontSize: 13,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     // PUBLIC
@@ -9838,7 +10082,8 @@ function(obj, config, string, array, d3util, mixins) {
         'color',
         'fontFamily',
         'fontSize',
-        'fontWeight'
+        'fontWeight',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -10002,7 +10247,8 @@ function(obj, config, string, label, mixins, d3util) {
       opacity: 1,
       backgroundColor: '#fff',
       type: 'overlay',
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -10049,7 +10295,8 @@ function(obj, config, string, label, mixins, d3util) {
         'cssClass',
         'opacity',
         'backgroundColor',
-        'layoutConfig'
+        'layoutConfig',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -10165,7 +10412,8 @@ function(obj, config, string, mixins, d3util) {
       assetId: null,
       target: null,
       cssClass: null,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     function asset() {
@@ -10181,7 +10429,8 @@ function(obj, config, string, mixins, d3util) {
         'cid',
         'assetId',
         'target',
-        'cssClass'
+        'cssClass',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -10308,7 +10557,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
       inLegend: true,
       areaGenerator: d3.svg.area(),
       opacity: 1,
-      hiddenStates: null
+      hiddenStates: null,
+      rootId: null
     };
 
     /**
@@ -10384,7 +10634,8 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator'
+        'areaGenerator',
+        'rootId'
       ),
       mixins.lifecycle,
       mixins.toggle);
@@ -10444,7 +10695,7 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
             });
           root.append('path')
             .attr({
-              'class': string.classes('path'),
+              'class': string.classes('path')
             });
           return root;
         });
@@ -10480,256 +10731,6 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
   };
 });
 
-define('core/format',[],
-function() {
-  
-
-  function getSuffix(optSuffix) {
-    return optSuffix ? ' ' + optSuffix : '';
-  }
-
-  return {
-
-    /**
-     * Default formatter for a date/time domain using UTC time.
-     * Text is in the format:
-     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM
-     * @public
-     * @param {Array} domain Contains min and max of the domain.
-     * @param {String} optSuffix
-     * @return {String}
-     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
-     */
-    timeDomainUTC: function(domain, optSuffix) {
-      var formatter, dateStart, dateEnd;
-      formatter = d3.time.format.utc('%b %-e, %I:%M %p');
-      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
-      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
-      return formatter(dateStart) + ' - ' +
-          formatter(dateEnd) + getSuffix(optSuffix);
-    },
-
-    /**
-     * Formatter for a date/time domain using local time.
-     * Text is in the format:
-     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM -0700
-     * @public
-     * @param {Array} domain Contains min and max of the domain.
-     * @param {String} optSuffix
-     * @return {String}
-     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
-     */
-    timeDomain: function(domain, optSuffix) {
-      var formatter, dateStart, dateEnd;
-      formatter = d3.time.format('%b %-e, %I:%M %p');
-      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
-      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
-      return formatter(dateStart) + ' - ' +
-          formatter(dateEnd) + getSuffix(optSuffix);
-    },
-
-    /**
-     * Standard formatter for non-time domains.
-     * Text is in the format:
-     *   start - end unit
-     *
-     * @param {Array} domain
-     * @param {String} optSuffix
-     * @return {String}
-     */
-    standardDomain: function(domain, optSuffix) {
-      return domain[0] + ' - ' + domain[1] + getSuffix(optSuffix);
-    }
-
-  };
-
-});
-
-/**
- * @fileOverview
- * Component to display the start/end values of a domain.
- */
-define('components/domain-label',[
-  'core/object',
-  'core/config',
-  'core/string',
-  'core/format',
-  'd3-ext/util',
-  'mixins/mixins',
-  'components/label'
-],
-function(obj, configMixin, string, format, d3util, mixins, label) {
-  
-
-  return function() {
-
-    // PRIVATE
-
-    var defaults,
-      config,
-      root,
-      dataCollection,
-      innerLabel;
-
-    config = {};
-
-    defaults = {
-      type: 'domainLabel',
-      cid: null,
-      target: null,
-      cssClass: null,
-      suffix: null,
-      dataId: '$domain',
-      layout: 'horizontal',
-      position: 'center-right',
-      formatter: format.timeDomainUTC,
-      dimension: 'x',
-      hiddenStates: ['loading']
-    };
-
-    // PUBLIC
-
-    /**
-     * The main function.
-     * @return {components.domainLabel}
-     */
-    function domainLabel() {
-      obj.extend(config, defaults);
-      innerLabel = label();
-      domainLabel.rebind(
-        innerLabel,
-        'color',
-        'fontFamily',
-        'fontWeight',
-        'fontSize');
-      return domainLabel;
-    }
-
-    // Apply Mixins
-    obj.extend(
-      domainLabel,
-      configMixin.mixin(
-        config,
-        'cid',
-        'target',
-        'cssClass'
-      ),
-      mixins.lifecycle,
-      mixins.toggle);
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    domainLabel.dispatch = mixins.dispatch();
-
-    /**
-     * Gets/Sets the data source to be used with the domainLabel.
-     * @param {Object} data Any data source.
-     * @return {Object|components.domainLabel}
-     */
-    domainLabel.data = function(data) {
-      // Set data if provided.
-      if (data) {
-        dataCollection = data;
-        return domainLabel;
-      }
-      // Otherwise return the entire raw data.
-      return dataCollection;
-    };
-
-    /**
-     * Does the initial render to the document.
-     * @param {d3.selection|Node|string} A d3.selection, DOM node,
-     *    or a selector string.
-     * @return {components.domainLabel}
-     */
-    domainLabel.render = function(selection) {
-      if (!root) {
-        root = d3util.applyTarget(domainLabel, selection, function(target) {
-          var root = target.append('g')
-            .attr({
-              'class': string.classes('component', 'domain-label')
-            });
-          return root;
-        });
-        if (root) {
-          innerLabel.render(root);
-        }
-      }
-      domainLabel.update();
-      domainLabel.dispatch.render.call(this);
-      return domainLabel;
-    };
-
-    /**
-     * Triggers a document update based on new data/config.
-     * @return {components.domainLabel}
-     */
-    domainLabel.update = function() {
-      // Return early if no data or render() hasn't been called yet.
-      if (!root) {
-        return domainLabel;
-      }
-      if (config.cssClass) {
-        root.classed(config.cssClass, true);
-      }
-      if (config.cid) {
-        root.attr('gl-cid', config.cid);
-      }
-      innerLabel
-        .config('dataId', config.dataId);
-
-      if (dataCollection) {
-        innerLabel.data(dataCollection)
-          .text(function() {
-            return config.formatter(this.data()[config.dimension],
-              config.suffix);
-          });
-      }
-      innerLabel.update();
-      root.position(config.position);
-      domainLabel.dispatch.update.call(this);
-      return domainLabel;
-    };
-
-    /**
-     * Returns the formatted text.
-     * @public
-     * @return {String}
-     */
-    domainLabel.text = function() {
-      return innerLabel.text();
-    };
-
-    /**
-     * Returns the root
-     * @return {d3.selection}
-     */
-    domainLabel.root = function () {
-      return root;
-    };
-
-    /**
-     * Destroys the domainLabel and removes everything from the DOM.
-     * @public
-     */
-    domainLabel.destroy = function() {
-      if (root) {
-        root.remove();
-      }
-      root = null;
-      config = null;
-      defaults = null;
-      innerLabel.destroy();
-      domainLabel.dispatch.destroy.call(this);
-    };
-
-    return domainLabel();
-  };
-
-});
-
 define('components/component',[
   'components/line',
   'components/legend',
@@ -10737,10 +10738,9 @@ define('components/component',[
   'components/label',
   'components/overlay',
   'components/asset',
-  'components/area',
-  'components/domain-label'
+  'components/area'
 ],
-function(line, legend, axis, label, overlay, asset, area, domainLabel) {
+function(line, legend, axis, label, overlay, asset, area) {
   
 
   return {
@@ -10750,8 +10750,7 @@ function(line, legend, axis, label, overlay, asset, area, domainLabel) {
     label: label,
     overlay: overlay,
     asset: asset,
-    area: area,
-    domainLabel: domainLabel
+    area: area
   };
 
 });
@@ -11166,6 +11165,7 @@ define('layout/layouts',[],function () {
           name: 'gl-main',
           clip: true,
           border: 1,
+          paddingTop: 4,
           borderColor: '#999',
           backgroundColor: '#fff'
         },
@@ -11470,6 +11470,106 @@ function (layouts, array) {
 
 /**
  * @fileOverview
+ * Very simple implementation for an unordered set.
+ * Works with primitive types such as strings and numbers.
+ */
+define('core/set',[
+  'core/object',
+  'core/array'
+],
+function (obj, array) {
+  
+
+  function set() {
+    var store = {};
+
+    return {
+
+      /**
+       * Adds element(s) to the set.
+       */
+      add: function(elements) {
+        elements = array.getArray(elements);
+        elements.forEach(function(element) {
+          store[element] = true;
+        });
+      },
+
+      /**
+       * Removes element(s) to the set.
+       */
+      remove: function(elements) {
+        elements = array.getArray(elements);
+        elements.forEach(function(element) {
+          delete store[element];
+        });
+      },
+
+      /**
+       * Serializes the set to an array.
+       * Note: order is not preserved.
+       */
+      toArray: function() {
+        return Object.keys(store);
+      },
+
+      /**
+       * Returns true if set is empty.
+       */
+      isEmpty: function() {
+        return Object.keys(store).length === 0;
+      },
+
+      /**
+       * Returns true if set contains all the elements specified.
+       *         false otherwise.
+       */
+      contains: function(elements) {
+        elements = array.getArray(elements);
+        return elements.every(function(element) {
+          return obj.isDef(store[element]);
+        });
+      },
+
+      /**
+       * Toggles the presence of the element(s).
+       * If element is present, it is removed.
+       * If element is absent, it is added.
+       */
+      toggle: function(elements) {
+        elements = array.getArray(elements);
+        elements.forEach(function(element) {
+          if (this.contains(element)) {
+            this.remove(element);
+          } else {
+            this.add(element);
+          }
+        }, this);
+      }
+
+    };
+  }
+
+  return {
+
+    /**
+     * Creates a new set.
+     * Takes in optional elements to initialize the set.
+     */
+    create: function (elements) {
+      var newSet = set();
+      if (obj.isDef(array)) {
+        newSet.add(elements);
+      }
+      return newSet;
+    }
+
+  };
+
+});
+
+/**
+ * @fileOverview
  * Data Dimension.
  */
 define('data/dimension/dimension',[
@@ -11677,6 +11777,25 @@ define('data/selection/selection',[
     });
   };
 
+  /**
+   * Filters the datasources by tags.
+   * returns datasources which do not contain tags.
+   * @param  {array|string} tags
+   */
+  Selection.prototype.filterByTags = function (tags) {
+    return new Selection(this.dataSources_.filter(
+      function(dataSource) {
+        return array.getArray(tags).every(function(tag) {
+          return !array.contains(dataSource.tags, tag);
+        });
+      })
+    );
+  };
+
+  Selection.prototype.length = function() {
+    return this.dataSources_.length;
+  };
+
   Selection.prototype.map = function(fn) {
     return new Selection(this.dataSources_.map(fn));
   };
@@ -11719,9 +11838,10 @@ define('data/selection/selection',[
  */
 define('data/selection/diff-quotient',[
   'core/object',
+  'core/string',
   'data/functions',
   'data/selection/selection'
-], function (obj, dataFns, selection) {
+], function (obj, string, dataFns, selection) {
   
 
   var selectionPrototype = selection.getSelectionPrototype(),
@@ -11733,17 +11853,27 @@ define('data/selection/diff-quotient',[
    * TODO: Move after creation of a constants file.
    */
   TIME_INTERVAL = {
+    SECOND: 1000,
+    MINUTE: 1000 * 60,
+    HOUR: 1000 * 60 * 60,
     DAY: 1000 * 60 * 60 * 24
   };
 
   /**
    * Calculates the difference quotient on the data
-   * TODO: Should accept axis on which to work on.
-   *       Time interval to calculate rate by.
+   * TODO: Should accept dimension on which to work on.
+   * @param {Object?} options
+   * @param {(string|number)?} options.interval Optional interval specified as
+   *   number or string such as second, minute, hour or day.
    */
-  selectionPrototype.diffQuotient = function () {
-    var data, mutatedData,
+  selectionPrototype.diffQuotient = function (options) {
+    var data, mutatedData, interval,
         prevX, prevY, curX, curY, slope;
+    options = options || {};
+    interval = options.interval || 1;
+    if (string.isString(interval)) {
+      interval = TIME_INTERVAL[options.interval.toUpperCase()];
+    }
     return this.map(function(source) {
       var r = {};
       data = source.data;
@@ -11755,7 +11885,7 @@ define('data/selection/diff-quotient',[
           slope = (curY - prevY) / (curX - prevX);
           mutatedData.push({
             x: curX,
-            y: slope * TIME_INTERVAL.DAY
+            y: slope * interval
           });
         }
         prevX = curX;
@@ -11763,12 +11893,60 @@ define('data/selection/diff-quotient',[
       });
       obj.extend(r, source);
       r.data = mutatedData;
-      r.dimensions = {
-        x: function(d) { return d.x; },
-        y: function(d) { return d.y; }
-      };
+      r.dimensions = {  x: 'x', y: 'y' };
       return r;
     });
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Stack data sources.
+ */
+define('data/selection/stack',[
+  'core/object',
+  'data/selection/selection',
+  'data/functions'
+], function (obj, selection, dataFns) {
+  
+
+  var selectionPrototype = selection.getSelectionPrototype();
+
+  /**
+   * Applies a stacking function to the selected data sources.
+   * Assumes presence of 'y' dimension, and adds a new 'y0' dimension.
+   */
+  selectionPrototype.stack = function() {
+    var mutatedData, stack, layers;
+
+    stack = d3.layout.stack()
+      .values(function(d) {
+        return d.data;
+      });
+
+    layers = this.map(function(source) {
+      var newSource = {};
+      // Make copy of each data source.
+      obj.extend(newSource, source);
+      // Data points to get by accessor methods to change later.
+      mutatedData = [];
+      newSource.data.forEach(function(d, i) {
+        var dataPointCopy = {};
+        Object.keys(source.dimensions).forEach(function(dimKey) {
+          dataPointCopy[dimKey] = dataFns.dimension(source, dimKey)(d, i);
+        });
+        mutatedData.push(dataPointCopy);
+      });
+      newSource.id += '-stack';
+      newSource.dimensions.y0 = 'y0';
+      newSource.data = mutatedData;
+      return newSource;
+    });
+
+    // Apply d3 stacking function to new copy of the data.
+    stack(layers.all());
+    return layers;
   };
 
 });
@@ -11780,11 +11958,18 @@ define('data/selection/diff-quotient',[
 define('data/collection',[
   'core/object',
   'core/array',
+  'core/set',
   'data/selection/selection',
-  'data/selection/diff-quotient'
-], function (obj, array, selection) {
+  'events/pubsub',
+  'data/selection/diff-quotient',
+  'data/selection/stack'
+], function (obj, array, set, selection, pubsub) {
   
 
+  /**
+   * Computes the derivation by calling the
+   * derivation function with the sources it needs.
+   */
   function applyDerivation(dc, data) {
     var dataSelections, derivedData;
     dataSelections = array.getArray(data.sources).map(function(d) {
@@ -11798,6 +11983,14 @@ define('data/collection',[
     return derivedData;
   }
 
+  function getScopeFn(scope) {
+    return pubsub.scope(scope);
+  }
+
+  /**
+   * A data config is determined to derived config if
+   * it contains a sources or derivation field.
+   */
   function isDerivedDataConfig(data) {
     if (data) {
       return  obj.isDef(data.sources) ||
@@ -11806,8 +11999,24 @@ define('data/collection',[
     return false;
   }
 
-  function isWildCard(id) {
-    return id === '*' || id === '+';
+  /**
+   * Adds a data source.
+   * Tags non-derived sources with * and +.
+   * Tags derived sources with +.
+   */
+  function addDataSource(dataCollection, data) {
+    var id = data.id;
+    if (isDerivedDataConfig(data)) {
+      if (!obj.isDef(data.tags)) {
+        data.tags = '+';
+      }
+      dataCollection[id] = { glDerive: data };
+    } else {
+      if (!obj.isDef(data.tags)) {
+        data.tags = ['*', '+'];
+      }
+      dataCollection[id] = data;
+    }
   }
 
   /**
@@ -11835,8 +12044,7 @@ define('data/collection',[
     visited.push(id);
     sources = [];
     array.getArray(d.glDerive.sources).forEach(function(s) {
-      sources = sources.concat(
-        s.split(',').filter(function(id) { return !isWildCard(id); }));
+      sources = sources.concat(s.split(','));
     });
     sources.forEach(function(id) {
       deriveDataById(id.trim(), data, deps, dataCollection, visited);
@@ -11846,7 +12054,8 @@ define('data/collection',[
   }
 
   function collection() {
-    var dataCollection = {};
+    var dataCollection = {},
+        globalPubsub = pubsub.getSingleton();
 
     return {
 
@@ -11869,11 +12078,7 @@ define('data/collection',[
           this.dispatch.error();
           return;
         }
-        if (isDerivedDataConfig(data)) {
-          dataCollection[data.id] = { glDerive: data };
-        } else {
-          dataCollection[data.id] = data;
-        }
+        addDataSource(dataCollection, data);
       },
 
       /**
@@ -11884,11 +12089,7 @@ define('data/collection',[
         if (!dataCollection[data.id]) {
           this.add(data);
         }
-        if (isDerivedDataConfig(data)) {
-          dataCollection[data.id] = { glDerive: data };
-        } else {
-          dataCollection[data.id] = data;
-        }
+        addDataSource(dataCollection, data);
       },
 
       isDerived: function(id) {
@@ -11945,19 +12146,98 @@ define('data/collection',[
       },
 
       /**
+       * Returns the tag(s) of the datasource speciifed by its id.
+       */
+      getTags: function(id) {
+        var tags;
+        if (this.isDerived(id)) {
+          tags = obj.get(dataCollection, [id, 'glDerive', 'tags']);
+        } else {
+          tags = obj.get(dataCollection, [id, 'tags']);
+        }
+        return array.getArray(tags);
+      },
+
+      /**
+       * Sets the tag(s) of the datasource speciifed by its id.
+       */
+      setTags: function(id, tags) {
+        tags = set.create(tags).toArray();
+        if (this.isDerived(id)) {
+          dataCollection[id].glDerive.tags = tags;
+        }
+        dataCollection[id].tags = tags;
+      },
+
+
+      /**
+       * Adds tag(s) to a datasource by id.
+       * If tag is already present, no operation is performed.
+       */
+      addTags: function(id, tags) {
+        var tagSet = set.create(this.getTags(id));
+        tagSet.add(tags);
+        this.setTags(id, tagSet.toArray());
+      },
+
+      /**
+       * Removes tag(s) from a datasource by id.
+       * If tag isn't present, no operation is performed.
+       */
+      removeTags: function(id, tags) {
+        var tagSet = set.create(this.getTags(id));
+        tagSet.remove(tags);
+        this.setTags(id, tagSet.toArray());
+      },
+
+     /**
+       * Checks if tag(s) belong to a datasource by id.
+       */
+      hasTags: function(id, tags) {
+        return array.getArray(tags).every(function(tag) {
+          return array.contains(this.getTags(id), tag);
+        }, this);
+      },
+
+      /**
+       * Togggles the presence the of the given tags with the
+       * datasource with the associated id.
+       * In other words,
+       * Adds a tag if it isn't present.
+       * Removes a tag if it is present.
+       * @param  {@Object} scope/rootid
+       */
+       //todo: functional approach for scoping
+       //XXX: optimize update derivations
+      toggleTags: function(id, tags, scope) {
+        var tagSet, scopeFn;
+        tagSet = set.create(this.getTags(id));
+        scopeFn = getScopeFn(scope);
+        tags = array.getArray(tags);
+        tagSet.toggle(tags);
+        this.setTags(id, tagSet.toArray());
+        this.updateDerivations();
+        globalPubsub.pub(scopeFn('data-toggle'), id);
+      },
+
+      /**
        * Get data source by id.
        */
       get: function(id) {
-        if (id) {
-          if (dataCollection[id]) {
-            return dataCollection[id].glDerivation || dataCollection[id];
+        if (obj.get(dataCollection, id)) {
+          if (this.isDerived(id)) {
+            return dataCollection[id].glDerivation ||
+                   'gl-error-not-computed';
           }
-          return  null;
+          return dataCollection[id];
         }
-        return Object.keys(dataCollection).map(function(k) {
-          var data = dataCollection[k];
-          return data.glDerivation || data;
-        });
+        if (arguments.length === 0) {
+          return Object.keys(dataCollection).map(function(k) {
+            var data = dataCollection[k];
+            return data.glDerivation || data;
+          });
+        }
+        return null;
       },
 
       /**
@@ -11972,17 +12252,15 @@ define('data/collection',[
           ids = ids.concat(s.split(','));
         });
         ids.forEach(function(id) {
-          if(isWildCard(id)) {
+          id = id.trim();
+          if(dataCollection[id]) {
+            dataList.push(this.get(id));
+          } else {
             Object.keys(dataCollection).forEach(function(k) {
-              if(!this.isDerived(k) || sources === '+') {
+              if(this.hasTags(k, id)) {
                 dataList.push(this.get(k));
               }
             }, this);
-          } else {
-              id = id.trim();
-              if(dataCollection[id]) {
-                dataList.push(this.get(id));
-              }
           }
         }, this);
         dataSelection.add(dataList);
@@ -11993,13 +12271,20 @@ define('data/collection',[
        * Checks whether dataCollection is empty
        * @return {Boolean}
        */
-      isEmpty: function() {
+      isEmpty: function(optSel) {
+        if (optSel) {
+          return this.select(optSel).length() === 0;
+        }
         return Object.keys(dataCollection).length === 0;
       }
     };
   }
 
   return {
+
+    /**
+     * Creates a new collection.
+     */
     create: function() {
       return collection();
     }
@@ -12035,13 +12320,12 @@ define('data/domain',[
      */
     'interval': function(sel, dim, config) {
       var extent = computeFn.extent(sel, dim) || [0, 1],
-          isTimeScale = obj.get(config, 'isTimeScale'),
           unitStr = obj.get(config, 'unit'),
           unit = obj.get(d3.time, unitStr),
           period = obj.get(config, 'period'),
           offset;
 
-      if (isTimeScale && unit) {
+      if (unit) {
         offset = +unit.offset(
           extent[1],
           -(period || 1)
@@ -12161,6 +12445,7 @@ define('graphs/graph',[
   'core/array',
   'core/asset-loader',
   'core/component-manager',
+  'core/string',
   'components/component',
   'layout/layoutmanager',
   'd3-ext/util',
@@ -12169,7 +12454,7 @@ define('graphs/graph',[
   'data/collection',
   'data/domain'
 ],
-function(obj, config, array, assetLoader, componentManager, components,
+function(obj, config, array, assetLoader, componentManager, string, components,
   layoutManager, d3util, mixins, dataFns, collection, domain) {
   
 
@@ -12231,7 +12516,10 @@ function(obj, config, array, assetLoader, componentManager, components,
       xAxisUnit: null,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
-      domainIntervalUnit: null
+      domainIntervalUnit: null,
+      id: string.random(),
+      domainSources: null,
+      domainConfig: null
     };
 
     /**
@@ -12332,32 +12620,15 @@ function(obj, config, array, assetLoader, componentManager, components,
         root_,
         config_.viewBoxWidth,
         config_.viewBoxHeight);
+      root_.select('g').attr('gl-id', config_.id);
     }
 
-    /**
-     * Updates the domain on the scales
-     * @private
-     */
-    function updateScales() {
-      var graphDomain,
-        dataIds = [];
-
-      componentManager_.get().forEach(function(component) {
-        var componentData;
-        if (component.data) {
-          componentData = component.data();
-          if (componentData && componentData.data && componentData.dimensions) {
-            dataIds.push(component.config('dataId'));
-          }
-        }
-      });
-
-      domain.addDomainDerivation({
+    function getDomainConfig(sources) {
+      return {
         x: {
-          sources: dataIds.join(','),
+          sources: sources,
           compute: 'interval',
           args: {
-            isTimeScale: d3util.isTimeScale(config_.xScale),
             unit: config_.domainIntervalUnit,
             period: config_.domainIntervalPeriod
           },
@@ -12367,7 +12638,7 @@ function(obj, config, array, assetLoader, componentManager, components,
           'default': [0, 0]
         },
         y: {
-          sources: dataIds.join(','),
+          sources: sources,
           compute: 'extent',
           modifier: {
             force: config_.forceY,
@@ -12375,11 +12646,28 @@ function(obj, config, array, assetLoader, componentManager, components,
           },
           'default': [0, 0]
         }
-      }, dataCollection_);
+      };
+    }
+
+    /**
+     * Updates the domain on the scales
+     * @private
+     */
+    function updateScales() {
+      var graphDomain,
+          domainSources,
+          domainConfig;
+
+      domainSources = config_.domainSources || '*';
+      domainConfig = getDomainConfig(domainSources);
+      if (config_.domainConfig) {
+        domainConfig = obj.extend(domainConfig, config_.domainConfig);
+      }
+      domain.addDomainDerivation(domainConfig, dataCollection_);
 
       dataCollection_.updateDerivations();
       graphDomain = dataCollection_.get('$domain');
-      if (dataIds.length > 0) {
+      if (dataCollection_.select(domainSources).length() > 0) {
         config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
           .domain(graphDomain.x);
 
@@ -12565,8 +12853,10 @@ function(obj, config, array, assetLoader, componentManager, components,
           'gl-loading-overlay',
           'gl-error-overlay']);
       componentManager_.get().forEach(function(c) {
-        var hiddenStates = c.config('hiddenStates');
-        if (array.contains(hiddenStates, config_.state)) {
+        var hiddenStates = c.config('hiddenStates'),
+            dataId = c.config('dataId');
+        if (array.contains(hiddenStates, config_.state) ||
+              (dataId && dataCollection_.hasTags(dataId, 'inactive'))) {
           c.hide();
         } else {
           c.show();
@@ -12752,6 +13042,8 @@ function(obj, config, array, assetLoader, componentManager, components,
       var selection = d3util.select(selector);
       assetLoader.loadAll();
       renderPanel(selection);
+      componentManager_.registerSharedObject('rootId', config_.id, true);
+      componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.
@@ -12801,6 +13093,71 @@ function(obj, config, array, assetLoader, componentManager, components,
 
 });
 
+define('core/format',[],
+function() {
+  
+
+  function getSuffix(optSuffix) {
+    return optSuffix ? ' ' + optSuffix : '';
+  }
+
+  return {
+
+    /**
+     * Default formatter for a date/time domain using UTC time.
+     * Text is in the format:
+     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM
+     * @public
+     * @param {Array} domain Contains min and max of the domain.
+     * @param {String} optSuffix
+     * @return {String}
+     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
+     */
+    timeDomainUTC: function(domain, optSuffix) {
+      var formatter, dateStart, dateEnd;
+      formatter = d3.time.format.utc('%b %-e, %I:%M %p');
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
+    },
+
+    /**
+     * Formatter for a date/time domain using local time.
+     * Text is in the format:
+     *    ShortMonth Day, HH:MM AM/PM - ShortMonth Day, HH:MM AM/PM -0700
+     * @public
+     * @param {Array} domain Contains min and max of the domain.
+     * @param {String} optSuffix
+     * @return {String}
+     * @see https://github.com/mbostock/d3/wiki/Time-Formatting#wiki-format
+     */
+    timeDomain: function(domain, optSuffix) {
+      var formatter, dateStart, dateEnd;
+      formatter = d3.time.format('%b %-e, %I:%M %p');
+      dateStart = domain[0] instanceof Date ? domain[0] : new Date(domain[0]);
+      dateEnd = domain[1] instanceof Date ? domain[1] : new Date(domain[1]);
+      return formatter(dateStart) + ' - ' +
+          formatter(dateEnd) + getSuffix(optSuffix);
+    },
+
+    /**
+     * Standard formatter for non-time domains.
+     * Text is in the format:
+     *   start - end unit
+     *
+     * @param {Array} domain
+     * @param {String} optSuffix
+     * @return {String}
+     */
+    standardDomain: function(domain, optSuffix) {
+      return domain[0] + ' - ' + domain[1] + getSuffix(optSuffix);
+    }
+
+  };
+
+});
+
 /**
  * @fileOverview
  * An object that constructs/configures graphs by encapsulating complexity
@@ -12812,56 +13169,64 @@ define('graphs/graph-builder',[
   'core/object',
   'core/array',
   'core/string',
+  'core/format',
   'd3-ext/util',
-  'graphs/graph'
+  'graphs/graph',
+  'events/pubsub'
 ],
-function(obj, array, string, d3util, graph) {
+function(obj, array, string, format, d3util, graph, pubsub) {
   
 
     var defaults,
       config,
-      INTERNAL_DATA_CONFIG,
+      globalPubsub,
+      internalDataConfig,
       INTERNAL_COMPONENTS_CONFIG,
       GRAPH_TYPES;
 
     defaults = {
-      layout: 'default',
+      layout: 'default'
     };
 
     config = {};
 
+    globalPubsub = pubsub.getSingleton();
+
     /**
      * The supported types of pre-configured graphs.
      */
-    GRAPH_TYPES = ['line', 'area'];
+    GRAPH_TYPES = ['line', 'area', 'stacked-area'];
 
     /**
      * Dataset configurations automatically applied to graphs.
      */
-    INTERNAL_DATA_CONFIG = [{
-      id: 'gl-stats',
-      sources: ['*', '$domain'],
-      derivation: function(sources, domain) {
-        var xDomain, points, pointValues, result;
+    function getInternalDataConfig(domainSources) {
+      return [{
+        id: 'gl-stats',
+        sources: [domainSources, '$domain'],
+        derivation: function(sources, domain) {
+          var xDomain, points, pointValues, result;
 
-        result = {
-          min: 0,
-          max: 0,
-          avg: 0
-        };
-        if (sources.all().length) {
-          xDomain = domain.get().x;
-          points = sources.filter('x', xDomain).dim('y').concat();
-          pointValues = points.get();
-          if (pointValues && pointValues.length) {
-            result.min = points.min().round().get();
-            result.max = points.max().round().get();
-            result.avg = points.avg().round().get();
+          result = {
+            min: 0,
+            max: 0,
+            avg: 0
+          };
+          sources = sources.filterByTags('inactive');
+          if (sources.all().length) {
+            xDomain = domain.get().x;
+            points = sources.filter('x', xDomain).dim('y').concat();
+            pointValues = points.get();
+            if (pointValues && pointValues.length) {
+              result.min = points.min().round().get();
+              result.max = points.max().round().get();
+              result.avg = points.avg().round().get();
+            }
           }
+          return result;
         }
-        return result;
-      }
-    }];
+      }];
+    }
 
     /**
      * Component configurations automatically applied to graphs.
@@ -12875,15 +13240,15 @@ function(obj, array, string, d3util, graph) {
         dataId: 'gl-stats',
         position: 'center-left',
         target: 'gl-footer',
-        hiddenStates: ['empty', 'error']
+        hiddenStates: ['empty', 'loading', 'error']
       },
       {
         cid: 'gl-domain-label',
-        type: 'domainLabel',
-        target: 'gl-footer',
+        type: 'label',
+        dataId: '$domain',
         position: 'center-right',
-        suffix: 'UTC',
-        hiddenStates: ['empty', 'error']
+        target: 'gl-footer',
+        hiddenStates: ['empty',  'loading', 'error']
       }
     ];
 
@@ -12897,7 +13262,7 @@ function(obj, array, string, d3util, graph) {
      */
     function isInternalData(dataId) {
       var foundData;
-      foundData = array.find(INTERNAL_DATA_CONFIG, function(d) {
+      foundData = array.find(internalDataConfig, function(d) {
         return d.id === dataId;
       });
       return foundData || string.startsWith(dataId, '$') ? true : false;
@@ -12929,16 +13294,26 @@ function(obj, array, string, d3util, graph) {
      * @param {String} componentType
      * @param {graphs.graph} g
      */
-    function addComponentsForDataSources(dataSources, componentType, g) {
+    function addComponentsForDataSources(dataSources, componentType,
+          g, sources, isStacked) {
+      var id;
       array.getArray(dataSources).forEach(function(dataSource) {
+        id = dataSource.id;
+        if (isStacked) {
+          id += '-stack';
+        }
         if (!isInternalData(dataSource.id) &&
             !componentExists(dataSource.id, g)) {
-          g.component({
-            type: componentType,
-            dataId: dataSource.id,
-            cid: dataSource.id,
-            color: dataSource.color || null
-          });
+          // If no sources are specified, add all data ids
+          // else add the specified ones.
+          if(sources.length === 0 || array.contains(sources, dataSource.id)) {
+            g.component({
+              type: componentType,
+              dataId: id,
+              cid: id,
+              color: dataSource.color || null
+            });
+          }
         }
       });
     }
@@ -12971,13 +13346,27 @@ function(obj, array, string, d3util, graph) {
      * @param {String} componentType
      * @param {graphs.graph} g
      */
-    function overrideAddDataFn(componentType, g) {
+    function overrideAddDataFn(componentType, g, sources, isStacked) {
       var dataCollection = g.data();
+      isStacked = isStacked || false;
       obj.override(dataCollection, 'add', function(supr, data) {
         var args, retVal;
         args = array.convertArgs(arguments, 1);
         retVal = supr.apply(dataCollection, args);
-        addComponentsForDataSources(data, componentType, g);
+        if (isStacked) {
+          array.getArray(data).forEach(function(ds) {
+            supr.apply(dataCollection, [{
+              id: ds.id + '-stack',
+              sources: 'stacks',
+              derivation: function(sources) {
+                return sources.get().filter(function(source) {
+                  return source.id === ds.id + '-stack';
+                })[0];
+              }
+            }]);
+          });
+        }
+        addComponentsForDataSources(data, componentType, g, sources, isStacked);
         return retVal;
       });
     }
@@ -12989,9 +13378,23 @@ function(obj, array, string, d3util, graph) {
      * @param {graphs.graph} g
      */
     function addInternalData(g) {
-      INTERNAL_DATA_CONFIG.forEach(function(dataConfig) {
+      internalDataConfig.forEach(function(dataConfig) {
         g.data().add(dataConfig);
       });
+    }
+
+    /**
+     * TODO: Add capability to derivation to create sources.
+     */
+    function addStackedData(g) {
+      var dataSources = [{
+        id: 'stacks',
+        sources: '*',
+        derivation: function(sources) {
+          return sources.stack().all();
+        }
+      }];
+      g.data().add(dataSources);
     }
 
     /**
@@ -13021,6 +13424,13 @@ function(obj, array, string, d3util, graph) {
         return 'Avg: ' + values.avg + unit +
                '    Min: ' +  values.min + unit +
                '    Max: ' + values.max + unit;
+      });
+      g.component('gl-domain-label').text(function() {
+        var domain = this.data();
+        if (domain) {
+          return format.timeDomainUTC(domain.x, 'UTC');
+        }
+        return '';
       });
     }
 
@@ -13067,19 +13477,35 @@ function(obj, array, string, d3util, graph) {
      * Build and return a new graph of the specified type.
      *
      * @param {String} type A valid pre-configured graph type.
-     * @param {layout.layouts} layout The layout to use.
+     * @param {Object?} options Options for the pre-configured graph type.
+     * @param {(Array.<string>|string)?} options.sources Definite list of
+     *   sources that have corresponding graph components.
      * @return {graphs.graph}
      */
-    graphBuilder.create = function(type, optLayout) {
-      var g;
+    graphBuilder.create = function(type, options) {
+      var g, layout, sources, domainSources, scopeFn;
+
+      options = options || {};
+      layout = options.layout || 'default';
+      sources = array.getArray(options.sources);
+      domainSources = sources.join(',') || '*';
+      internalDataConfig = getInternalDataConfig(domainSources);
 
       g = graph()
         .config({
           forceY: [0],
-          layout: optLayout || 'default',
-          yAxisUnit: 'ms'
+          layout: layout,
+          yAxisUnit: 'ms',
+          domainSources: domainSources
         });
+
       g.dispatch.on('update', updateStatsLabel);
+      g.dispatch.on('render', function() {
+        // subscribe to toggle event and update stats
+        scopeFn = pubsub.scope(g.config('id'));
+        globalPubsub.sub(scopeFn('data-toggle'), updateStatsLabel.bind(g));
+      });
+
       addInternalData(g);
       addInternalComponents(g);
 
@@ -13087,142 +13513,19 @@ function(obj, array, string, d3util, graph) {
         case 'line':
         case 'area':
           overrideRemoveDataFn(g);
-          overrideAddDataFn(type, g);
+          overrideAddDataFn(type, g, sources, false);
+          break;
+        case 'stacked-area':
+          g.component().first('gl-legend').config({'hideOnClick': false});
+          addStackedData(g);
+          overrideRemoveDataFn(g);
+          overrideAddDataFn('area', g, sources, true);
           break;
       }
       return g;
     };
 
     return graphBuilder();
-});
-
-define('events/pubsub',[
-  'core/array'
-],
-function(array) {
-  
-
-  /**
-   * A global singleton instance.
-   * @private
-   */
-  var globalInstance;
-
-  function broker() {
-    var callbackCache;
-
-    /**
-     * Cache object to hold all the topics and callback references.
-     * @private
-     */
-    callbackCache = {};
-
-    return {
-
-      /**
-       * Publishes an event for a topic.
-       * Also takes additional arguments to pass along to subscribers.
-       *
-       * @public
-       * @param {String} topic The topic/event name.
-       * @return {events.pubsub}
-       */
-      pub: function(topic) {
-        var args;
-
-        if (!callbackCache[topic]) {
-          return this;
-        }
-        args = array.convertArgs(arguments, 1);
-        callbackCache[topic].forEach(function(callback) {
-          callback.apply(this, args);
-        });
-        return this;
-      },
-
-      /**
-       * Subscribes to an event for a topic.
-       *
-       * @public
-       * @param {String} topic The topic/event name.
-       * @param {Function} callback
-       * @return {events.pubsub}
-       */
-      sub: function(topic, callback) {
-        if (!callbackCache[topic]) {
-          callbackCache[topic] = [];
-        }
-        callbackCache[topic].push(callback);
-        return this;
-      },
-
-      /**
-       * Unsubscribe all, or just particular, callbacks from a topic.
-       *
-       * @public
-       * @param {String} topic
-       * @param {Array|Function} optCallbacks
-       * @return {events.pubsub}
-       */
-      unsub: function(topic, optCallbacks) {
-        var subscribers;
-
-        // No callbacks specified, remove all for that topic.
-        if (!optCallbacks) {
-          delete callbackCache[topic];
-          return this;
-        }
-        subscribers = callbackCache[topic] || [];
-        // No subscribers to remove, return early.
-        if (!subscribers.length) {
-          return this;
-        }
-        // Only remove specified callbacks for topic.
-        array.remove(subscribers, optCallbacks);
-        return this;
-      },
-
-      /**
-       * Unsubscribe everything and reset the cache.
-       *
-       * @public
-       * @return {events.pubsub}
-       */
-      clearAll: function() {
-        callbackCache = {};
-        return this;
-      }
-    };
-  }
-
-  return {
-
-    /**
-     * Creates a new pubsub instance.
-     *
-     * @public
-     * @return {events.pubsub}
-     */
-    create: function() {
-      return broker();
-    },
-
-    /**
-     * Returns the global singleton instance if it exists, otherwise creates it.
-     *
-     * @public
-     * @return {events.pubsub}
-     */
-    getSingleton: function() {
-      if (globalInstance) {
-        return globalInstance;
-      }
-      globalInstance = this.create();
-      return globalInstance;
-    }
-
-  };
-
 });
 
 /**
@@ -13254,7 +13557,7 @@ define('d3-ext/size',['d3'], function(d3) {
     if (layoutRect.empty()) {
       layoutRect = selection.append('rect')
         .attr({
-          class: 'gl-layout',
+          'class': 'gl-layout',
           fill: 'none'
         });
     }
@@ -13826,8 +14129,8 @@ function(d3, string) {
     if (clipPath.empty()) {
       clipPath = defs.append('clipPath')
         .attr({
-          class: 'gl-clip-path',
-          id: 'gl-clip-path-' + string.random(),
+          'class': 'gl-clip-path',
+          id: 'gl-clip-path-' + string.random()
         });
     }
 
@@ -13879,7 +14182,7 @@ function(graph, graphBuilder, component, collection, assets, pubsub) {
   
 
   var core = {
-    version: '0.0.4',
+    version: '0.0.6',
     graphBuilder: graphBuilder,
     graph: graph,
     components: component,

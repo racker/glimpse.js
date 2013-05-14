@@ -1,3 +1,11 @@
+## 0.0.6 (May 14 2013)
+
+- Stacked Area Graphs
+- Show/Hide series Interaction
+- Fixes top labels that get chopped
+- Fixes hidden states for stats & domain label
+- Fixes IE tests and other bugs
+
 ## 0.0.5 (April 22 2013)
 
 - Validation for ids for dataCollection
