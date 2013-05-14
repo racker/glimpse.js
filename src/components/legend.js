@@ -49,7 +49,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       gap: 20,
       keys: [],
       hiddenStates: ['loading'],
-      rootId: null
+      rootId: null,
+      hideOnClick: true
     };
 
     globalPubsub = pubsub.getSingleton();
@@ -92,7 +93,6 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       enterSelection
         .append('rect')
         .attr({
-          'style': 'cursor:pointer;',
           'class': 'gl-legend-key-indicator',
           'stroke': 'none',
           'x': 0,
@@ -103,16 +103,12 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       enterSelection
         .append('text')
         .attr({
-          'style': 'cursor:pointer;',
           'class': 'gl-legend-key-label',
           'text-anchor': 'start',
           'stroke': 'none'
         });
 
-      // Handle click event- toggle data inactive
-      enterSelection
-        .on('click', onClickHandler);
-      };
+    };
 
     /**
      * Apply updates to the update selection.
@@ -120,6 +116,15 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      */
     update_ = function(selection) {
       var inactive, color;
+
+      // Handle click event- toggle data inactive
+      if(config_.hideOnClick) {
+        selection
+          .on('click', onClickHandler);
+      } else {
+        selection
+          .on('click', null);
+      }
 
       // The outer <g> element for each key.
       selection
@@ -134,6 +139,9 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         .attr({
           'width': config_.indicatorWidth,
           'height': config_.indicatorHeight,
+          'style': function() {
+            return config_.hideOnClick ? 'cursor:pointer;' : null;
+          },
           'fill': function(d) {
             inactive = dataCollection_.hasTags(d.dataId, 'inactive');
             color = inactive ? config_.inactiveColor : d3.functor(d.color)();
@@ -147,6 +155,9 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         .attr({
           'x': config_.indicatorWidth + config_.indicatorSpacing,
           'y': config_.indicatorHeight,
+          'style': function() {
+            return config_.hideOnClick ? 'cursor:pointer;' : null;
+          },
           'fill': function(d) {
             inactive = dataCollection_.hasTags(d.dataId, 'inactive');
             color = inactive ? config_.inactiveColor : config_.fontColor;

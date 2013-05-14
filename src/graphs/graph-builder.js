@@ -356,6 +356,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           overrideAddDataFn(type, g, sources, false);
           break;
         case 'stacked-area':
+          g.component().first('gl-legend').config({'hideOnClick': false});
           addStackedData(g);
           overrideRemoveDataFn(g);
           overrideAddDataFn('area', g, sources, true);
