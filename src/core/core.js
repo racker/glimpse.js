@@ -13,7 +13,7 @@ function(graph, graphBuilder, component, collection, assets, pubsub) {
   'use strict';
 
   var core = {
-    version: '0.0.6',
+    version: '0.0.7',
     graphBuilder: graphBuilder,
     graph: graph,
     components: component,

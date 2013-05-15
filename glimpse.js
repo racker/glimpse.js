@@ -11819,6 +11819,27 @@ define('data/selection/selection',[
     });
   };
 
+  /**
+   * Returns a new selection with the specified dimensions
+   * in a flat form.
+   * @param {string|Array.<string>} dims A list of dimensions.
+   */
+  Selection.prototype.flatten = function(dims) {
+    return this.map(function(dataSource) {
+      var newDataSource = {};
+      obj.extend(newDataSource, dataSource);
+      delete newDataSource.dimensions;
+      newDataSource.data = dataSource.data.map(function(d) {
+        var data = {};
+        array.getArray(dims).forEach(function(dim) {
+          data[dim] = dataFns.dimension(dataSource, dim)(d);
+        });
+        return data;
+      });
+      return newDataSource;
+    });
+  };
+
   return {
 
     create: function(optDataSource) {
@@ -11906,9 +11927,8 @@ define('data/selection/diff-quotient',[
  */
 define('data/selection/stack',[
   'core/object',
-  'data/selection/selection',
-  'data/functions'
-], function (obj, selection, dataFns) {
+  'data/selection/selection'
+], function (obj, selection) {
   
 
   var selectionPrototype = selection.getSelectionPrototype();
@@ -11918,35 +11938,26 @@ define('data/selection/stack',[
    * Assumes presence of 'y' dimension, and adds a new 'y0' dimension.
    */
   selectionPrototype.stack = function() {
-    var mutatedData, stack, layers;
+    var stack, flattenedSource;
 
     stack = d3.layout.stack()
       .values(function(d) {
         return d.data;
       });
 
-    layers = this.map(function(source) {
-      var newSource = {};
-      // Make copy of each data source.
-      obj.extend(newSource, source);
-      // Data points to get by accessor methods to change later.
-      mutatedData = [];
-      newSource.data.forEach(function(d, i) {
-        var dataPointCopy = {};
-        Object.keys(source.dimensions).forEach(function(dimKey) {
-          dataPointCopy[dimKey] = dataFns.dimension(source, dimKey)(d, i);
-        });
-        mutatedData.push(dataPointCopy);
-      });
-      newSource.id += '-stack';
-      newSource.dimensions.y0 = 'y0';
-      newSource.data = mutatedData;
-      return newSource;
+    flattenedSource = this.flatten(['x','y']);
+
+    stack(flattenedSource.all());
+    flattenedSource.map(function(source) {
+      source.id += '-stack';
+      // Dimensions are not needed for flat fields.
+      // Required because a component is checking for y0 dim.
+      source.dimensions = {
+        y0: 'y0'
+      };
     });
 
-    // Apply d3 stacking function to new copy of the data.
-    stack(layers.all());
-    return layers;
+    return flattenedSource;
   };
 
 });
@@ -14182,7 +14193,7 @@ function(graph, graphBuilder, component, collection, assets, pubsub) {
   
 
   var core = {
-    version: '0.0.6',
+    version: '0.0.7',
     graphBuilder: graphBuilder,
     graph: graph,
     components: component,

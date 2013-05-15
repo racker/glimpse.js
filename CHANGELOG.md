@@ -1,3 +1,7 @@
+## 0.0.7 (May 15 2013)
+
+- Stacked Area Fix and bugs.
+
 ## 0.0.6 (May 14 2013)
 
 - Stacked Area Graphs
