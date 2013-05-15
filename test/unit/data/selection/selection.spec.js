@@ -122,6 +122,84 @@ function (selection) {
 
     });
 
+    describe('.flatten()', function() {
+
+      beforeEach(function() {
+        sel.add({
+          id: 'test1',
+          data: [
+            { latency: 100, weight: 20 },
+            { latency: 200, weight: 30 },
+            { latency: 300, weight: 40 },
+            { latency: 400, weight: 60 },
+            { latency: 500, weight: 30 }],
+          dimensions: {
+            latency: 'latency',
+            weight: function(d) { return d.weight; }
+          }
+        });
+        sel.add({
+          id: 'test2',
+          data: [
+            { latency: 10, weight: 2 },
+            { latency: 20, weight: 3 },
+            { latency: 30, weight: 4 },
+            { latency: 40, weight: 6 },
+            { latency: 50, weight: 3 }]
+        });
+        sel.add({
+          id: 'test3',
+          data: [
+            { dfw: { latency: 1, weight: 42 } },
+            { dfw: { latency: 2, weight: 43 } },
+            { dfw: { latency: 3, weight: 44 } },
+            { dfw: { latency: 4, weight: 46 } },
+            { dfw: { latency: 5, weight: 43 } }],
+          dimensions: {
+            latency: 'dfw.latency',
+            weight: function(d) { return d.dfw.weight; }
+          }
+        });
+      });
+
+      it('creates a new copy of data', function(){
+        var flatData = sel.flatten(['latency', 'weight']).all(),
+            origData = sel.all();
+        expect(flatData[0].data[0].latency).toBe(origData[0].data[0].latency);
+        flatData[0].data[0].latency += 100;
+        expect(flatData[0].data[0].latency)
+          .not.toBe(origData[0].data[0].latency);
+      });
+
+      it('flattens nested data', function() {
+        var flatSel = sel.flatten(['latency', 'weight']);
+        expect(flatSel.get(2)).toEqual({
+          id : 'test3',
+          data : [{ latency : 1, weight : 42 },
+                  { latency : 2, weight : 43 },
+                  { latency : 3, weight : 44 },
+                  { latency : 4, weight : 46 },
+                  { latency : 5, weight : 43 }]
+        });
+      });
+
+      it('flattening latency still yeilds correct dimension call', function() {
+        expect(sel.flatten('latency').dim('latency').all())
+          .toEqual([[ 100, 200, 300, 400, 500 ],
+                   [ 10, 20, 30, 40, 50 ], [1, 2, 3, 4, 5]]);
+      });
+
+      it('flatten multiple dimensions correctly', function() {
+        var flatSel = sel.flatten(['weight', 'latency']);
+        expect(flatSel.dim('weight').all()).toEqual([[ 20, 30, 40, 60, 30 ],
+            [ 2, 3, 4, 6, 3 ],[ 42, 43, 44, 46, 43 ]]);
+        expect(flatSel.dim('latency').all())
+          .toEqual([[ 100, 200, 300, 400, 500 ], [ 10, 20, 30, 40, 50 ],
+                    [ 1, 2, 3, 4, 5 ]]);
+      });
+
+    });
+
     describe('.dim()', function() {
 
       beforeEach(function() {
