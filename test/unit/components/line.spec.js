@@ -158,20 +158,14 @@ function(d3, object, line, dc) {
         testLine.render('#svg-fixture');
       });
 
-      it('toggles the line to hide after checking data tag', function() {
-        dataCollection.addTags('fakeData', 'inactive');
-        testLine.handleDataToggle_('fakeData');
+      it('toggles the line to hide in data tag is inactive', function() {
+        dataCollection.toggleTags('fakeData', 'inactive');
         expect(testLine.root().node()).toHaveAttr('display', 'none');
       });
 
-      it('does not hide the line when the dataId is incorrect', function() {
-        testLine.handleDataToggle_('Data');
-        expect(testLine.root().node()).not.toHaveAttr('display');
-      });
-
       it('toggles the line to show after checking data tag', function() {
-        dataCollection.removeTags('fakeData', 'inactive');
-        testLine.handleDataToggle_('fakeData');
+        dataCollection.addTags('fakeData', 'inactive');
+        dataCollection.toggleTags('fakeData', 'inactive');
         expect(testLine.root().node()).not.toHaveAttr('display', 'none');
       });
 

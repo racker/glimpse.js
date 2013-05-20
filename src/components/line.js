@@ -23,7 +23,6 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       defaults_,
       dataCollection_,
       root_,
-      scope_ = null,
       globalPubsub = pubsub.getSingleton();
 
     defaults_ = {
@@ -82,6 +81,23 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'x'
       )(data, index);
       return x;
+    }
+
+    /**
+     * Handles the sub of data-toggle event.
+     * Checks presence of inactive tag
+     * to show/hide the line component
+     * @param  {string} dataId
+     */
+     function handleDataToggle(args) {
+      var id = config_.dataId;
+      if (args === id) {
+        if (dataCollection_.hasTags(id, 'inactive')) {
+          line.hide();
+        } else {
+          line.show();
+        }
+      }
     }
 
     /**
@@ -167,23 +183,6 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
     };
 
     /**
-     * Handles the sub of data-toggle event.
-     * Checks presence of inactive tag
-     * to show/hide the line component
-     * @param  {string} dataId
-     */
-     line.handleDataToggle_ = function (args) {
-      var id = config_.dataId;
-      if (args === id) {
-        if (dataCollection_.hasTags(id, 'inactive')) {
-          line.hide();
-        } else {
-          line.show();
-        }
-      }
-    };
-
-    /**
      * Renders the line component
      * @param  {d3.selection|Node|string} selection
      * @return {components.line}
@@ -205,7 +204,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         });
       }
       scope = line.scope();
-      globalPubsub.sub(scope('data-toggle'), line.handleDataToggle_);
+      globalPubsub.sub(scope('data-toggle'), handleDataToggle);
       line.update();
       line.dispatch.render.call(this);
       return line;
@@ -222,10 +221,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
     /** Defines the rootId for line */
     //TODO create a mixin for scope
     line.scope = function() {
-      if (!scope_) {
-        scope_ = pubsub.scope(config_.rootId);
-      }
-      return scope_;
+      return pubsub.scope(config_.rootId);
     };
 
     /**
@@ -239,7 +235,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         root_.remove();
       }
       scope = line.scope();
-      globalPubsub.unsub(scope('data-toggle'), line.handleDataToggle_);
+      globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
       root_ = null;
       config_ = null;
       defaults_ = null;
