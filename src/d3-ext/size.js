@@ -52,6 +52,10 @@ define(['d3'], function(d3) {
       if (width) {
         return parseFloat(width);
       }
+      // NOTE: Prevent Firefox DOM exception.
+      if (this.attr('display') === 'none') {
+        return 0;
+      }
       return this.node().getBBox().width;
     }
     // Setting.
@@ -86,6 +90,10 @@ define(['d3'], function(d3) {
       height = this.attr('gl-height');
       if (height) {
         return parseFloat(height);
+      }
+      // NOTE: Prevent Firefox DOM exception.
+      if (this.attr('display') === 'none') {
+        return 0;
       }
       return this.node().getBBox().height;
     }

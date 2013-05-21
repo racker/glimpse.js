@@ -88,6 +88,11 @@ function() {
           expect(rect.width()).toBe(20);
         });
 
+        it('reports zero if display:none', function() {
+          rect.attr('display', 'none');
+          expect(rect.width()).toBe(0);
+        });
+
         it('returns width attribute of group', function() {
           g.append('rect').width(1000).height(1);
           expect(g.width()).toBe(12);
@@ -122,6 +127,11 @@ function() {
 
         it('returns correct height of rect', function() {
           expect(rect.height()).toBe(40);
+        });
+
+        it('reports zero if display:none', function() {
+          rect.attr('display', 'none');
+          expect(rect.height()).toBe(0);
         });
 
         it('returns height attribute of group', function() {
