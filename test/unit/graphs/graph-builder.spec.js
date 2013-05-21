@@ -251,6 +251,16 @@ function(graphBuilder, graph) {
           expect(areaComponents.length).toBe(2);
         });
 
+        it('legend renders when data is added to collection', function() {
+          var dc = testGraph.data(),
+              renderTarget = jasmine.htmlFixture(),
+              legendContainer;
+          dc.add(testData);
+          testGraph.render(renderTarget);
+          legendContainer = renderTarget.select('.gl-legend').node();
+          expect(legendContainer.childNodes.length).toBe(1);
+        });
+
       });
 
       describe('create("stacked-area")', function() {

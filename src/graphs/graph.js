@@ -283,24 +283,6 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     }
 
     /**
-     * Inserts/Updates object in data array
-     * @param  {object} data
-     */
-    function extendData(data) {
-      //Set default x and y accessors.
-      if(!data.dimensions) {
-        data.dimensions = {};
-      }
-      if (!data.dimensions.x) {
-        data.dimensions.x = defaultXaccessor_;
-      }
-      if (!data.dimensions.y) {
-        data.dimensions.y = defaultYaccessor_;
-      }
-      dataCollection_.extend(data);
-    }
-
-    /**
      * Displays the empty message over the main container.
      * @private
      */
@@ -530,15 +512,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         if (typeof data === 'string') {
           return dataCollection_.get(data);
         }
-        if (Array.isArray(data)) {
-          var i, len = data.length;
-          for (i = 0; i < len; i += 1) {
-            extendData(data[i]);
-          }
-        } else {
-          extendData(data);
-        }
-        componentManager_.applySharedObject('data');
+        array.getArray(data).forEach(function(d) {
+          dataCollection_.extend(d);
+        });
         return graph;
       }
 
@@ -587,6 +563,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {graphs.graph}
      */
     graph.update = function() {
+      componentManager_.applySharedObject('data');
       updateScales();
       updateComponents();
       if (graph.isRendered()) {
