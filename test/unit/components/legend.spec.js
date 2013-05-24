@@ -390,11 +390,11 @@ function(legend, dc) {
       });
 
       it('uses a cursor pointer on key text', function() {
-        expect(label.attr('style')).toBe('cursor:pointer;');
+        expect(label.attr('style')).toBe('cursor: pointer;');
       });
 
       it('uses a cursor pointer on key indicator', function() {
-        expect(indicator.attr('style')).toBe('cursor:pointer;');
+        expect(indicator.attr('style')).toBe('cursor: pointer;');
       });
 
     });

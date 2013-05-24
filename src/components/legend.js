@@ -140,7 +140,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
           'width': config_.indicatorWidth,
           'height': config_.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor:pointer;' : null;
+            return config_.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
             inactive = dataCollection_.hasTags(d.dataId, 'inactive');
@@ -156,7 +156,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
           'x': config_.indicatorWidth + config_.indicatorSpacing,
           'y': config_.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor:pointer;' : null;
+            return config_.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
             inactive = dataCollection_.hasTags(d.dataId, 'inactive');
