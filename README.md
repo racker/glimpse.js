@@ -1,13 +1,13 @@
-# glimpse.js [![Build Status](https://travis-ci.org/racker/glimpse.js.png?branch=master)](https://travis-ci.org/racker/glimpse.js)  
+# glimpse.js [![Build Status](https://travis-ci.org/racker/glimpse.js.png?branch=master)](https://travis-ci.org/racker/glimpse.js)
 
-A JavaScript library for making beautiful graphs and visualizations effortlessly.  
+A JavaScript library for making beautiful graphs and visualizations effortlessly.
 
 Its purpose is to empower developers to quickly render data as standards-compliant web-based visualizations.
 Glimpse.js requires very little code and has virtually no learning curve, yet is customizable enough to allow for the most complex data visualizations.
 We leverage countless hours of work that have already gone into the open-source community by building on top of the immensely popular
 [d3.js](http://d3js.org/) library (a lower-level data visualization library).
 We take that work one step further by providing a simpler API and by drastically reducing the amount of code necessary for the end-user to write.
-Interactive time-series graphs can be created in as little as 2-3 lines of code.  
+Interactive time-series graphs can be created in as little as 2-3 lines of code.
 
 [Read the docs to get started.](https://github.com/racker/glimpse.js/wiki)
 
@@ -25,7 +25,6 @@ Interactive time-series graphs can be created in as little as 2-3 lines of code.
 - Safari (latest)
 - Chrome (latest)
 - Firefox (latest)
-
 
 ## Dependencies
 - d3.js (comes bundled)

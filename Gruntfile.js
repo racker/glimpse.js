@@ -12,7 +12,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-exec');
-  grunt.loadNpmTasks('grunt-lexicon');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadTasks('grunt/tasks/');
   grunt.loadNpmTasks('grunt-conventional-changelog');
@@ -189,17 +188,6 @@ module.exports = function(grunt) {
       }
     },
 
-    lexicon: {
-      all: {
-        src: ['src/**/*js'],
-        dest: 'docs/',
-        options: {
-          title: ' ',
-          format: 'markdown'
-        }
-      }
-    },
-
     concat: {
       docs: {
         src: ['docs/**/*.md'],
@@ -240,7 +228,7 @@ module.exports = function(grunt) {
   grunt.registerTask('testwin', 'exec:testWindows');
   grunt.registerTask('assets', ['clean:assets', 'compile-svg:assets']);
   grunt.registerTask('docs',
-    ['clean:docs', 'lexicon', 'concat:docs', 'clean:docs']);
+    ['clean:docs', 'concat:docs', 'clean:docs']);
   grunt.registerTask('compile-static', [
     'assets',
     'clean:build',
