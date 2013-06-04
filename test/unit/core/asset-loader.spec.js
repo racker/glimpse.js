@@ -36,12 +36,12 @@ function (assetLoader) {
       });
 
       it('adds the main svg element', function() {
-        selection = d3.selectAll('body > #gl-global-assets > svg');
+        selection = d3.select('body > #gl-global-assets > svg');
         expect(selection).toBeSelectionLength(1);
       });
 
       it('adds main svg defs', function() {
-        selection = d3.selectAll('body > #gl-global-assets > svg > defs');
+        selection = d3.select('body > #gl-global-assets > svg > defs');
         expect(selection).toBeSelectionLength(1);
       });
 
