@@ -1,8 +1,9 @@
 define([
   'graphs/graph-builder',
-  'graphs/graph'
+  'graphs/graph',
+  'test-util/d3interaction'
 ],
-function(graphBuilder, graph) {
+function(graphBuilder, graph, d3interaction) {
   'use strict';
 
   function filterComponents(g, type) {
@@ -338,6 +339,75 @@ function(graphBuilder, graph) {
           expect(areaComponents.length).toBe(2);
           expect(areaComponents[0].cid()).toBe('cpu-sys-stack');
           expect(areaComponents[1].cid()).toBe('cpu-user-stack');
+        });
+
+        it('has correct stats', function() {
+          var renderTarget = jasmine.htmlFixture(),
+              dc = testGraph.data(),
+              stats;
+          addCpuSysData();
+          addCpuUserData();
+          testGraph.render(renderTarget);
+          stats = dc.get('gl-stats');
+          expect(stats.min).toBe(19);
+          expect(stats.max).toBe(40);
+          expect(stats.avg).toBe(26);
+        });
+
+
+        describe('legend', function() {
+
+          var renderTarget, legend1, legend2;
+
+          beforeEach(function() {
+            renderTarget = jasmine.htmlFixture();
+            addCpuSysData();
+            addCpuUserData();
+            testGraph.render(renderTarget);
+            legend1 = renderTarget.selectAll('.gl-legend-key')[0][0];
+            legend2 = renderTarget.selectAll('.gl-legend-key')[0][1];
+          });
+
+          it('sets up legend click handlers', function() {
+            expect(legend1).toHaveClickHandler();
+            expect(legend2).toHaveClickHandler();
+          });
+
+          it('legend click hides area', function() {
+            var cpuStack = testGraph.component().first('cpu-sys-stack');
+            spyOn(cpuStack, 'hide').andCallThrough();
+            d3interaction.click(legend1);
+            expect(cpuStack.hide).toHaveBeenCalled();
+          });
+
+          it('legend click recomputes stack', function() {
+            spyOn(d3.layout, 'stack').andCallThrough();
+            d3interaction.click(legend1);
+            expect(d3.layout.stack).toHaveBeenCalled();
+          });
+
+          it('has correct stats when sys legend is clicked', function () {
+            var dc = testGraph.data(),
+                stats;
+            d3interaction.click(legend1);
+            stats = dc.get('gl-stats');
+            expect(stats.min).toBe(19);
+            expect(stats.max).toBe(21);
+            expect(stats.avg).toBe(21);
+          });
+
+           it('has correct stats when all legends are clicked', function () {
+            var dc = testGraph.data(),
+                stats;
+            d3interaction.click(legend1);
+            d3interaction.click(legend2);
+            stats = dc.get('gl-stats');
+            expect(stats.min).toBe(0);
+            expect(stats.max).toBe(0);
+            expect(stats.avg).toBe(0);
+          });
+
+
         });
 
         it('computes stack data correctly for cpu-user', function() {

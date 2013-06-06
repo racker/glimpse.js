@@ -19,9 +19,7 @@ define([
    */
   function applyDerivation(dc, data) {
     var dataSelections, derivedData;
-    dataSelections = array.getArray(data.sources).map(function(d) {
-      return dc.select(d);
-    });
+    dataSelections = resolveSources(data.sources, dc).map(dc.select.bind(dc));
     derivedData = data.derivation.apply(null, dataSelections);
     if (typeof derivedData === 'object' &&
          !Array.isArray(derivedData)) {
@@ -67,6 +65,17 @@ define([
   }
 
   /**
+   * Takes a list of sources (comma delimited list of ids or tags) and
+   * resolves them to the corresposing array of array of ids.
+   */
+  function resolveSources(sources, dc) {
+    return array.getArray(d3.functor(sources)(dc.resolve.bind(dc)))
+      .map(function(source) {
+        return dc.resolve(source);
+      });
+  }
+
+  /**
    * @private
    * Derives data source by id.
    * Accepts the cached deps object.
@@ -90,9 +99,10 @@ define([
     }
     visited.push(id);
     sources = [];
-    array.getArray(d.glDerive.sources).forEach(function(s) {
-      sources = sources.concat(s.split(','));
-    });
+    resolveSources(d.glDerive.sources, dataCollection)
+      .forEach(function(source) {
+        sources = sources.concat(source);
+      });
     sources.forEach(function(id) {
       deriveDataById(id.trim(), data, deps, dataCollection, visited);
     });
@@ -163,6 +173,28 @@ define([
         ids.forEach(function(i) {
           delete dataCollection[i];
         });
+      },
+
+      /**
+       * Takes a selection query and resolves it into
+       * the corresponding array of ids.
+       */
+      resolve: function(selection) {
+        var sources = selection.split(','),
+            ids = [];
+        sources.forEach(function(src) {
+          var source = src.trim();
+          if (dataCollection[source]) {
+            ids.push(source);
+          } else {
+            Object.keys(dataCollection).forEach(function(k) {
+              if (this.hasTags(k, source)) {
+                ids.push(k);
+              }
+            }, this);
+          }
+        }, this);
+        return ids;
       },
 
       /**
@@ -295,8 +327,8 @@ define([
       select: function(sources) {
         var dataSelection = selection.create(),
             dataList = [], ids = [];
-        array.getArray(sources).forEach(function(s) {
-          ids = ids.concat(s.split(','));
+        resolveSources(sources, this).forEach(function(s) {
+          ids = ids.concat(s);
         });
         ids.forEach(function(id) {
           id = id.trim();

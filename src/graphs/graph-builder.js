@@ -195,15 +195,23 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         retVal = supr.apply(dataCollection, args);
         if (isStacked) {
           array.getArray(data).forEach(function(ds) {
-            supr.apply(dataCollection, [{
-              id: ds.id + '-stack',
-              sources: 'stacks',
-              derivation: function(sources) {
-                return sources.get().filter(function(source) {
-                  return source.id === ds.id + '-stack';
-                })[0];
-              }
-            }]);
+            // Don't add stack derivation for $domain.
+            if (ds.id[0] !== '$') {
+              supr.apply(dataCollection, [{
+                id: ds.id + '-stack',
+                sources: 'stacks',
+                tags: [ '+', 'glstack' ],
+                derivation: function(sources) {
+                  return sources.get().filter(function(source) {
+                    return source.id === ds.id + '-stack';
+                  })[0] || {
+                    id: ds.id + '-stack',
+                    dimensions: {},
+                    data: []
+                  };
+                }
+              }]);
+            }
           });
         }
         addComponentsForDataSources(data, componentType, g, sources, isStacked);
@@ -229,9 +237,27 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     function addStackedData(g) {
       var dataSources = [{
         id: 'stacks',
-        sources: '*',
+        // Compute list of ids denoting * - inactive
+        // in terms of the original and not the derived sources.
+        sources: function(resolve) {
+          var star = resolve('*'),
+              inactive = resolve('inactive').map(function(id) {
+                return id.substring(0, id.length - 6);
+              });
+          inactive.forEach(function(id) {
+            var position = star.indexOf(id);
+            if (position >= 0) {
+              star.splice(position, 1);
+            }
+          });
+          return star.join(',');
+        },
         derivation: function(sources) {
-          return sources.stack().all();
+          if (sources) {
+            return sources.stack().all();
+          } else {
+            return [];
+          }
         }
       }];
       g.data().add(dataSources);
@@ -328,7 +354,11 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       options = options || {};
       layout = options.layout || 'default';
       sources = array.getArray(options.sources);
-      domainSources = sources.join(',') || '*';
+      if (type === 'stacked-area') {
+        domainSources = 'glstack';
+      } else {
+        domainSources = sources.join(',') || '*';
+      }
       internalDataConfig = getInternalDataConfig(domainSources);
 
       g = graph()
@@ -356,7 +386,6 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           overrideAddDataFn(type, g, sources, false);
           break;
         case 'stacked-area':
-          g.component().first('gl-legend').config({'hideOnClick': false});
           addStackedData(g);
           overrideRemoveDataFn(g);
           overrideAddDataFn('area', g, sources, true);

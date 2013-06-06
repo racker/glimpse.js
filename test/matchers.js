@@ -241,6 +241,15 @@ beforeEach(function() {
           'Expected ' + jasmine.pp(serializedXML) + 'not to be ' + xmlString];
       };
       return serializedXML  ===  xmlString;
+    },
+
+    toHaveClickHandler: function() {
+      var ele = this.actual;
+      this.message = function () {
+        return ['Expected' + jasmine.pp(ele) + 'to have a d3 click handler.',
+         'Expected' + jasmine.pp(ele) + 'not to have a d3 click handler.'];
+      };
+      return ele.__onclick !== undefined;
     }
 
   });

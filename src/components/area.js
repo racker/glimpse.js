@@ -109,6 +109,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           area.show();
         }
       }
+      area.update();
     }
 
     /**
@@ -160,6 +161,11 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
     area.update = function() {
       if (!root_) {
+        return area;
+      }
+
+      // Do not generate area when there's no data.
+      if (area.data().data.length === 0) {
         return area;
       }
 

@@ -96,7 +96,6 @@ define([
         }
       );
 
-
     });
 
     describe('.add()', function() {
@@ -231,6 +230,58 @@ define([
         dataCollection.add(data);
         dataCollection.updateDerivations();
         expect(dataCollection.get('test')).toBe('XYZ');
+      });
+
+    });
+
+    describe('.resolve()', function() {
+
+      function addData(id, tags) {
+        dataCollection.add({
+          id: id,
+          data: [],
+          tags: tags
+        });
+      }
+
+      it('resolves * to an empty list of ids', function() {
+        expect(dataCollection.resolve('*')).toEqual([]);
+      });
+
+      it('resolves a non existent sel to an empty array', function() {
+        expect(dataCollection.resolve('test')).toEqual([]);
+        expect(dataCollection.resolve('abc')).toEqual([]);
+        expect(dataCollection.resolve('def')).toEqual([]);
+      });
+
+      it('resolves * to actual the corresponding id', function() {
+        addData('test');
+        expect(dataCollection.resolve('*')).toEqual(['test']);
+      });
+
+      it('resolves * to actual the corresponding id', function() {
+        addData('test');
+        addData('abc');
+        addData('xyz');
+        expect(dataCollection.resolve('*')).toEqual(['test', 'abc', 'xyz']);
+      });
+
+      it('resolves an id to the id itself', function() {
+        addData('test');
+        addData('abc');
+        addData('xyz');
+        expect(dataCollection.resolve('test')).toEqual(['test']);
+        expect(dataCollection.resolve('abc')).toEqual(['abc']);
+        expect(dataCollection.resolve('xyz')).toEqual(['xyz']);
+      });
+
+      it('resolves a tag to the corresponding ids', function() {
+        addData('test', 'web');
+        addData('abc', ['web', 'ord']);
+        addData('xyz', ['ord', 'latency']);
+        expect(dataCollection.resolve('web')).toEqual(['test', 'abc']);
+        expect(dataCollection.resolve('ord')).toEqual(['abc', 'xyz']);
+        expect(dataCollection.resolve('latency')).toEqual(['xyz']);
       });
 
     });
