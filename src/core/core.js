@@ -19,7 +19,7 @@ function(obj, string, array, fn, format, graph,
   'use strict';
 
   var core = {
-    version: '0.0.8',
+    version: '0.0.9',
     obj: obj,
     string: string,
     array: array,

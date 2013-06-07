@@ -1,6 +1,6 @@
 {
   "name": "glimpse.js",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": "./glimpse.min.js",
   "ignore": [
     "build/",
@@ -16,8 +16,8 @@
     "pre-commit.js"
   ],
   "dependencies": {
-    "d3": "~3.0",
+    "d3": "~3.1",
     "almond": "~0.2",
-    "requirejs": "~2.0"
+    "requirejs": "~2.1"
   }
 }

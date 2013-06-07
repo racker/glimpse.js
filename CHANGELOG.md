@@ -1,3 +1,9 @@
+## 0.0.9 (June 7 2013)
+
+- Fix legend interaction for stacked-area graphs.
+- Expose core helper api.
+- Upgrade to d3 v3.1
+
 ## 0.0.8 (May 22 2013)
 
 - Fixes show/hide bug in Firefox.
