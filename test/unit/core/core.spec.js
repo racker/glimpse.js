@@ -6,6 +6,31 @@ function(core, pubsub) {
   'use strict';
 
   describe('core.core', function () {
+
+    describe('helper api', function() {
+
+      it('should have object helper exposed', function () {
+        expect(core.obj).toBeDefined();
+      });
+
+      it('should have string helper exposed', function () {
+        expect(core.string).toBeDefined();
+      });
+
+      it('should have array helper exposed', function () {
+        expect(core.array).toBeDefined();
+      });
+
+      it('should have function helper exposed', function () {
+        expect(core.fn).toBeDefined();
+      });
+
+      it('should have format helper exposed', function () {
+        expect(core.format).toBeDefined();
+      });
+
+    });
+
     it('should have a version', function () {
       expect(core.version).toBeDefined();
     });
