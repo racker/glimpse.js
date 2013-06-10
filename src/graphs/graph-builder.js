@@ -159,7 +159,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
-     * Overrides the removeData() funciton on the graph.
+     * Overrides the removeData() function on the graph.
      * Additionally removes any corresponding components when called.
      *
      * TODO: remove this in favor of data collection events
@@ -328,6 +328,22 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       }
     }
 
+
+    /**
+     *  Builds a sparkline by destroying the appropriate line graph elements.
+     * Also configures the layout
+     */
+    function sparklineBuilder(g) {
+      g.config({
+        'layout':'sparkline',
+        'width': 400,
+        'height': 120,
+        'viewBoxWidth': 400,
+        'viewBoxHeight': 120
+      });
+      g.component().destroy(['gl-legend', 'gl-stats', 'gl-xaxis']);
+    }
+
     /**
      * An object that constructs/configures graphs by encapsulating complexity
      *   in order to simplify the end-user api.
@@ -389,15 +405,22 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         scopeFn = pubsub.scope(g.config('id'));
         globalPubsub.sub(scopeFn('data-toggle'), updateStatsLabel.bind(g));
       });
-
-      addInternalData(g);
-      addInternalComponents(g);
+	
+      if(type !== 'sparkline'){
+        addInternalData(g);
+        addInternalComponents(g);
+      }
 
       switch (type) {
         case 'line':
         case 'area':
           overrideRemoveDataFn(g);
           overrideAddDataFn(type, g, sources, false);
+          break;
+        case 'sparkline':
+          overrideRemoveDataFn(g);
+          overrideAddDataFn('line', g, sources, false);
+          sparklineBuilder(g);
           break;
         case 'stacked-area':
           addStackedData(g);

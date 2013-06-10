@@ -245,7 +245,8 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @private
      */
     function updateLegend() {
-      var legendKeys = [];
+      var legendKeys = [],
+        componentLegend;
       componentManager_.get().forEach(function(c) {
         var cData = c.data ? c.data() : null;
         if (c.config('inLegend') && cData) {
@@ -256,30 +257,38 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           });
         }
       });
-      componentManager_.first('gl-legend')
-        .config({ keys: legendKeys })
-        .update();
+      componentLegend = componentManager_.first('gl-legend');
+      if(componentLegend){
+        componentLegend.config({ keys: legendKeys })
+          .update();
+      }
     }
 
     /**
      * Updates all the special components.
      */
     function updateComponents() {
-      componentManager_.first('gl-xaxis')
-        .config({
-          scale: config_.xScale,
-          ticks: config_.xTicks,
-          unit: config_.xAxisUnit
-        });
-      componentManager_.first('gl-yaxis')
-        .config({
-          scale: config_.yScale,
-          ticks: config_.yTicks,
-          unit: config_.yAxisUnit,
-          target: config_.primaryContainer
-        });
-      componentManager_.update();
-      updateLegend();
+      var yaxisComponent,
+        xaxisComponent;
+        xaxisComponent = componentManager_.first('gl-xaxis');
+        if (xaxisComponent) {
+          xaxisComponent.config({
+            scale: config_.xScale,
+            ticks: config_.xTicks,
+            unit: config_.xAxisUnit
+          });
+        }
+        yaxisComponent = componentManager_.first('gl-yaxis');
+        if (yaxisComponent) {
+          yaxisComponent.config({
+            scale: config_.yScale,
+            ticks: config_.yTicks,
+            unit: config_.yAxisUnit,
+            target: config_.primaryContainer
+          });
+        }
+        componentManager_.update();
+        updateLegend();
     }
 
     /**

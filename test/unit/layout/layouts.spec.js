@@ -12,7 +12,7 @@ function (layouts) {
 
     it('gets all layouts', function () {
       var l = layouts.getLayouts();
-      expect(Object.keys(l)).toEqual(['default', 'threepane']);
+      expect(Object.keys(l)).toEqual(['default', 'sparkline','threepane']);
     });
 
     it('has a default layout', function () {

@@ -130,7 +130,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
     line.dispatch = mixins.dispatch();
 
     // TODO: this will be the same for all components
-    // put this func somehwere else and apply as needed
+    // put this func somewhere else and apply as needed
     line.data = function(data) {
       if (data) {
         dataCollection_ = data;

@@ -225,7 +225,6 @@ function(obj, array, string, func, components) {
       filter: function(fn, context) {
         return componentList.filter(fn, context);
       },
-
       /**
        * Removes components from the collection (without destroying them).
        * Also removes the cids from the the cidList.

@@ -442,6 +442,76 @@ function(graphBuilder, graph, d3interaction) {
 
       });
 
+      describe('create("sparkline")', function() {
+
+        beforeEach(function() {
+          testGraph = graphBuilder.create('sparkline');
+          testGraph.data().add(testData);
+        });
+
+        it('adds a single line component for a single data source', function() {
+          var lineComponents;
+          lineComponents = filterComponents(testGraph, 'line');
+          expect(lineComponents.length).toBe(1);
+          expect(lineComponents[0].cid()).toBe('test-data');
+        });
+
+        it('adds a line component for each data source added', function() {
+          var lineComponents;
+          testGraph.data().add(testData1);
+          lineComponents = filterComponents(testGraph, 'line');
+          expect(lineComponents.length).toBe(2);
+        });
+
+        it('adds only y-axis to sparkline', function() {
+          var axisComponents;
+          axisComponents = filterComponents(testGraph, 'axis');
+          expect(axisComponents.length).toBe(1);
+          expect(axisComponents[0].config('axisType')).toBe('y');
+        });
+
+        it('does not add x-axis to sparkline', function() {
+          var axisComponents;
+          axisComponents = filterComponents(testGraph, 'axis');
+          expect(axisComponents[0].config('axisType')).not.toBe('x');
+        });
+
+        it('does not add legend to sparkline', function() {
+          var legendComponents;
+          legendComponents = filterComponents(testGraph, 'gl-legend');
+          expect(legendComponents.length).toBe(0);
+        });
+
+        it('does not add any labels to sparkline', function() {
+          var labelComponents;
+          labelComponents = filterComponents(testGraph, 'label');
+          expect(labelComponents.length).toBe(0);
+        });
+
+        it('does not add stats to sparkline', function() {
+          var statsComponents;
+          statsComponents = filterComponents(testGraph, 'gl-stats');
+          expect(statsComponents.length).toBe(0);
+        });
+
+        it('does not add domains to sparkline', function() {
+          var domainComponents;
+          domainComponents = filterComponents(testGraph, 'gl-domain-label');
+          expect(domainComponents.length).toBe(0);
+        });
+
+        it('does not add legend to sparkline', function() {
+          var legendComponents;
+          legendComponents = filterComponents(testGraph, 'legend');
+          expect(legendComponents.length).toBe(0);
+        });
+
+        it('sets the layout to sparkline', function() {
+          expect(testGraph.config('layout')).toBe('sparkline');
+        });
+
+      });
+
     });
 
   });

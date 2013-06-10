@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Sparkline Graph</h1>
+    <h3>This example illustrates a simple sparkline graph</h3>
+    <div id="container"></div>
+    <div id="container2"></div>
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var oneHr = 1000 * 60 * 60;
+        var latencyData = [
+            { "time": 0,       "latency": 100 },
+            { "time": oneHr,   "latency": 50 },
+            { "time": oneHr*2, "latency": 25 },
+            { "time": oneHr*8, "latency": 25 }
+          ];
+
+
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'latencyDfw',
+            title: 'Time to Connect (DFW)',
+            data: latencyData,
+            dimensions: {
+              x: 'time',
+              y: 'latency'
+            }
+          }
+        ];
+
+        // Create and render a line graph.
+        var lineGraph = glimpse.graphBuilder().create('sparkline')
+          .data(dataConfig)
+          .render('#container');
+
+        // for debugging
+        window.graph = lineGraph;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>

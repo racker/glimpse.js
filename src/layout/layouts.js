@@ -39,6 +39,21 @@ define(function () {
       ]
     },
 
+     'sparkline': {
+      name: 'gl-vgroup',
+      split: [100],
+      children: [
+        {
+          name: 'gl-main',
+          clip: true,
+          border: 1,
+          paddingTop: 4,
+          borderColor: '#999',
+          backgroundColor: '#fff'
+        }
+        ]
+    },
+
    'threepane': {
       name: 'gl-vgroup',
       split: [15, 70, 15],
