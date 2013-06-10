@@ -548,11 +548,6 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           c.config('target', config_.primaryContainer);
         }
         setDefaultColor(c);
-
-        // TODO: Remove this once extents/domain is calculated properly.
-        if (graph.isRendered()) {
-          c.render(root_);
-        }
       });
 
       return graph;

@@ -301,6 +301,17 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
+    * Render newly added components.
+    */
+    function renderAddedComponents(g) {
+      g.component().filter(function(c) {
+        return !c.isRendered();
+      }).forEach(function(c) {
+        c.render(g.root());
+      });
+    }
+
+    /**
      * Updates config for stats label
      */
     function updateStatsLabel() {
@@ -369,7 +380,10 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           domainSources: domainSources
         });
 
-      g.dispatch.on('update', updateStatsLabel);
+      g.dispatch.on('update', function() {
+        updateStatsLabel.call(this);
+        renderAddedComponents(g);
+      });
       g.dispatch.on('render', function() {
         // subscribe to toggle event and update stats
         scopeFn = pubsub.scope(g.config('id'));

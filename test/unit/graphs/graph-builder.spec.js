@@ -354,6 +354,22 @@ function(graphBuilder, graph, d3interaction) {
           expect(stats.avg).toBe(26);
         });
 
+        it('renders new components on update', function() {
+          var renderTarget = jasmine.htmlFixture(),
+              cm, sysRender, userRender;
+          testGraph = graphBuilder.create('stacked-area');
+          cm = testGraph.component();
+          testGraph.render(renderTarget);
+          addCpuSysData();
+          addCpuUserData();
+          sysRender = spyOn(cm.first('cpu-sys-stack'), 'render')
+                     .andCallThrough();
+          userRender = spyOn(cm.first('cpu-user-stack'), 'render')
+                     .andCallThrough();
+          testGraph.update();
+          expect(sysRender).toHaveBeenCalled();
+          expect(userRender).toHaveBeenCalled();
+        });
 
         describe('legend', function() {
 

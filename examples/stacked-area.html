@@ -84,8 +84,11 @@
             'forceY': [0, 100],
             'yDomainModifier': 1
           })
-          .data(sampleData)
           .render('#container');
+
+          areaGraph
+          .data(sampleData)
+          .update();
 
 
           // for debugging
