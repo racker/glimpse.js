@@ -18,6 +18,7 @@ define([
   /**
    * @constructor
    * Data Dimension.
+   * @param {(Object, Array.<Object>)?} optDataSource
    */
   Dimension = function(optDataSource) {
     this.dataSources_ = array.getArray(optDataSource);
@@ -133,6 +134,7 @@ define([
   /**
    * Returns a source by index.
    * Defaults to returning the first source.
+   * @param {number?} i index of the data source
    */
   Dimension.prototype.get = function(i) {
     i = i || 0;
@@ -141,10 +143,18 @@ define([
 
   return {
 
+    /**
+     * Creates a new dimension selection.
+     * Optionally takes in a single or list of dimension arrays
+     * to initialize the selection.
+     */
     create: function(optDimensions) {
       return new Dimension(optDimensions);
     },
 
+    /**
+     * Returns dim selection prototype for extension.
+     */
     getDimensionPrototype: function() {
       return Dimension.prototype;
     }

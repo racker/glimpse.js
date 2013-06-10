@@ -20,6 +20,10 @@ define([
     this.dataSources_ = array.getArray(optDataSource);
   };
 
+  /**
+   * Adds a new data sources to an existing selection.
+   * @param {Object|Array.<Object>} data
+   */
   Selection.prototype.add = function(data) {
     if(Array.isArray(data)) {
       array.append(this.dataSources_, data);
@@ -67,27 +71,49 @@ define([
     );
   };
 
+  /**
+   * Returns the number of data sources in the selection.
+   */
   Selection.prototype.length = function() {
     return this.dataSources_.length;
   };
 
+  /**
+   * Helper method to run map on a selection.
+   */
   Selection.prototype.map = function(fn) {
     return new Selection(this.dataSources_.map(fn));
   };
 
+  /**
+   * Helper function to return dimension selection over
+   * a map of the selection.
+   */
   Selection.prototype.dimMap = function(fn) {
     return dimension.create(this.dataSources_.map(fn));
   };
 
+  /**
+   * Returns all the data sources.
+   */
   Selection.prototype.all = function() {
     return this.dataSources_;
   };
 
+  /**
+   * Returns the raw data source specified by index.
+   * Returns the first data source if no index is specified.
+   * @param {number?} i index of the data source
+   */
   Selection.prototype.get = function(i) {
     i = i || 0;
     return this.dataSources_[i];
   };
 
+  /**
+   * Returns a dimension selection of the specified dimension.
+   * @param {string} dim The dimension
+   */
   Selection.prototype.dim = function(dim) {
     return this.dimMap(function(dataSource) {
       return dataSource.data.map(dataFns.dimension(dataSource, dim));
@@ -117,9 +143,19 @@ define([
 
   return {
 
+    /**
+     * Creates a new selection.
+     * Optionally takes in a single or list of data sources
+     * to initialize the selection.
+     * @param {(Object, Array.<Object>)?}
+     */
     create: function(optDataSource) {
       return new Selection(optDataSource);
     },
+
+    /**
+     * Returns selection prototype for extension.
+     */
     getSelectionPrototype: function() {
       return Selection.prototype;
     }

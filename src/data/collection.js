@@ -110,6 +110,9 @@ define([
     d.glDerivation = applyDerivation(dataCollection, d.glDerive);
   }
 
+  /**
+   * Constructor for the collection.
+   */
   function collection() {
     var dataCollection = {},
         globalPubsub = pubsub.getSingleton();
@@ -149,13 +152,20 @@ define([
         addDataSource(dataCollection, data);
       },
 
+      /**
+       * Determines whether a data is standard or derived.
+       * Returns true if data is derived if an is provided.
+       */
       isDerived: function(id) {
         var data = dataCollection[id];
         return obj.isDef(data) && obj.isDef(data.glDerive);
       },
 
       /**
-       * Recalculate derived sources.
+       * Creates a dependency graph and uses it to recalculate
+       * derived sources based on the right order.
+       * If a circular dependency is encountered, that data source
+       * will be injected as 'gl-error-circular-dependency'
        */
       updateDerivations: function() {
         var deps = {};
