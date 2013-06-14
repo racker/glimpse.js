@@ -42,7 +42,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       indicatorSpacing: 4,
       fontColor: '#333',
       fontFamily: 'Arial, sans-serif',
-      fontWeight: 'bold',
+      fontWeight: 'normal',
       fontSize: 13,
       layout: 'horizontal',
       inactiveColor: 'grey',
