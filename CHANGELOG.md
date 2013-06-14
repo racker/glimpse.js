@@ -1,3 +1,9 @@
+## 0.0.10 (June 14 2013)
+
+- Fixes showLegend config option bug.
+- Adds sparkline.
+- Fixes bug with rendering a newly added component(graphbuilder).
+
 ## 0.0.9 (June 7 2013)
 
 - Fix legend interaction for stacked-area graphs.
