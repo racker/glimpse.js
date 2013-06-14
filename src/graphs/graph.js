@@ -241,25 +241,45 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     }
 
     /**
+     * Add legend component to the graph
+     */
+    function addLegend() {
+      if (!componentManager_.first('gl-legend') && config_.showLegend) {
+        componentManager_.add({
+          cid: 'gl-legend',
+          type: 'legend',
+          target: 'gl-info'
+        });
+      }
+    }
+
+    /**
      * Formats the keys for the legend and calls update on it
      * @private
      */
     function updateLegend() {
-      var legendKeys = [],
-        componentLegend;
-      componentManager_.get().forEach(function(c) {
-        var cData = c.data ? c.data() : null;
-        if (c.config('inLegend') && cData) {
-          legendKeys.push({
-            dataId: c.config('dataId'),
-            color: c.config('color'),
-            label: c.data().title || ''
-          });
-        }
-      });
-      componentLegend = componentManager_.first('gl-legend');
-      if(componentLegend){
-        componentLegend.config({ keys: legendKeys })
+      var legendKeys = [], legend;
+
+      legend = componentManager_.first('gl-legend');
+
+      if (!legend) {
+        addLegend();
+        legend = componentManager_.first('gl-legend');
+      }
+
+      if (legend) {
+        componentManager_.get().forEach(function(c) {
+          var cData = c.data ? c.data() : null;
+          if (c.config('inLegend') && cData) {
+            legendKeys.push({
+              dataId: c.config('dataId'),
+              color: c.config('color'),
+              label: c.data().title || ''
+            });
+          }
+        });
+        componentManager_.first('gl-legend')
+          .config({ keys: legendKeys })
           .update();
       }
     }
@@ -463,13 +483,6 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           hiddenStates: ['empty', 'loading', 'error']
         }
       ]);
-      if (config_.showLegend) {
-        componentManager_.add({
-          cid: 'gl-legend',
-          type: 'legend',
-          target: 'gl-info'
-        });
-      }
       componentManager_
         .registerSharedObject('xScale', config_.xScale, true)
         .registerSharedObject('yScale', config_.yScale, true)
@@ -587,6 +600,8 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       var selection = d3util.select(selector);
       assetLoader.loadAll();
       renderPanel(selection);
+      //Add legend before applying shared objects.
+      addLegend();
       componentManager_.registerSharedObject('rootId', config_.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();

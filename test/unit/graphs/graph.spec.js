@@ -74,24 +74,27 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         ]);
     }
 
+    function setLegendSpies(){
+      legend = testGraph.component('gl-legend');
+      spyOn(legend, 'render').andCallThrough();
+      spyOn(legend, 'update');
+    }
+
     function setSpies() {
       testComponent = testGraph.component('testComponent');
       xAxis =  testGraph.component('gl-xaxis');
       yAxis =  testGraph.component('gl-yaxis');
-      legend = testGraph.component('gl-legend');
       xScale = testGraph.config('xScale');
       yScale = testGraph.config('yScale');
       spyOn(assetLoader, 'loadAll');
       spyOn(testComponent, 'render');
       spyOn(xAxis, 'render').andCallThrough();
       spyOn(yAxis, 'render').andCallThrough();
-      spyOn(legend, 'render').andCallThrough();
       spyOn(testComponent, 'update');
       spyOn(xAxis, 'update');
       spyOn(yAxis, 'update');
       spyOn(yAxis, 'hide');
       spyOn(xAxis, 'hide');
-      spyOn(legend, 'update');
       spyOn(xScale, 'domain').andCallThrough();
       spyOn(yScale, 'domain').andCallThrough();
     }
@@ -297,6 +300,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         setSpies();
         selection = jasmine.htmlFixture();
         testGraph.render(selection.node());
+        setLegendSpies();
         testGraph.update();
         panel = selection.select('svg');
       });
@@ -481,7 +485,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       });
 
       it('adds legend', function() {
-         expect(testGraph.component('gl-legend')).toBeDefinedAndNotNull();
+        expect(testGraph.component('gl-legend')).toBeDefinedAndNotNull();
       });
 
       it('renders svg node', function() {
@@ -507,10 +511,6 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         expect(yScale.domain).toHaveBeenCalled();
       });
 
-      it('updates legend', function() {
-        expect(legend.update).toHaveBeenCalled();
-      });
-
       it('updates legend keys', function() {
         expect(legend.config().keys).toBeDefinedAndNotNull();
       });
@@ -522,10 +522,6 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       it('updates rootId on components', function() {
         expect(componentManager.applySharedObject)
           .toHaveBeenCalledWith('rootId', componentManager.cids());
-      });
-
-      it('calls render on legend component', function() {
-        expect(legend.render).toHaveBeenCalled();
       });
 
       it('calls render on x-axis component', function() {
@@ -728,7 +724,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         }
       });
 
-      it('returns graceully when rendered with no data', function() {
+      it('returns gracefully when rendered with no data', function() {
         expect(exceptionCaught).toBe(false);
       });
 
@@ -813,6 +809,8 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       });
 
     });
+
+    //TODO: Add tests to check if the 'showLegend' config works
 
   });
 
