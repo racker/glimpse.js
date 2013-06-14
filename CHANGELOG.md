@@ -1,3 +1,10 @@
+## 0.0.10 (June 14 2013)
+
+- Changes default font of legend to normal.
+- Fixes bug in showLegend config option for graph.
+- Adds sparkline.
+- Fixes bug with rendering a newly added component(graphbuilder).
+
 ## 0.0.9 (June 7 2013)
 
 - Fix legend interaction for stacked-area graphs.

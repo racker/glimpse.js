@@ -10189,7 +10189,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
     line.dispatch = mixins.dispatch();
 
     // TODO: this will be the same for all components
-    // put this func somehwere else and apply as needed
+    // put this func somewhere else and apply as needed
     line.data = function(data) {
       if (data) {
         dataCollection_ = data;
@@ -10350,7 +10350,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       indicatorSpacing: 4,
       fontColor: '#333',
       fontFamily: 'Arial, sans-serif',
-      fontWeight: 'bold',
+      fontWeight: 'normal',
       fontSize: 13,
       layout: 'horizontal',
       inactiveColor: 'grey',
@@ -11867,7 +11867,6 @@ function(obj, array, string, func, components) {
       filter: function(fn, context) {
         return componentList.filter(fn, context);
       },
-
       /**
        * Removes components from the collection (without destroying them).
        * Also removes the cids from the the cidList.
@@ -12068,6 +12067,21 @@ define('layout/layouts',[],function () {
           borderTop: 1
         }
       ]
+    },
+
+     'sparkline': {
+      name: 'gl-vgroup',
+      split: [100],
+      children: [
+        {
+          name: 'gl-main',
+          clip: true,
+          border: 1,
+          paddingTop: 4,
+          borderColor: '#999',
+          backgroundColor: '#fff'
+        }
+        ]
     },
 
    'threepane': {
@@ -12473,6 +12487,7 @@ define('data/dimension/dimension',[
   /**
    * @constructor
    * Data Dimension.
+   * @param {(Object, Array.<Object>)?} optDataSource
    */
   Dimension = function(optDataSource) {
     this.dataSources_ = array.getArray(optDataSource);
@@ -12588,6 +12603,7 @@ define('data/dimension/dimension',[
   /**
    * Returns a source by index.
    * Defaults to returning the first source.
+   * @param {number?} i index of the data source
    */
   Dimension.prototype.get = function(i) {
     i = i || 0;
@@ -12596,10 +12612,18 @@ define('data/dimension/dimension',[
 
   return {
 
+    /**
+     * Creates a new dimension selection.
+     * Optionally takes in a single or list of dimension arrays
+     * to initialize the selection.
+     */
     create: function(optDimensions) {
       return new Dimension(optDimensions);
     },
 
+    /**
+     * Returns dim selection prototype for extension.
+     */
     getDimensionPrototype: function() {
       return Dimension.prototype;
     }
@@ -12630,6 +12654,10 @@ define('data/selection/selection',[
     this.dataSources_ = array.getArray(optDataSource);
   };
 
+  /**
+   * Adds a new data sources to an existing selection.
+   * @param {Object|Array.<Object>} data
+   */
   Selection.prototype.add = function(data) {
     if(Array.isArray(data)) {
       array.append(this.dataSources_, data);
@@ -12677,27 +12705,49 @@ define('data/selection/selection',[
     );
   };
 
+  /**
+   * Returns the number of data sources in the selection.
+   */
   Selection.prototype.length = function() {
     return this.dataSources_.length;
   };
 
+  /**
+   * Helper method to run map on a selection.
+   */
   Selection.prototype.map = function(fn) {
     return new Selection(this.dataSources_.map(fn));
   };
 
+  /**
+   * Helper function to return dimension selection over
+   * a map of the selection.
+   */
   Selection.prototype.dimMap = function(fn) {
     return dimension.create(this.dataSources_.map(fn));
   };
 
+  /**
+   * Returns all the data sources.
+   */
   Selection.prototype.all = function() {
     return this.dataSources_;
   };
 
+  /**
+   * Returns the raw data source specified by index.
+   * Returns the first data source if no index is specified.
+   * @param {number?} i index of the data source
+   */
   Selection.prototype.get = function(i) {
     i = i || 0;
     return this.dataSources_[i];
   };
 
+  /**
+   * Returns a dimension selection of the specified dimension.
+   * @param {string} dim The dimension
+   */
   Selection.prototype.dim = function(dim) {
     return this.dimMap(function(dataSource) {
       return dataSource.data.map(dataFns.dimension(dataSource, dim));
@@ -12727,9 +12777,19 @@ define('data/selection/selection',[
 
   return {
 
+    /**
+     * Creates a new selection.
+     * Optionally takes in a single or list of data sources
+     * to initialize the selection.
+     * @param {(Object, Array.<Object>)?}
+     */
     create: function(optDataSource) {
       return new Selection(optDataSource);
     },
+
+    /**
+     * Returns selection prototype for extension.
+     */
     getSelectionPrototype: function() {
       return Selection.prototype;
     }
@@ -12959,6 +13019,9 @@ define('data/collection',[
     d.glDerivation = applyDerivation(dataCollection, d.glDerive);
   }
 
+  /**
+   * Constructor for the collection.
+   */
   function collection() {
     var dataCollection = {},
         globalPubsub = pubsub.getSingleton();
@@ -12998,13 +13061,20 @@ define('data/collection',[
         addDataSource(dataCollection, data);
       },
 
+      /**
+       * Determines whether a data is standard or derived.
+       * Returns true if data is derived if an is provided.
+       */
       isDerived: function(id) {
         var data = dataCollection[id];
         return obj.isDef(data) && obj.isDef(data.glDerive);
       },
 
       /**
-       * Recalculate derived sources.
+       * Creates a dependency graph and uses it to recalculate
+       * derived sources based on the right order.
+       * If a circular dependency is encountered, that data source
+       * will be injected as 'gl-error-circular-dependency'
        */
       updateDerivations: function() {
         var deps = {};
@@ -13605,45 +13675,74 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     }
 
     /**
+     * Add legend component to the graph
+     */
+    function addLegend() {
+      if (!componentManager_.first('gl-legend') && config_.showLegend) {
+        componentManager_.add({
+          cid: 'gl-legend',
+          type: 'legend',
+          target: 'gl-info'
+        });
+      }
+    }
+
+    /**
      * Formats the keys for the legend and calls update on it
      * @private
      */
     function updateLegend() {
-      var legendKeys = [];
-      componentManager_.get().forEach(function(c) {
-        var cData = c.data ? c.data() : null;
-        if (c.config('inLegend') && cData) {
-          legendKeys.push({
-            dataId: c.config('dataId'),
-            color: c.config('color'),
-            label: c.data().title || ''
-          });
-        }
-      });
-      componentManager_.first('gl-legend')
-        .config({ keys: legendKeys })
-        .update();
+      var legendKeys = [], legend;
+
+      legend = componentManager_.first('gl-legend');
+
+      if (!legend) {
+        addLegend();
+        legend = componentManager_.first('gl-legend');
+      }
+
+      if (legend) {
+        componentManager_.get().forEach(function(c) {
+          var cData = c.data ? c.data() : null;
+          if (c.config('inLegend') && cData) {
+            legendKeys.push({
+              dataId: c.config('dataId'),
+              color: c.config('color'),
+              label: c.data().title || ''
+            });
+          }
+        });
+        componentManager_.first('gl-legend')
+          .config({ keys: legendKeys })
+          .update();
+      }
     }
 
     /**
      * Updates all the special components.
      */
     function updateComponents() {
-      componentManager_.first('gl-xaxis')
-        .config({
-          scale: config_.xScale,
-          ticks: config_.xTicks,
-          unit: config_.xAxisUnit
-        });
-      componentManager_.first('gl-yaxis')
-        .config({
-          scale: config_.yScale,
-          ticks: config_.yTicks,
-          unit: config_.yAxisUnit,
-          target: config_.primaryContainer
-        });
-      componentManager_.update();
-      updateLegend();
+      var yaxisComponent,
+        xaxisComponent;
+        xaxisComponent = componentManager_.first('gl-xaxis');
+        if (xaxisComponent) {
+          xaxisComponent.config({
+            scale: config_.xScale,
+            ticks: config_.xTicks,
+            unit: config_.xAxisUnit
+          });
+        }
+        yaxisComponent = componentManager_.first('gl-yaxis');
+        if (yaxisComponent) {
+          yaxisComponent.config({
+            scale: config_.yScale,
+            ticks: config_.yTicks,
+            unit: config_.yAxisUnit,
+            target: config_.primaryContainer
+          });
+        }
+        componentManager_.update();
+        updateLegend();
     }
 
     /**
@@ -13818,13 +13917,6 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           hiddenStates: ['empty', 'loading', 'error']
         }
       ]);
-      if (config_.showLegend) {
-        componentManager_.add({
-          cid: 'gl-legend',
-          type: 'legend',
-          target: 'gl-info'
-        });
-      }
       componentManager_
         .registerSharedObject('xScale', config_.xScale, true)
         .registerSharedObject('yScale', config_.yScale, true)
@@ -13912,11 +14004,6 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           c.config('target', config_.primaryContainer);
         }
         setDefaultColor(c);
-
-        // TODO: Remove this once extents/domain is calculated properly.
-        if (graph.isRendered()) {
-          c.render(root_);
-        }
       });
 
       return graph;
@@ -13947,6 +14034,8 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       var selection = d3util.select(selector);
       assetLoader.loadAll();
       renderPanel(selection);
+      //Add legend before applying shared objects.
+      addLegend();
       componentManager_.registerSharedObject('rootId', config_.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();
@@ -14159,7 +14248,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
-     * Overrides the removeData() funciton on the graph.
+     * Overrides the removeData() function on the graph.
      * Additionally removes any corresponding components when called.
      *
      * TODO: remove this in favor of data collection events
@@ -14301,6 +14390,17 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
+    * Render newly added components.
+    */
+    function renderAddedComponents(g) {
+      g.component().filter(function(c) {
+        return !c.isRendered();
+      }).forEach(function(c) {
+        c.render(g.root());
+      });
+    }
+
+    /**
      * Updates config for stats label
      */
     function updateStatsLabel() {
@@ -14315,6 +14415,22 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         });
         componentManager.update('gl-stats');
       }
+    }
+
+
+    /**
+     *  Builds a sparkline by destroying the appropriate line graph elements.
+     * Also configures the layout
+     */
+    function sparklineBuilder(g) {
+      g.config({
+        'layout':'sparkline',
+        'width': 400,
+        'height': 120,
+        'viewBoxWidth': 400,
+        'viewBoxHeight': 120
+      });
+      g.component().destroy(['gl-legend', 'gl-stats', 'gl-xaxis']);
     }
 
     /**
@@ -14369,21 +14485,31 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           domainSources: domainSources
         });
 
-      g.dispatch.on('update', updateStatsLabel);
+      g.dispatch.on('update', function() {
+        updateStatsLabel.call(this);
+        renderAddedComponents(g);
+      });
       g.dispatch.on('render', function() {
         // subscribe to toggle event and update stats
         scopeFn = pubsub.scope(g.config('id'));
         globalPubsub.sub(scopeFn('data-toggle'), updateStatsLabel.bind(g));
       });
-
-      addInternalData(g);
-      addInternalComponents(g);
+	
+      if(type !== 'sparkline'){
+        addInternalData(g);
+        addInternalComponents(g);
+      }
 
       switch (type) {
         case 'line':
         case 'area':
           overrideRemoveDataFn(g);
           overrideAddDataFn(type, g, sources, false);
+          break;
+        case 'sparkline':
+          overrideRemoveDataFn(g);
+          overrideAddDataFn('line', g, sources, false);
+          sparklineBuilder(g);
           break;
         case 'stacked-area':
           addStackedData(g);
@@ -15065,7 +15191,7 @@ function(obj, string, array, fn, format, graph,
   'use strict';
 
   var core = {
-    version: '0.0.9',
+    version: '0.0.10',
     obj: obj,
     string: string,
     array: array,
