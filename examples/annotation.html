@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Annotations</h1>
+    <h3>This example illustrates how to render a simple time-series line graph</h3>
+    <div id="container"></div>
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var oneHr = 1000 * 60 * 60;
+        var testData = [
+            { "time": 0,       "value": 20 },
+            { "time": oneHr,   "value": 30 },
+            { "time": oneHr*2, "value": 40 },
+            { "time": oneHr*3, "value": 50 },
+            { "time": oneHr*4, "value": 60 },
+            { "time": oneHr*5, "value": 70 },
+            { "time": oneHr*6, "value": 75 },
+            { "time": oneHr*7, "value": 40 },
+            { "time": oneHr*8, "value": 10 },
+            { "time": oneHr*9, "value": 20 }
+          ];
+
+
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'testData',
+            title: 'Test',
+            data: testData,
+            dimensions: {
+              x: 'time',
+              y: 'value'
+            }
+          }
+        ];
+
+        // Create and render a line graph.
+        var lineGraph = glimpse.graph()
+          .component({
+            cid: 'testDataLine',
+            dataId: 'testData',
+            type: 'line',
+            target: 'gl-main'
+          })
+          .component({
+            cid: 'myEvent',
+            type: 'annotation',
+            target: 'gl-main',
+            xPos: oneHr * 8
+          })
+          .data(dataConfig)
+          .render('#container');
+
+
+        // 1. one-off annotations
+        // 2. data source inline annotation flags
+        // 3. annotations as separeate data source
+
+        // - add bg color to label
+        // - add positioning abilities to label
+
+
+        // for debugging
+        window.graph = lineGraph;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>
