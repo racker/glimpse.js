@@ -435,7 +435,11 @@ function(obj, array, string, format, d3util, graph, pubsub, DataCollection) {
 
       switch (type) {
         case 'line':
+
         case 'scatter':
+
+	      case 'bar':
+
         case 'area':
           overrideRemoveDataFn(g);
           overrideAddDataFn(type, g, sources, false);
