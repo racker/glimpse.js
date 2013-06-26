@@ -394,7 +394,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       options = options || {};
       layout = options.layout || 'default';
       sources = array.getArray(options.sources);
-      if (sources.length === 0) {
+      if (array.isEmpty(sources)) {
         sources = ['*'];
       }
       if (type === 'stacked-area') {
