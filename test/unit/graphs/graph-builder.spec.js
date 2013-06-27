@@ -139,6 +139,23 @@ function(graphBuilder, graph, d3interaction) {
           expect(lineComponents[0].cid()).toBe('test-data');
         });
 
+        it('handles wildcards such as * for a source', function() {
+          var lineComponents;
+          createWithSources('*');
+          testGraph.data(testData);
+          lineComponents = filterComponents(testGraph, 'line');
+          expect(lineComponents.length).toBe(1);
+          expect(lineComponents[0].cid()).toBe('test-data');
+        });
+
+        it('handles wildcards such as * for multiple sources', function() {
+          var lineComponents;
+          createWithSources('*');
+          testGraph.data([testData, testData1]);
+          lineComponents = filterComponents(testGraph, 'line');
+          expect(lineComponents.length).toBe(2);
+        });
+
         it('doesnt add testdata line comp if not in sources', function() {
           var lineComponents;
           createWithSources(['xyz', 'data2']);
@@ -306,6 +323,26 @@ function(graphBuilder, graph, d3interaction) {
           });
         }
 
+        function addCpuDerivedData() {
+          testGraph.data().add({
+            'id': 'cpu-derived-data',
+            'title': 'derived metric',
+            'sources': '',
+            'derivation': function() {
+              return {
+               'data': [
+                  { 'x': 1317279600000, 'y': 20 },
+                  { 'x': 1317695968421, 'y': 19 },
+                  { 'x': 1318112336842, 'y': 21 },
+                  { 'x': 1318528705263, 'y': 21 },
+                  { 'x': 1318945073684, 'y': 21 },
+                  { 'x': 1319361442105, 'y': 21 }
+                ]
+              };
+            }
+          });
+        }
+
         it('adds a single stacked-area derived data source', function() {
           addCpuUserData();
           expect(testGraph.data().get('cpu-user-stack'))
@@ -340,6 +377,32 @@ function(graphBuilder, graph, d3interaction) {
           expect(areaComponents[0].cid()).toBe('cpu-sys-stack');
           expect(areaComponents[1].cid()).toBe('cpu-user-stack');
         });
+
+        it('adding derived source does not render it', function() {
+          var areaComponents;
+          addCpuSysData();
+          addCpuUserData();
+          addCpuDerivedData();
+          areaComponents = filterComponents(testGraph, 'area');
+          expect(areaComponents.length).toBe(2);
+          expect(areaComponents[0].cid()).toBe('cpu-sys-stack');
+          expect(areaComponents[1].cid()).toBe('cpu-user-stack');
+        });
+
+        it('adding derived src with source specified renders it', function() {
+          var areaComponents;
+          testGraph = graphBuilder.create('stacked-area',
+            { sources: ['*', 'cpu-derived-data'] });
+          addCpuSysData();
+          addCpuUserData();
+          addCpuDerivedData();
+          areaComponents = filterComponents(testGraph, 'area');
+          expect(areaComponents.length).toBe(3);
+          expect(areaComponents[0].cid()).toBe('cpu-sys-stack');
+          expect(areaComponents[1].cid()).toBe('cpu-user-stack');
+          expect(areaComponents[2].cid()).toBe('cpu-derived-data-stack');
+        });
+
 
         it('has correct stats', function() {
           var renderTarget = jasmine.htmlFixture(),

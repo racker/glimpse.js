@@ -126,6 +126,17 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
+     * Returns
+     * true if any element in arr2 is in arr1
+     * false otherwise.
+     */
+    function containsAny(arr1, arr2) {
+      return !arr2.every(function(item) {
+        return !array.contains(arr1, item);
+      });
+    }
+
+    /**
      * Adds a new component of the specified type for every supplied data id
      * that is not an internal data source.
      *
@@ -136,7 +147,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      */
     function addComponentsForDataSources(dataSources, componentType,
           g, sources, isStacked) {
-      var id;
+      var id, tags;
       array.getArray(dataSources).forEach(function(dataSource) {
         id = dataSource.id;
         if (isStacked) {
@@ -146,7 +157,8 @@ function(obj, array, string, format, d3util, graph, pubsub) {
             !componentExists(dataSource.id, g)) {
           // If no sources are specified, add all data ids
           // else add the specified ones.
-          if(sources.length === 0 || array.contains(sources, dataSource.id)) {
+          tags = array.getArray(dataSource.tags);
+          if(containsAny(sources, tags.concat(dataSource.id))) {
             g.component({
               type: componentType,
               dataId: id,
@@ -234,13 +246,13 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     /**
      * TODO: Add capability to derivation to create sources.
      */
-    function addStackedData(g) {
+    function addStackedData(g, sources) {
       var dataSources = [{
         id: 'stacks',
         // Compute list of ids denoting * - inactive
         // in terms of the original and not the derived sources.
         sources: function(resolve) {
-          var star = resolve('*'),
+          var star = resolve(sources.join(',')),
               inactive = resolve('inactive').map(function(id) {
                 return id.substring(0, id.length - 6);
               });
@@ -381,6 +393,9 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       options = options || {};
       layout = options.layout || 'default';
       sources = array.getArray(options.sources);
+      if (array.isEmpty(sources)) {
+        sources = ['*'];
+      }
       if (type === 'stacked-area') {
         domainSources = 'glstack';
       } else {
@@ -405,7 +420,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         scopeFn = pubsub.scope(g.config('id'));
         globalPubsub.sub(scopeFn('data-toggle'), updateStatsLabel.bind(g));
       });
-	
+
       if(type !== 'sparkline'){
         addInternalData(g);
         addInternalComponents(g);
@@ -423,7 +438,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           sparklineBuilder(g);
           break;
         case 'stacked-area':
-          addStackedData(g);
+          addStackedData(g, sources);
           overrideRemoveDataFn(g);
           overrideAddDataFn('area', g, sources, true);
           break;
