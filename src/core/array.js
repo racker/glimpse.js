@@ -45,6 +45,17 @@ function () {
     },
 
     /**
+     * Returns:
+     * true if input array is empty
+     * false otherwise
+     * @param {Array} arr
+     * @return {boolean}
+     */
+    isEmpty: function(arr) {
+      return arr.length === 0;
+    },
+
+    /**
      * Convert 'arguments' object into a real array,
      * starting at optional 'from' index.
      */

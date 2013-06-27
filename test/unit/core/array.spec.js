@@ -62,6 +62,23 @@ function (array) {
 
     });
 
+    describe('isEmpty()', function () {
+
+      it('returns true for empty arrays', function () {
+        expect(array.isEmpty([])).toBe(true);
+      });
+
+      it('returns false for non-empty arrays', function () {
+        expect(array.isEmpty([undefined])).toBe(false);
+        expect(array.isEmpty([null])).toBe(false);
+        expect(array.isEmpty(['a'])).toBe(false);
+        expect(array.isEmpty([{}])).toBe(false);
+        expect(array.isEmpty([1])).toBe(false);
+        expect(array.isEmpty(['a', 1, {}])).toBe(false);
+      });
+
+    });
+
     describe('append()', function () {
 
       it('appends at the end of the array', function () {
