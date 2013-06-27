@@ -158,8 +158,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           // If no sources are specified, add all data ids
           // else add the specified ones.
           tags = array.getArray(dataSource.tags);
-          if(sources.length === 0 ||
-            containsAny(sources, tags.concat(dataSource.id))) {
+          if(containsAny(sources, tags.concat(dataSource.id))) {
             g.component({
               type: componentType,
               dataId: id,
