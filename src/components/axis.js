@@ -35,7 +35,8 @@ function(obj, config, string, mixins, d3util) {
       tickSize: 0,
       ticks: 3,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     /**
@@ -99,27 +100,6 @@ function(obj, config, string, mixins, d3util) {
     }
 
     /**
-     * Repositions the root node within the parent DOM to ensure it's always
-     * last and therefore appears above other elements.
-     *
-     * @private
-     */
-    function repositionDOM() {
-      var rootNode, parentNode;
-
-      // Not rendered yet.
-      if (!root_) {
-        return;
-      }
-      rootNode = root_.node();
-      if (rootNode.nextElementSibling) {
-        parentNode = rootNode.parentNode;
-        root_.remove();
-        parentNode.appendChild(rootNode);
-      }
-    }
-
-    /**
      * Main function for Axis component.
      */
     function axis() {
@@ -143,9 +123,12 @@ function(obj, config, string, mixins, d3util) {
       axis,
       config.mixin(
         config_,
-        'cid', 'rootId'),
+        'cid',
+        'rootId',
+        'zIndex'),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -176,7 +159,7 @@ function(obj, config, string, mixins, d3util) {
       }
 
       formatAxis();
-      repositionDOM();
+      axis.applyZIndex();
       axis.dispatch.update.call(this);
       return axis;
     };
