@@ -9837,18 +9837,51 @@ define('mixins/lifecycle',[],function () {
 
 });
 
+define('mixins/zIndex',[],function () {
+  'use strict';
+
+  function getZIndex(ele) {
+    return d3.select(ele).attr('gl-zIndex') || 0;
+  }
+
+  return {
+
+    /**
+     * Enforces z-index based positioning of a component within its
+     * parent container.
+     */
+    applyZIndex: function () {
+      var root = this.root(), parent;
+      if (root) {
+        root.attr('gl-zIndex', this.zIndex());
+        parent = d3.select(root.node().parentNode);
+        parent.selectAll('.gl-component').remove()[0].sort(function(a, b) {
+          return getZIndex(a) - getZIndex(b);
+        }).forEach(function(ele) {
+          parent.node().appendChild(ele);
+        });
+      }
+      return this;
+    }
+
+  };
+
+});
+
 define('mixins/mixins',[
   'mixins/toggle',
   'mixins/dispatch',
-  'mixins/lifecycle'
+  'mixins/lifecycle',
+  'mixins/zIndex'
 ],
-function(toggle, dispatch, lifecycle) {
+function(toggle, dispatch, lifecycle, zIndex) {
   'use strict';
 
   return {
     toggle: toggle,
     lifecycle: lifecycle,
-    dispatch: dispatch
+    dispatch: dispatch,
+    zIndex: zIndex
   };
 
 });
@@ -10108,7 +10141,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       yScale: null,
       opacity: 1,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 5
     };
 
     /**
@@ -10188,10 +10222,12 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'yScale',
         'lineGenerator',
         'color',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -10248,6 +10284,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         .data(dataConfig.data);
       update(selection);
       remove(selection);
+      line.applyZIndex();
       line.dispatch.update.call(this);
       return line;
     };
@@ -10309,6 +10346,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      line.applyZIndex();
       line.dispatch.destroy.call(this);
     };
 
@@ -10369,7 +10407,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       keys: [],
       hiddenStates: ['loading'],
       rootId: null,
-      hideOnClick: true
+      hideOnClick: true,
+      zIndex: 10
     };
 
     globalPubsub = pubsub.getSingleton();
@@ -10516,10 +10555,12 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         'fontWeight',
         'indicatorWidth',
         'indicatorHeight',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -10619,6 +10660,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      legend.applyZIndex();
       legend.dispatch.destroy.call(this);
     };
 
@@ -10664,7 +10706,8 @@ function(obj, config, string, mixins, d3util) {
       tickSize: 0,
       ticks: 3,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     /**
@@ -10728,27 +10771,6 @@ function(obj, config, string, mixins, d3util) {
     }
 
     /**
-     * Repositions the root node within the parent DOM to ensure it's always
-     * last and therefore appears above other elements.
-     *
-     * @private
-     */
-    function repositionDOM() {
-      var rootNode, parentNode;
-
-      // Not rendered yet.
-      if (!root_) {
-        return;
-      }
-      rootNode = root_.node();
-      if (rootNode.nextElementSibling) {
-        parentNode = rootNode.parentNode;
-        root_.remove();
-        parentNode.appendChild(rootNode);
-      }
-    }
-
-    /**
      * Main function for Axis component.
      */
     function axis() {
@@ -10772,9 +10794,12 @@ function(obj, config, string, mixins, d3util) {
       axis,
       config.mixin(
         config_,
-        'cid', 'rootId'),
+        'cid',
+        'rootId',
+        'zIndex'),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -10805,7 +10830,7 @@ function(obj, config, string, mixins, d3util) {
       }
 
       formatAxis();
-      repositionDOM();
+      axis.applyZIndex();
       axis.dispatch.update.call(this);
       return axis;
     };
@@ -10913,7 +10938,8 @@ function(obj, config, string, array, d3util, mixins) {
       fontWeight: 'normal',
       fontSize: 13,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     // PUBLIC
@@ -10939,10 +10965,12 @@ function(obj, config, string, array, d3util, mixins) {
         'fontFamily',
         'fontSize',
         'fontWeight',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -11062,6 +11090,7 @@ function(obj, config, string, array, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      label.applyZIndex();
       label.dispatch.destroy.call(this);
     };
 
@@ -11104,7 +11133,8 @@ function(obj, config, string, label, mixins, d3util) {
       backgroundColor: '#fff',
       type: 'overlay',
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 20
     };
 
     /**
@@ -11152,10 +11182,12 @@ function(obj, config, string, label, mixins, d3util) {
         'opacity',
         'backgroundColor',
         'layoutConfig',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -11213,6 +11245,7 @@ function(obj, config, string, label, mixins, d3util) {
         root_.attr('gl-cid', config_.cid);
       }
       updateChildren_();
+      overlay.applyZIndex();
       overlay.dispatch.update.call(this);
       return overlay;
     };
@@ -11269,7 +11302,8 @@ function(obj, config, string, mixins, d3util) {
       target: null,
       cssClass: null,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     function asset() {
@@ -11286,10 +11320,12 @@ function(obj, config, string, mixins, d3util) {
         'assetId',
         'target',
         'cssClass',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -11354,6 +11390,7 @@ function(obj, config, string, mixins, d3util) {
         'xlink:href': '#' + config_.assetId
       });
       root_.position(config_.position);
+      asset.applyZIndex();
       asset.dispatch.update.call(this);
       return asset;
     };
@@ -11416,7 +11453,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       areaGenerator: d3.svg.area(),
       opacity: 1,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 5
     };
 
     globalPubsub = pubsub.getSingleton();
@@ -11514,10 +11552,12 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'opacity',
         'cssClass',
         'areaGenerator',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -11561,6 +11601,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           'opacity': config_.opacity,
           'd': config_.areaGenerator
         });
+      area.applyZIndex();
       area.dispatch.update.call(this);
       return area;
     };
