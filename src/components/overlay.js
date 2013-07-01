@@ -32,7 +32,8 @@ function(obj, config, string, label, mixins, d3util) {
       backgroundColor: '#fff',
       type: 'overlay',
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 20
     };
 
     /**
@@ -80,7 +81,8 @@ function(obj, config, string, label, mixins, d3util) {
         'opacity',
         'backgroundColor',
         'layoutConfig',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
       mixins.toggle);

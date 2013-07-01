@@ -35,7 +35,8 @@ function(obj, config, string, mixins, d3util) {
       tickSize: 0,
       ticks: 3,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     /**
@@ -143,7 +144,9 @@ function(obj, config, string, mixins, d3util) {
       axis,
       config.mixin(
         config_,
-        'cid', 'rootId'),
+        'cid',
+        'rootId',
+        'zIndex'),
       mixins.lifecycle,
       mixins.toggle);
 

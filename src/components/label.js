@@ -39,7 +39,8 @@ function(obj, config, string, array, d3util, mixins) {
       fontWeight: 'normal',
       fontSize: 13,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 10
     };
 
     // PUBLIC
@@ -65,7 +66,8 @@ function(obj, config, string, array, d3util, mixins) {
         'fontFamily',
         'fontSize',
         'fontWeight',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
       mixins.toggle);

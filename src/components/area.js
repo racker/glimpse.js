@@ -36,7 +36,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       areaGenerator: d3.svg.area(),
       opacity: 1,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 5
     };
 
     globalPubsub = pubsub.getSingleton();
@@ -134,7 +135,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'opacity',
         'cssClass',
         'areaGenerator',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
       mixins.toggle);

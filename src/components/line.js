@@ -38,7 +38,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       yScale: null,
       opacity: 1,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      zIndex: 5
     };
 
     /**
@@ -118,7 +119,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'yScale',
         'lineGenerator',
         'color',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
       mixins.toggle);
