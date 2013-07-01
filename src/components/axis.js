@@ -148,7 +148,8 @@ function(obj, config, string, mixins, d3util) {
         'rootId',
         'zIndex'),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -180,6 +181,7 @@ function(obj, config, string, mixins, d3util) {
 
       formatAxis();
       repositionDOM();
+      axis.applyZIndex();
       axis.dispatch.update.call(this);
       return axis;
     };

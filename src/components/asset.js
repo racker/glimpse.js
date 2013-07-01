@@ -48,7 +48,8 @@ function(obj, config, string, mixins, d3util) {
         'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -113,6 +114,7 @@ function(obj, config, string, mixins, d3util) {
         'xlink:href': '#' + config_.assetId
       });
       root_.position(config_.position);
+      asset.applyZIndex();
       asset.dispatch.update.call(this);
       return asset;
     };

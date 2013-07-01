@@ -85,7 +85,8 @@ function(obj, config, string, label, mixins, d3util) {
         'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -143,6 +144,7 @@ function(obj, config, string, label, mixins, d3util) {
         root_.attr('gl-cid', config_.cid);
       }
       updateChildren_();
+      overlay.applyZIndex();
       overlay.dispatch.update.call(this);
       return overlay;
     };

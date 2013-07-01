@@ -139,7 +139,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -183,6 +184,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           'opacity': config_.opacity,
           'd': config_.areaGenerator
         });
+      area.applyZIndex();
       area.dispatch.update.call(this);
       return area;
     };

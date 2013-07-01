@@ -70,7 +70,8 @@ function(obj, config, string, array, d3util, mixins) {
         'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -190,6 +191,7 @@ function(obj, config, string, array, d3util, mixins) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      label.applyZIndex();
       label.dispatch.destroy.call(this);
     };
 

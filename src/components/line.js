@@ -123,7 +123,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -180,6 +181,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         .data(dataConfig.data);
       update(selection);
       remove(selection);
+      line.applyZIndex();
       line.dispatch.update.call(this);
       return line;
     };
@@ -241,6 +243,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      line.applyZIndex();
       line.dispatch.destroy.call(this);
     };
 
