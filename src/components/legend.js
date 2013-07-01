@@ -50,7 +50,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       keys: [],
       hiddenStates: ['loading'],
       rootId: null,
-      hideOnClick: true
+      hideOnClick: true,
+      zIndex: 10
     };
 
     globalPubsub = pubsub.getSingleton();
@@ -197,10 +198,12 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         'fontWeight',
         'indicatorWidth',
         'indicatorHeight',
-        'rootId'
+        'rootId',
+        'zIndex'
       ),
       mixins.lifecycle,
-      mixins.toggle);
+      mixins.toggle,
+      mixins.zIndex);
 
     /**
      * Event dispatcher.
@@ -300,6 +303,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       root_ = null;
       config_ = null;
       defaults_ = null;
+      legend.applyZIndex();
       legend.dispatch.destroy.call(this);
     };
 

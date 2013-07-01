@@ -222,7 +222,7 @@ function(axisComponent) {
       });
 
       it('repositions itself to the bottom of its parents DOM', function() {
-        container.append('g');
+        container.append('g').attr('class', 'gl-component');
         axis.update();
         expect(axis.root().node()).toBe(container.node().lastElementChild);
       });
