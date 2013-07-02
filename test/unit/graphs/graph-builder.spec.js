@@ -93,6 +93,15 @@ function(graphBuilder, graph, d3interaction) {
         expect(testGraph.component('gl-stats').config('unit')).toBe('GB');
       });
 
+      it('sets the correct text for the stats label', function() {
+        var selection, statsText;
+        selection = jasmine.htmlFixture();
+        testGraph.render(selection);
+
+        statsText = selection.select('[gl-cid="gl-stats"]').text();
+        expect(statsText).toBe('Avg: 50 GB    Min: 1 GB    Max: 100 GB');
+      });
+
       it('removes corresponding components when data is removed', function() {
         var lineComponents;
         testGraph.data().remove('test-data');
