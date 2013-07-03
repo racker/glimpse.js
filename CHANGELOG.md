@@ -1,3 +1,9 @@
+## 0.0.11 (July 3 2013)
+
+- Fix ticks bug - ticks are always visible.
+- Implement zIndex for all components.
+- Upgrade to d3 v3.2
+
 ## 0.0.10 (June 14 2013)
 
 - Changes default font of legend to normal.
