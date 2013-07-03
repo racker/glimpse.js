@@ -104,6 +104,28 @@ function(graph) {
         });
       });
 
+      it('components within components are intact', function() {
+        var componentApplyZIndexSpies;
+        testGraph .component([
+          { cid: 'testComp', type: 'line', dataId: 'fakeData', zIndex: 20 },
+          { cid: 'testComp2', type: 'line',
+            dataId: 'fakeData', color: 'red', zIndex: 5 }
+        ])
+        .state('loading');
+        componentApplyZIndexSpies = testGraph.component().cids()
+          .map(function(cid) {
+            return spyOn(testGraph.component().first(cid), 'applyZIndex')
+                    .andCallThrough();
+          });
+        expect(componentApplyZIndexSpies.length > 0).toBe(true);
+        renderGraph();
+        expect(selection.select('.gl-overlay .gl-components')
+               .node().childNodes.length).toBe(2);
+        componentApplyZIndexSpies.forEach(function(spy) {
+          expect(spy).toHaveBeenCalled();
+        });
+      });
+
     });
 
   });
