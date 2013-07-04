@@ -202,7 +202,7 @@ module.exports = function(grunt) {
       specified json files.
      */
     bumpup: {
-        files: ['package.json', 'component.json']
+        files: ['package.json', 'bower.json']
     },
     /*
       Generates a complete changelog
@@ -240,7 +240,7 @@ module.exports = function(grunt) {
   grunt.registerTask('compile', 'compile-static');
   // Task for updating the pkg config property.
   grunt.registerTask('updatepkg', function () {
-    grunt.config.set('pkg', grunt.file.readJSON('component.json'));
+    grunt.config.set('pkg', grunt.file.readJSON('bower.json'));
   });
   grunt.registerTask('release', function(type) {
     type = type ? type : 'patch';
