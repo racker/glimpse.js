@@ -299,9 +299,9 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           values.min = d.min || 0;
           values.max = d.max || 0;
         }
-        return 'Avg: ' + values.avg + unit +
-               '    Min: ' +  values.min + unit +
-               '    Max: ' + values.max + unit;
+        return 'Avg: ' + values.avg + ' ' + unit +
+               '    Min: ' +  values.min + ' ' + unit +
+               '    Max: ' + values.max + ' ' + unit;
       });
       g.component('gl-domain-label').text(function() {
         var domain = this.data();
