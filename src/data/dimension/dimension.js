@@ -63,6 +63,28 @@ define([
   };
 
   /**
+   * Converts an array of rows (dimensions) to corresponding array
+   * of columns.
+   * For example,
+   *   [ a p x ]         [ a b c ]
+   *   [ b q y ] becomes [ p q r ]
+   *   [ c r z ]         [ x y z ]
+   */
+  Dimension.prototype.columnise = function() {
+    var maxLength = d3.max(this.dataSources_.map(function(dataSource) {
+      return dataSource.length;
+    })) || 0, table = [], col, i, k;
+    for (i = 0; i < maxLength; i++) {
+      col = [];
+      for (k = 0; k < this.dataSources_.length; k++) {
+        col.push(this.dataSources_[k][i]);
+      }
+      table.push(col);
+    }
+    return new Dimension(table);
+  };
+
+  /**
    * Averages the values in the dimension selection.
    */
   Dimension.prototype.avg = function() {
