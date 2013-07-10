@@ -19,6 +19,15 @@ define([
     },
 
     /**
+     * Computes the stack extent i.e. the extent of
+     * 0 and max of sum of all stack offsets per dimension.
+     */
+    'stack-extent': function(sel, dim) {
+      return sel.dim(dim).columnise()
+                .sum().add([0]).concat().extent().get();
+    },
+
+    /**
      * Computes the time interval.
      * Config arguments:
      * unit: may be 'day', 'month', 'year' etc
