@@ -23,7 +23,7 @@ define([
      * 0 and max of sum of all stack offsets per dimension.
      */
     'stack-extent': function(sel, dim) {
-      return sel.dim(dim).columnise()
+      return sel.dim(dim).transpose()
                 .sum().add([0]).concat().extent().get();
     },
 

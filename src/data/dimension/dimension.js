@@ -63,6 +63,7 @@ define([
   };
 
   /**
+   * Transposes the dimension matrix i.e.
    * Converts an array of rows (dimensions) to corresponding array
    * of columns.
    * For example,
@@ -70,7 +71,7 @@ define([
    *   [ b q y ] becomes [ p q r ]
    *   [ c r z ]         [ x y z ]
    */
-  Dimension.prototype.columnise = function() {
+  Dimension.prototype.transpose = function() {
     var maxLength = d3.max(this.dataSources_.map(function(dataSource) {
       return dataSource.length;
     })) || 0, table = [], col, i, k;
