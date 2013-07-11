@@ -147,7 +147,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      */
     function addComponentsForDataSources(dataSources, componentType,
           g, sources, isStacked) {
-      var id, tags;
+      var id;
       array.getArray(dataSources).forEach(function(dataSource) {
         id = dataSource.id;
         if (isStacked) {
@@ -157,8 +157,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
             !componentExists(dataSource.id, g)) {
           // If no sources are specified, add all data ids
           // else add the specified ones.
-          tags = array.getArray(dataSource.tags);
-          if(containsAny(sources, tags.concat(dataSource.id))) {
+          if(isInSources(dataSource, sources)) {
             g.component({
               type: componentType,
               dataId: id,
@@ -188,6 +187,11 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       });
     }
 
+    function isInSources(ds, sources) {
+      var tags = array.getArray(ds.tags);
+      return containsAny(sources, tags.concat(ds.id));
+    }
+
     /**
      * Overrides the add() function on the graph's data collection. Anytime
      * add() is called a new component of the specified type will be added too.
@@ -208,7 +212,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         if (isStacked) {
           array.getArray(data).forEach(function(ds) {
             // Don't add stack derivation for $domain.
-            if (ds.id[0] !== '$') {
+            if (ds.id[0] !== '$' && isInSources(ds, sources)) {
               supr.apply(dataCollection, [{
                 id: ds.id + '-stack',
                 sources: 'stacks',

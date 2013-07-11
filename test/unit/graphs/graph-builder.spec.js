@@ -113,8 +113,8 @@ function(graphBuilder, graph, d3interaction) {
 
         var derivedData, newData;
 
-        function createWithSources(sources) {
-          testGraph = graphBuilder.create('line', { sources: sources });
+        function createWithSources(sources, type) {
+          testGraph = graphBuilder.create(type || 'line', { sources: sources });
           testGraph.config({
             'xScale': d3.scale.linear(),
             'yAxisUnit': 'GB'
@@ -137,6 +137,70 @@ function(graphBuilder, graph, d3interaction) {
               y: 'y'
             }
           };
+        });
+
+        describe('stack-area:', function() {
+
+          it('adds testdata comp if sources is not specified', function() {
+            var areaComponents;
+            createWithSources(undefined, 'stacked-area');
+            testGraph.data(testData);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(1);
+            expect(areaComponents[0].cid()).toBe('test-data-stack');
+          });
+
+          it('handles wildcards such as * for a source', function() {
+            var areaComponents;
+            createWithSources('*', 'stacked-area');
+            testGraph.data(testData, 'stacked-area');
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(1);
+            expect(areaComponents[0].cid()).toBe('test-data-stack');
+          });
+
+          it('handles wildcards such as * for multiple sources', function() {
+            var areaComponents;
+            createWithSources('*', 'stacked-area');
+            testGraph.data([testData, testData1]);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(2);
+          });
+
+          it('doesnt add testdata comp if not in sources', function() {
+            var areaComponents;
+            createWithSources(['xyz', 'data2'], 'stacked-area');
+            testGraph.data(testData);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(0);
+          });
+
+          it('add testdata comp if it is in sources', function() {
+            var areaComponents;
+            createWithSources(['xyz', 'test-data'], 'stacked-area');
+            testGraph.data(testData);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(1);
+            expect(areaComponents[0].cid()).toBe('test-data-stack');
+          });
+
+          it('doesnt add derived data comp if not in sources', function() {
+            var areaComponents;
+            createWithSources(['xyz', 'data2'], 'stacked-area');
+            testGraph.data(derivedData);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(0);
+          });
+
+          it('add derived data comp if it is in sources', function() {
+            var areaComponents;
+            createWithSources(['xyz', 'derived-data'], 'stacked-area');
+            testGraph.data(derivedData);
+            areaComponents = filterComponents(testGraph, 'area');
+            expect(areaComponents.length).toBe(1);
+            expect(areaComponents[0].cid()).toBe('derived-data-stack');
+          });
+
         });
 
         it('adds testdata line comp if sources is not specified', function() {
