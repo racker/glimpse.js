@@ -47,6 +47,10 @@ function(core, pubsub) {
       expect(core.pubsub).toBeDefined();
     });
 
+    it('should have the layouts exposed', function () {
+      expect(core.layouts).toBeDefined();
+    });
+
     it('should have the global pubsub exposed', function () {
       expect(core.globalPubsub).toBe(pubsub.getSingleton());
     });

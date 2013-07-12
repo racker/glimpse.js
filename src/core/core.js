@@ -6,6 +6,7 @@ define([
   'core/function',
   'core/format',
   'graphs/graph',
+  'layout/layouts',
   'graphs/graph-builder',
   'components/component',
   'data/collection',
@@ -14,7 +15,7 @@ define([
 
   'd3-ext/d3-ext'
 ],
-function(obj, string, array, fn, format, graph,
+function(obj, string, array, fn, format, graph, layouts,
     graphBuilder, component, collection, assets, pubsub) {
   'use strict';
 
@@ -27,6 +28,7 @@ function(obj, string, array, fn, format, graph,
     format: format,
     graphBuilder: graphBuilder,
     graph: graph,
+    layouts: layouts,
     components: component,
     dataCollection: collection,
     assetLoader: assets,
