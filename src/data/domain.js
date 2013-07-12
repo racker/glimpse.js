@@ -24,7 +24,7 @@ define([
      */
     'stack-extent': function(sel, dim) {
       return sel.dim(dim).transpose()
-                .sum().add([0]).concat().extent().get();
+                .sum().concat().extent().get();
     },
 
     /**

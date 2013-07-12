@@ -198,7 +198,7 @@ define([
           }, dc);
           dc.updateDerivations();
           xStackExtents = dc.get('$domain').x;
-          expect(xStackExtents).toEqual([0, 450]);
+          expect(xStackExtents).toEqual([60, 450]);
         });
 
         it('returns the stack-extents for non-derived sources if called with *',
@@ -212,7 +212,7 @@ define([
             }, dc);
             dc.updateDerivations();
             xStackExtents = dc.get('$domain').x;
-            expect(xStackExtents).toEqual([0, 950]);
+            expect(xStackExtents).toEqual([70, 950]);
           }
         );
 
@@ -252,7 +252,7 @@ define([
           }, dc);
           dc.updateDerivations();
           yStackExtents = dc.get('$domain').y;
-          expect(yStackExtents).toEqual([0, 70]);
+          expect(yStackExtents).toEqual([15, 70]);
         });
 
         it('returns the ystackExtents for non-derived sources if called with *',
@@ -265,20 +265,26 @@ define([
               }
             }, dc);
             dc.updateDerivations();
-            expect(dc.get('$domain').y).toEqual([0, 105]);
+            expect(dc.get('$domain').y).toEqual([65, 105]);
           }
         );
 
-        it('computes multiple stack extents', function() {
+        it('computes multiple stck exts & applies force modifer', function() {
           domain.addDomainDerivation({
             x: {
               sources: '*',
               compute: 'stack-extent',
+              modifier: {
+                force: [0]
+              },
               'default': [0, 0]
             },
             y: {
               sources: '*',
               compute: 'stack-extent',
+              modifier: {
+                force: [0]
+              },
               'default': [0, 0]
             }
           }, dc);
