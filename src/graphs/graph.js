@@ -76,6 +76,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       errorMessage: 'Error loading graph data',
       state: 'normal',
       yDomainModifier: 1.2,
+      yCompute: 'extent',
       colorPalette: d3.scale.category10().range(),
       xAxisUnit: null,
       yAxisUnit: null,
@@ -203,7 +204,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         },
         y: {
           sources: sources,
-          compute: 'extent',
+          compute: config_.yCompute,
           modifier: {
             force: config_.forceY,
             maxMultiplier: config_.yDomainModifier

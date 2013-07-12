@@ -392,7 +392,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      * @return {graphs.graph}
      */
     graphBuilder.create = function(type, options) {
-      var g, layout, sources, domainSources, scopeFn;
+      var g, layout, sources, domainSources, yCompute, scopeFn;
 
       options = options || {};
       layout = options.layout || 'default';
@@ -402,6 +402,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       }
       if (type === 'stacked-area') {
         domainSources = 'glstack';
+        yCompute = 'stack-extent';
       } else {
         domainSources = sources.join(',') || '*';
       }
@@ -412,6 +413,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           forceY: [0],
           layout: layout,
           yAxisUnit: 'ms',
+          yCompute: yCompute,
           domainSources: domainSources
         });
 
