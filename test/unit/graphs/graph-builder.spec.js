@@ -358,6 +358,9 @@ function(graphBuilder, graph, d3interaction) {
 
         beforeEach(function() {
           testGraph = graphBuilder.create('stacked-area');
+          testGraph.config({
+            yDomainModifier: 1
+          });
         });
 
         function addCpuSysData() {
@@ -476,7 +479,6 @@ function(graphBuilder, graph, d3interaction) {
           expect(areaComponents[2].cid()).toBe('cpu-derived-data-stack');
         });
 
-
         it('has correct stats', function() {
           var renderTarget = jasmine.htmlFixture(),
               dc = testGraph.data(),
@@ -488,6 +490,46 @@ function(graphBuilder, graph, d3interaction) {
           expect(stats.min).toBe(19);
           expect(stats.max).toBe(40);
           expect(stats.avg).toBe(26);
+        });
+
+        it('has correct yCompute config', function() {
+          expect(testGraph.config('yCompute')).toBe('stack-extent');
+        });
+
+        it('has correct y domain for 1 dataset', function() {
+          var renderTarget = jasmine.htmlFixture(),
+              dc = testGraph.data(),
+              yDomain;
+          addCpuUserData();
+          testGraph.render(renderTarget);
+          yDomain = dc.get('$domain').y;
+          expect(yDomain).toEqual([ 0, 21 ]);
+        });
+
+        it('has correct y domain for 2 dataset', function() {
+          var renderTarget = jasmine.htmlFixture(),
+              dc = testGraph.data(),
+              yDomain;
+          addCpuSysData();
+          addCpuUserData();
+          testGraph.render(renderTarget);
+          yDomain = dc.get('$domain').y;
+          expect(yDomain).toEqual([ 0, 61 ]);
+        });
+
+        it('has correct y domain for 2 dataset and a derived src', function() {
+          var renderTarget = jasmine.htmlFixture(),
+              yDomain, dc;
+          testGraph = graphBuilder.create('stacked-area',
+            { sources: ['*', 'cpu-derived-data'] })
+            .config( { yDomainModifier: 1 });
+          dc = testGraph.data();
+          addCpuSysData();
+          addCpuUserData();
+          addCpuDerivedData();
+          testGraph.render(renderTarget);
+          yDomain = dc.get('$domain').y;
+          expect(yDomain).toEqual([ 0, 82 ]);
         });
 
         it('renders new components on update', function() {

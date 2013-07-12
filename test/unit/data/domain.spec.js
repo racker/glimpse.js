@@ -184,6 +184,117 @@ define([
 
       });
 
+      describe('stack-extents', function() {
+
+        var xStackExtents, yStackExtents;
+
+        it('calculates the stack-extents for the provided sources', function() {
+          domain.addDomainDerivation({
+            x: {
+              sources: 'data1,data2',
+              compute: 'stack-extent',
+              'default': [0, 0]
+            }
+          }, dc);
+          dc.updateDerivations();
+          xStackExtents = dc.get('$domain').x;
+          expect(xStackExtents).toEqual([60, 450]);
+        });
+
+        it('returns the stack-extents for non-derived sources if called with *',
+          function() {
+            domain.addDomainDerivation({
+              x: {
+                sources: '*',
+                compute: 'stack-extent',
+                'default': [0, 0]
+              }
+            }, dc);
+            dc.updateDerivations();
+            xStackExtents = dc.get('$domain').x;
+            expect(xStackExtents).toEqual([70, 950]);
+          }
+        );
+
+        it('returns default on no data of 0', function() {
+          domain.addDomainDerivation({
+            x: {
+              sources: '',
+              compute: 'stack-extent',
+              'default': [0, 0]
+            }
+          }, dc);
+          dc.updateDerivations();
+          xStackExtents = dc.get('$domain').x;
+          expect(xStackExtents).toEqual([0, 0]);
+        });
+
+        it('returns non-zero default on no data', function() {
+          domain.addDomainDerivation({
+            x: {
+              sources: '',
+              compute: 'stack-extent',
+              'default': [100, 50]
+            }
+          }, dc);
+          dc.updateDerivations();
+          xStackExtents = dc.get('$domain').x;
+          expect(xStackExtents).toEqual([100, 50]);
+        });
+
+        it('calculates the yExtents for the provided sources', function() {
+          domain.addDomainDerivation({
+            y: {
+              sources: 'data1,data2',
+              compute: 'stack-extent',
+              'default': [0, 0]
+            }
+          }, dc);
+          dc.updateDerivations();
+          yStackExtents = dc.get('$domain').y;
+          expect(yStackExtents).toEqual([15, 70]);
+        });
+
+        it('returns the ystackExtents for non-derived sources if called with *',
+          function() {
+            domain.addDomainDerivation({
+              y: {
+                sources: '*',
+                compute: 'stack-extent',
+                'default': [0, 0]
+              }
+            }, dc);
+            dc.updateDerivations();
+            expect(dc.get('$domain').y).toEqual([65, 105]);
+          }
+        );
+
+        it('computes multiple stck exts & applies force modifer', function() {
+          domain.addDomainDerivation({
+            x: {
+              sources: '*',
+              compute: 'stack-extent',
+              modifier: {
+                force: [0]
+              },
+              'default': [0, 0]
+            },
+            y: {
+              sources: '*',
+              compute: 'stack-extent',
+              modifier: {
+                force: [0]
+              },
+              'default': [0, 0]
+            }
+          }, dc);
+          dc.updateDerivations();
+          expect(dc.get('$domain').x).toEqual([0, 950]);
+          expect(dc.get('$domain').y).toEqual([0, 105]);
+        });
+
+      });
+
       describe('interval', function() {
 
         var intervalDc, timeData;

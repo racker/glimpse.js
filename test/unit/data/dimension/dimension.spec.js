@@ -99,6 +99,45 @@ define([
 
     });
 
+    describe('.transpose()', function() {
+
+      it('columises a single row correctly', function() {
+        dim.add([[ 1, 2, 3, 4, 5 ]]);
+        expect(dim.transpose().all()).toEqual([
+          [ 1 ], [ 2 ], [ 3 ], [ 4 ], [ 5 ]
+        ]);
+      });
+
+      it('columises two rows correctly', function() {
+        dim.add([[ 1, 2, 3, 4, 5 ]]);
+        dim.add([[ 10, 20, 30, 40, 50 ]]);
+        expect(dim.transpose().all()).toEqual([
+          [ 1, 10 ], [ 2, 20 ], [ 3, 30 ], [ 4, 40 ], [ 5, 50 ]
+        ]);
+      });
+
+      it('columises three rows correctly', function() {
+        dim.add([[ 1, 2, 3, 4, 5 ]]);
+        dim.add([[ 10, 20, 30, 40, 50 ]]);
+        dim.add([[ 100, 200, 300, 400, 500 ]]);
+        expect(dim.transpose().all()).toEqual([
+          [ 1, 10, 100 ], [ 2, 20, 200 ], [ 3, 30, 300 ],
+          [ 4, 40, 400 ], [ 5, 50, 500 ]
+        ]);
+      });
+
+      it('handles unequal row lengths correctly', function() {
+        dim.add([[ 1, 2, 3, 4, 5 ]]);
+        dim.add([[ 10, 20, 30, 40 ]]);
+        dim.add([[ 100, 200, 300, 400, 500 ]]);
+        expect(dim.transpose().all()).toEqual([
+          [ 1, 10, 100 ], [ 2, 20, 200 ], [ 3, 30, 300 ],
+          [ 4, 40, 400 ], [ 5, undefined, 500 ]
+        ]);
+      });
+
+    });
+
     describe('.sum()', function() {
 
       it('computes correct sum - 1', function() {
