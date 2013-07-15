@@ -4,7 +4,7 @@ define([
 ], function (collection, domain) {
   'use strict';
 
-  describe('data doamian', function () {
+  describe('data domain', function () {
 
     var dc;
 
@@ -201,6 +201,28 @@ define([
           expect(xStackExtents).toEqual([60, 450]);
         });
 
+        it('calc stack-extents for sources with nulls', function() {
+          dc.add({
+            id: 'dataWithNulls',
+            data: [
+              { x: 100, y: 50},
+              { x: null, y: 45},
+              { x: 100, y: 35}
+            ]
+          });
+          domain.addDomainDerivation({
+            x: {
+              sources: 'data1,data2,dataWithNulls',
+              compute: 'stack-extent',
+              'default': [0, 0]
+            }
+          }, dc);
+          dc.updateDerivations();
+          xStackExtents = dc.get('$domain').x;
+          expect(xStackExtents).toEqual([160, 550]);
+        });
+
+
         it('returns the stack-extents for non-derived sources if called with *',
           function() {
             domain.addDomainDerivation({
@@ -291,6 +313,101 @@ define([
           dc.updateDerivations();
           expect(dc.get('$domain').x).toEqual([0, 950]);
           expect(dc.get('$domain').y).toEqual([0, 105]);
+        });
+
+      });
+
+      describe('handles null data', function() {
+
+        var nullDc, timeData;
+
+        timeData = [
+          {
+            id:'fakeData1',
+            data: [
+              { x: 1131696000000, y: 10},
+              { x: 1005465600000, y: 20},
+              { x: 1068537600000, y: 40}
+            ]
+          },
+          {
+            id:'fakeData2',
+            data: [
+              { x: 942307200000, y: 5},
+              { x: 1037001600000, y: 20},
+              { x: 879235200000, y: 30}
+            ]
+          },
+          {
+            id:'fakeData3',
+            data: [
+              { x: null, y: 20},
+              { x: 1034233200000, y: null},
+              { x: 1128927600000, y: 35}
+            ]
+          }
+        ];
+
+        beforeEach(function() {
+          nullDc = collection.create();
+          nullDc.add([
+            {
+              id: 'data1',
+              data: timeData[0].data
+            },
+            {
+              id: 'data2',
+              data: timeData[1].data
+            },
+            {
+              id: 'data3',
+              data: timeData[2].data
+            },
+            {
+              id: 'data4',
+              sources: '*',
+              derivation: function () {
+                return {
+                  x: 1000,
+                  y: 1000
+                };
+              }
+            }
+          ]);
+        });
+
+        it('calculates the extents from sources', function() {
+          domain.addDomainDerivation({
+            y: {
+              sources: '*',
+              compute: 'extent',
+              args: {
+                unit: 'day',
+                period: 1
+              },
+              'default': [0, 0]
+            }
+          }, nullDc);
+          nullDc.updateDerivations();
+          expect(nullDc.get('$domain').y)
+            .toEqual([5, 40]);
+        });
+
+        it('calculates the interval from sources for 1 month', function() {
+          domain.addDomainDerivation({
+            x: {
+              sources: '*',
+              compute: 'interval',
+              args: {
+                unit: 'day',
+                period: 1
+              },
+              'default': [0, 0]
+            }
+          }, nullDc);
+          nullDc.updateDerivations();
+          expect(nullDc.get('$domain').x)
+            .toEqual([1131609600000, 1131696000000]);
         });
 
       });
