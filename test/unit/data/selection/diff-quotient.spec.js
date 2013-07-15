@@ -24,6 +24,21 @@ function (dc) {
       {'time':1047542400000, 'transfer':10900000}
     ];
 
+    function getData(val) {
+      return [
+        {'time':1046505600000, 'transfer':10678000},
+        {'time':1046592000000, 'transfer':val},
+        {'time':1046678400000, 'transfer':12634000},
+        {'time':1046851200000, 'transfer':13432000},
+        {'time':1046937600000, 'transfer':val},
+        {'time':1047024000000, 'transfer':77970000},
+        {'time':1047283200000, 'transfer':88830000},
+        {'time':1047369600000, 'transfer':val},
+        {'time':1047456000000, 'transfer':11675000},
+        {'time':1047542400000, 'transfer':10900000}
+      ];
+    }
+
     beforeEach(function() {
       dataCollection = dc.create();
       dataCollection.add({
@@ -120,6 +135,37 @@ function (dc) {
 
         expect(dataCollection.get('diffQ'))
           .toEqual([534,-512,82,-73,-23,770,-43,-715,884,-882,-11,-9]);
+      });
+
+    });
+
+    describe('treats null values as 0', function() {
+
+      function setData(val) {
+        dataCollection = dc.create();
+        dataCollection.add({
+          id: 'transferOrd',
+          title: 'Time to Connect (ORD)',
+          data:  getData(val),
+          dimensions: {
+            x: 'time',
+            y: 'transfer'
+          }
+        });
+        addRoCDerivedSource('day');
+      }
+
+      it('generates same roc values for null and zero data points', function() {
+        var cachedRoc;
+        setData(0);
+        cachedRoc = dataCollection.get('diffQ');
+        expect(cachedRoc)
+          .toEqual([ -10678000, 12634000, 399000,
+                     -13432000, 77970000, 3620000,
+                     -88830000, 11675000, -775000 ]);
+        setData(null);
+        expect(dataCollection.get('diffQ'))
+          .toEqual(cachedRoc);
       });
 
     });

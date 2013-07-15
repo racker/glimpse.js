@@ -128,6 +128,51 @@ function(d3, object, line, dc) {
 
     });
 
+    describe('handles null values', function() {
+
+      // Currently null values are interpreted as zero.
+      // This will be changed in the future.
+
+      var selection;
+
+      function getData(val) {
+        return [{
+          id:'fakeData',
+          data: [
+            { x: 13, y: 106},
+            { x: val, y: 56},
+            { x: 17, y: 100}
+          ]
+        }];
+      }
+
+      function getDataAttribute(comp) {
+        return d3.select(comp.root().node().childNodes[0]).attr('d');
+      }
+
+      function renderLine(data) {
+        var l = line(),
+            d = dc.create();
+        d.add(data);
+        l.data(d);
+        l.xScale(d3.time.scale());
+        l.yScale(d3.scale.linear());
+        l.config({'dataId': 'fakeData', color: '#000'});
+        l.render('#svg-fixture');
+        return l;
+      }
+
+      it('renders null as zeros', function() {
+        var l1, l2;
+        selection = jasmine.svgFixture();
+        l1 = renderLine(getData(null));
+        l2 = renderLine(getData(0));
+        expect(getDataAttribute(l1)).toBe('M13,106L0,56L17,100');
+        expect(getDataAttribute(l1)).toBe(getDataAttribute(l2));
+      });
+
+    });
+
     describe('xScale()', function() {
 
       it('sets/gets the xScale', function() {
