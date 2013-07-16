@@ -136,6 +136,22 @@ function(area, dc) {
         testArea.render(selection);
       });
 
+      function createArea(data) {
+        var a = area(),
+            d = dc.create();
+        d.add(data);
+        a.data(d);
+        a.config({ 'dataId': 'fakeData' });
+        a.xScale(d3.scale.linear().domain([0, 100]).range([0, 100]));
+        a.yScale(d3.scale.linear().domain([0, 100]).range([0, 100]));
+        a.render(selection);
+        return a;
+      }
+
+      function getDataAttribute(comp) {
+        return d3.select(comp.root().node().childNodes[0]).attr('d');
+      }
+
       it('applies the data config X accessor fn', function() {
         expect(areaGenerator.x()({ x: 1 })).toBe(2);
       });
@@ -150,6 +166,19 @@ function(area, dc) {
         testArea.update();
         // y + 2 + 5
         expect(areaGenerator.y()({ y: 1 })).toBe(8);
+      });
+
+      it('renders null values as 0s', function() {
+        var d1 = getTestData(), d2 = getTestData(), a1, a2;
+        d1[0].data[0].x = 0;
+        d1[0].data[0].y = 0;
+        a1 = createArea(d1);
+        d2[0].data[0].x = null;
+        d2[0].data[0].y = null;
+        a2 = createArea(d2);
+        expect(getDataAttribute(a1))
+          .toBe('M0,0L1,50L2,100L3,75L3,0L2,0L1,0L0,0Z');
+        expect(getDataAttribute(a1)).toBe(getDataAttribute(a2));
       });
 
     });

@@ -150,6 +150,16 @@ define([
         expect(dim.sum().get()).toEqual(500);
       });
 
+      it('computes correct sum with single null', function() {
+        dim.add([[ 100, -200, -300, null, 400, 500 ]]);
+        expect(dim.sum().get()).toEqual(500);
+      });
+
+      it('computes correct sum with multiple nulls', function() {
+        dim.add([[ null, 100, -200, -300, null, 400, 500 ]]);
+        expect(dim.sum().get()).toEqual(500);
+      });
+
     });
 
     describe('.avg()', function() {
