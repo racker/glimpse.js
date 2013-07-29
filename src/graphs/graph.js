@@ -115,7 +115,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         len = colors.length;
         if (component.hasOwnProperty('color')) {
           component.config().color = component.config().color ||
-            colors[(coloredComponentsCount += 1) % len];
+            colors[(coloredComponentsCount++) % len];
         }
       }
     }
