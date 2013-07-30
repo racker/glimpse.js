@@ -14,14 +14,12 @@ function(obj, config, string, mixins, d3util) {
 
   return function() {
 
-    var config_,
-      defaults_,
-      root_,
+    var _ = {
+        config: {}
+      },
       d3axis_;
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'axis',
       axisType: 'x',
       gap: 0,
@@ -57,43 +55,43 @@ function(obj, config, string, mixins, d3util) {
     function formatAxis() {
       var zeroTick, zeroTickLabel;
       // remove boldness from default axis path
-      root_.selectAll('path')
+      _.root.selectAll('path')
         .attr({
           'fill': 'none'
         });
 
       // update fonts
-      root_.selectAll('text')
+      _.root.selectAll('text')
         .attr({
           'stroke': 'none',
-          'fill': config_.color
+          'fill': _.config.color
         });
 
       //Apply padding to the first tick on Y axis
-      if (config_.axisType === 'y') {
-        zeroTick = root_.select('g');
+      if (_.config.axisType === 'y') {
+        zeroTick = _.root.select('g');
 
         if (zeroTick.node()) {
           zeroTickLabel = zeroTick.text() +
-            (config_.unit ? ' ' + config_.unit : '');
+            (_.config.unit ? ' ' + _.config.unit : '');
           zeroTick.select('text').text(zeroTickLabel);
           setZeroTickTranslate(zeroTick);
         }
       }
 
       // apply text background for greater readability.
-      root_.selectAll('.gl-axis text').each(function() {
+      _.root.selectAll('.gl-axis text').each(function() {
 
         var textBg = this.cloneNode(true);
         d3.select(textBg).attr({
-          stroke: config_.textBgColor,
-          'stroke-width': config_.textBgSize
+          stroke: _.config.textBgColor,
+          'stroke-width': _.config.textBgSize
         });
         this.parentNode.insertBefore(textBg, this);
       });
 
       // remove axis line
-      root_.selectAll('.domain')
+      _.root.selectAll('.domain')
         .attr({
           'stroke': 'none'
         });
@@ -103,7 +101,7 @@ function(obj, config, string, mixins, d3util) {
      * Main function for Axis component.
      */
     function axis() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       d3axis_ = d3.svg.axis();
       axis.rebind(
         d3axis_,
@@ -117,45 +115,35 @@ function(obj, config, string, mixins, d3util) {
         'tickFormat');
       return axis;
     }
+    axis._ = _;
 
     // Apply mixins.
     obj.extend(
       axis,
-      config.mixin(
-        config_,
-        'cid',
-        'rootId',
-        'zIndex'),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    axis.dispatch = mixins.dispatch();
+    axis.init();
 
     /**
      * Apply updates to the axis.
      */
     axis.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return axis;
       }
-      root_.selectAll('g').remove();
+      _.root.selectAll('g').remove();
       axis.reapply();
-      root_.call(d3axis_);
-      root_.attr({
-        'font-family': config_.fontFamily,
-        'font-size': config_.fontSize,
+      _.root.call(d3axis_);
+      _.root.attr({
+        'font-family': _.config.fontFamily,
+        'font-size': _.config.fontSize,
         'class': string.classes('component',
-            'axis', config_.axisType + '-axis '),
-        'stroke': config_.color,
-        'opacity': config_.opacity
+            'axis', _.config.axisType + '-axis '),
+        'stroke': _.config.color,
+        'opacity': _.config.opacity
       });
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
 
       formatAxis();
@@ -170,8 +158,8 @@ function(obj, config, string, mixins, d3util) {
      * @return {component.axis}
      */
     axis.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(axis, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(axis, selection, function(target) {
           return target.append('g')
             .attr({
               'fill': 'none',
@@ -199,24 +187,16 @@ function(obj, config, string, mixins, d3util) {
     };
 
     /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    axis.root = function() {
-      return root_;
-    };
-
-    /**
      * Destroys the axis and removes everything from the DOM.
      * @public
      */
     axis.destroy = function() {
-      if (root_) {
-        root_.remove();
+      if (_.root) {
+        _.root.remove();
       }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
+      _.root = null;
+      _.config = null;
+      _.defaults = null;
       d3axis_ = null;
       axis.dispatch.destroy.call(this);
     };

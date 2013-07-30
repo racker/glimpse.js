@@ -9,10 +9,9 @@ define([
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
-  'data/functions',
-  'events/pubsub'
+  'data/functions'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
+function(array, config, obj, string, d3util, mixins, dataFns) {
   'use strict';
 
   return function() {
@@ -37,8 +36,6 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       rootId: null,
       zIndex: 5
     };
-
-    _.globalPubsub = pubsub.getSingleton();
 
     /**
      * Updates the area generator function
@@ -126,27 +123,16 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       area,
       config.mixin(
         _.config,
-        'cid',
-        'target',
         'xScale',
         'yScale',
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator',
-        'rootId',
-        'zIndex'
+        'areaGenerator'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.component,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    area.dispatch = mixins.dispatch();
+    area.init();
 
     /**
      * Updates the area component with new/updated data/config
@@ -204,13 +190,6 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       area.update();
       area.dispatch.render.call(this);
       return area;
-    };
-
-
-    /** Scope for the area component */
-    //TODO create a mixin for scope
-    area.scope = function() {
-      return pubsub.scope(_.config.rootId);
     };
 
     /**

@@ -61,45 +61,15 @@ function(obj, config, string, array, d3util, mixins) {
       label,
       config.mixin(
         _.config,
-        'cid',
-        'target',
         'cssClass',
         'color',
         'fontFamily',
         'fontSize',
-        'fontWeight',
-        'rootId',
-        'zIndex'
+        'fontWeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    label.dispatch = mixins.dispatch();
-
-    /**
-     * Gets/Sets the data source to be used with the label.
-     * Uses the configurable "text" accessor function to retrieve text.
-     * @param {Object} data Any data source.
-     * @return {Object|components.label}
-     */
-    label.data = function(data) {
-      // Set data if provided.
-      if (data) {
-        _.dataCollection = data;
-        return label;
-      }
-      // Find corresponding data group if dataId is set.
-      if (_.dataCollection && _.config.dataId) {
-        return _.dataCollection.get(_.config.dataId);
-      }
-      // Otherwise return the entire raw data.
-      return _.dataCollection;
-    };
+    label.super();
 
     /**
      * @description Gets/sets the static text to display.
@@ -172,21 +142,6 @@ function(obj, config, string, array, d3util, mixins) {
       _.root.position(_.config.position);
       label.dispatch.update.call(this);
       return label;
-    };
-
-    /**
-     * Destroys the label and removes everything from the DOM.
-     * @public
-     */
-    label.destroy = function() {
-      if (_.root) {
-        _.root.remove();
-      }
-      _.root = null;
-      _.config = null;
-      _.defaults = null;
-      label.applyZIndex();
-      label.dispatch.destroy.call(this);
     };
 
     return label();

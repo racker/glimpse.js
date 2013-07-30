@@ -16,14 +16,14 @@ function(obj, config, string, label, mixins, d3util) {
 
   return function() {
 
-    var defaults_,
-      config_,
-      root_,
+    var _ = {
+        config: {}
+      },
       updateChildren_;
 
-    config_ = {};
+    _.config = {};
 
-    defaults_ = {
+    _.defaults = {
       cid: null,
       target: null,
       components: [],
@@ -44,17 +44,17 @@ function(obj, config, string, label, mixins, d3util) {
       var parentNode,
           componentsContainer;
 
-      parentNode = d3.select(root_.node().parentNode);
+      parentNode = d3.select(_.root.node().parentNode);
 
-      root_.select('rect').attr({
+      _.root.select('rect').attr({
         width: parentNode.width(),
         height: parentNode.height(),
-        opacity: config_.opacity,
-        fill: config_.backgroundColor
+        opacity: _.config.opacity,
+        fill: _.config.backgroundColor
       });
-      componentsContainer = root_.select('g')
+      componentsContainer = _.root.select('g')
         .attr('class', 'gl-components');
-      config_.components.forEach(function(component) {
+      _.config.components.forEach(function(component) {
         if (component.root()) {
           // If already rendered, just update instead.
           component.update();
@@ -62,46 +62,28 @@ function(obj, config, string, label, mixins, d3util) {
           component.render(componentsContainer);
         }
       });
-      componentsContainer.layout(config_.layoutConfig);
+      componentsContainer.layout(_.config.layoutConfig);
     };
 
     function overlay() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return overlay;
     }
+    overlay._ = _;
 
     // Apply Mixins
     obj.extend(
       overlay,
       config.mixin(
-        config_,
-        'cid',
-        'target',
+        _.config,
         'cssClass',
         'opacity',
         'backgroundColor',
-        'layoutConfig',
-        'rootId',
-        'zIndex'
+        'layoutConfig'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    overlay.dispatch = mixins.dispatch();
-
-    /*
-     * Gets the root selection of this component.
-     * @public
-     * @return {d3.selection}
-     */
-    overlay.root = function () {
-      return root_;
-    };
+    overlay.init();
 
     /**
      * Renders the component to the specified selection,
@@ -111,8 +93,8 @@ function(obj, config, string, label, mixins, d3util) {
      * @return {components.overlay}
      */
     overlay.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(overlay, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(overlay, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'overlay')
@@ -134,37 +116,19 @@ function(obj, config, string, label, mixins, d3util) {
      * @return {componnets.update}
      */
     overlay.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return overlay;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       updateChildren_();
       overlay.applyZIndex();
       overlay.dispatch.update.call(this);
       return overlay;
-    };
-
-    /**
-     * Destroys this component and cleans up after itself.
-     * @public
-     */
-    overlay.destroy = function() {
-      // TODO: Need a more generalized way of removing sub-components.
-      config_.components.forEach(function(label) {
-        label.destroy();
-      });
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      overlay.dispatch.destroy.call(this);
     };
 
     return overlay();
