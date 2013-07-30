@@ -13,40 +13,41 @@
     <script src="../requirejs.conf.js"></script>
     <script>
       require(['glimpse'], function (glimpse) {
-	'use strict';
+        'use strict';
 
-	// Actual raw sample data.
-	var oneHr = 1000 * 60 * 60;
-	var latencyData = [
-	    { "time": 0,       "latency": 100 },
-	    { "time": oneHr,   "latency": 50 },
-	    { "time": oneHr*2, "latency": 25 },
-	    { "time": oneHr*8, "latency": 25 }
-	  ];
+        // Actual raw sample data.
+        var oneHr = 1000 * 60 * 60;
+        var latencyData = [
+            { "time": 0,       "latency": 100 },
+            { "time": oneHr,   "latency": 50 },
+            { "time": oneHr*2, "latency": 25 },
+            { "time": oneHr*8, "latency": 25 }
+          ];
 
 
-	// Configure which data to show.
-	var dataConfig = [
-	  {
-	    id: 'latencyDfw',
-	    title: 'Time to Connect (DFW)',
-	    data: latencyData,
-	    dimensions: {
-	      x: 'time',
-	      y: 'latency'
-	    }
-	  }
-	];
+        // Configure which data to show.
+        var dataConfig = [
+          {
+            id: 'latencyDfw',
+            title: 'Time to Connect (DFW)',
+            data: latencyData,
+            dimensions: {
+              x: 'time',
+              y: 'latency'
+            }
+          }
+        ];
 
-	// Create and render a bar graph.
-	var lineGraph = glimpse.graphBuilder().create('bar')
-	  .config('yAxisUnit', 'GB')
-	  .data(dataConfig)
-	  .render('#container');
+        // Create and render a bar graph.
+        var barGraph = glimpse.graphBuilder().create('bar')
+          .config({'yAxisUnit': 'GB',
+            'scaleWidth': false})
+          .data(dataConfig)
+          .render('#container');
 
-	// for debugging
-	window.graph = barGraph;
-	window.gl = glimpse;
+        // for debugging
+        window.graph = barGraph;
+        window.gl = glimpse;
       });
     </script>
   </body>

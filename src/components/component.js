@@ -10,7 +10,8 @@ define([
   'components/bar',
   'components/tooltip'
 ],
-function(line, legend, axis, label, overlay, asset, area, scatter, bar, tooltip) {
+function(line, legend, axis, label, overlay, asset,
+    area, scatter, bar, tooltip) {
 
   'use strict';
 
