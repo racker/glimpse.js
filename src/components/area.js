@@ -18,13 +18,11 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
   return function() {
 
     //Private variables
-    var config_ = {},
-      defaults_,
-      dataCollection_,
-      root_,
-      globalPubsub;
+    var _ = {
+      config: {}
+    };
 
-    defaults_ = {
+    _.defaults = {
       type: 'area',
       target: null,
       cid: null,
@@ -40,7 +38,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       zIndex: 5
     };
 
-    globalPubsub = pubsub.getSingleton();
+    _.globalPubsub = pubsub.getSingleton();
 
     /**
      * Updates the area generator function
@@ -51,34 +49,34 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           y1;
 
       dataConfig = area.data();
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       if (dataConfig.dimensions.y0) {
         // Use y0 for baseline if supplied.
         y0 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y0')(d, i));
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y0')(d, i));
         };
         y1 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i) +
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i) +
             dataFns.dimension(dataConfig, 'y0')(d, i));
         };
       } else {
         // Otherwise default to bottom of range.
         y0 = function() {
-          return config_.yScale.range()[0];
+          return _.config.yScale.range()[0];
         };
         y1 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
         };
       }
 
       // Configure the areaGenerator function
-      config_.areaGenerator
+      _.config.areaGenerator
         .x(function(d, i) {
           var value;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          return config_.xScale(value);
+          return _.config.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -86,9 +84,9 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           var minX, value;
           minX = 0;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          if (config_.xScale) {
-            minX = config_.xScale.range()[0];
-            value = config_.xScale(value);
+          if (_.config.xScale) {
+            minX = _.config.xScale.range()[0];
+            value = _.config.xScale(value);
           }
           return value >= minX;
         });
@@ -102,9 +100,9 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
      //TODO: same as line so extract it out
      function handleDataToggle(args) {
-      var id = config_.dataId;
+      var id = _.config.dataId;
       if (args === id) {
-        if (dataCollection_.hasTags(id, 'inactive')) {
+        if (_.dataCollection.hasTags(id, 'inactive')) {
           area.hide();
         } else {
           area.show();
@@ -118,15 +116,16 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.area}
      */
     function area() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return area;
     }
+    area._ = _;
 
     // Apply mixins.
     obj.extend(
       area,
       config.mixin(
-        config_,
+        _.config,
         'cid',
         'target',
         'xScale',
@@ -140,6 +139,7 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       ),
       mixins.lifecycle,
       mixins.toggle,
+      mixins.component,
       mixins.zIndex);
 
     /**
@@ -148,22 +148,12 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
     area.dispatch = mixins.dispatch();
 
-    // TODO: this will be the same for all components
-    // put this func somehwere else and apply as needed
-    area.data = function(data) {
-      if (data) {
-        dataCollection_ = data;
-        return area;
-      }
-      return dataCollection_.get(config_.dataId);
-    };
-
     /**
      * Updates the area component with new/updated data/config
      * @return {components.area}
      */
     area.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return area;
       }
 
@@ -174,15 +164,15 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
 
       updateAreaGenerator();
 
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      root_.select('.gl-path')
+      _.root.select('.gl-path')
         .datum(area.data().data)
         .attr({
-          'fill': config_.color,
-          'opacity': config_.opacity,
-          'd': config_.areaGenerator
+          'fill': _.config.color,
+          'opacity': _.config.opacity,
+          'd': _.config.areaGenerator
         });
       area.applyZIndex();
       area.dispatch.update.call(this);
@@ -196,8 +186,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
     area.render = function(selection) {
       var scope;
-      if (!root_) {
-        root_ = d3util.applyTarget(area, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(area, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'area')
@@ -210,24 +200,17 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         });
       }
       scope = area.scope();
-      globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
       area.update();
       area.dispatch.render.call(this);
       return area;
     };
 
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    area.root = function() {
-      return root_;
-    };
 
     /** Scope for the area component */
     //TODO create a mixin for scope
     area.scope = function() {
-      return pubsub.scope(config_.rootId);
+      return pubsub.scope(_.config.rootId);
     };
 
     /**
@@ -235,14 +218,14 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
     area.destroy = function() {
       var scope;
-      if(root_) {
-        root_.remove();
+      if(_.root) {
+        _.root.remove();
       }
       scope = area.scope();
-      globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
+      _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
+      _.root = null;
+      _.config = null;
+      _.defaults = null;
       area.dispatch.destroy.call(this);
     };
 
