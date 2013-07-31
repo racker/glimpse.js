@@ -9,10 +9,9 @@ define([
   'core/string',
   'core/array',
   'd3-ext/util',
-  'mixins/mixins',
-  'events/pubsub'
+  'mixins/mixins'
 ],
-function(obj, config, string, array, d3util, mixins, pubsub) {
+function(obj, config, string, array, d3util, mixins) {
   'use strict';
 
   return function() {
@@ -20,13 +19,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
     // PRIVATE
 
     var _ = {
-      defaults: {},
-      config: {},
-      root: null,
-      enter: null,
-      update: null,
-      remove: null,
-      dataCollection: null,
+      config: {}
     },
       onClickHandler;
 
@@ -52,8 +45,6 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       hideOnClick: true,
       zIndex: 10
     };
-
-    _.globalPubsub = pubsub.getSingleton();
 
     /**
      * Handles the click event on legend.
@@ -191,26 +182,16 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       legend,
       config.mixin(
         _.config,
-        'cid',
         'keys',
         'fontColor',
         'fontFamily',
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight',
-        'rootId',
-        'zIndex'
+        'indicatorHeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    legend.dispatch = mixins.dispatch();
+      mixins.component);
+    legend.init();
 
 
     /**
@@ -283,21 +264,6 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       legend.update();
       legend.dispatch.render.call(this);
       return legend;
-    };
-
-    /**
-     * Destroys the legend and removes everything from the DOM.
-     * @public
-     */
-    legend.destroy = function() {
-      if (_.root) {
-        _.root.remove();
-      }
-      _.root = null;
-      _.config = null;
-      _.defaults = null;
-      legend.applyZIndex();
-      legend.dispatch.destroy.call(this);
     };
 
     return legend();

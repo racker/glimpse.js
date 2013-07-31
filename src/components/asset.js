@@ -14,13 +14,11 @@ function(obj, config, string, mixins, d3util) {
 
   return function() {
 
-    var defaults_,
-      config_,
-      root_;
+    var _ = {
+      config: {}
+    };
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       cid: null,
       assetId: null,
       target: null,
@@ -31,40 +29,23 @@ function(obj, config, string, mixins, d3util) {
     };
 
     function asset() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return asset;
     }
+
+    asset._ = _;
 
     // Apply Mixins
     obj.extend(
       asset,
       config.mixin(
-        config_,
-        'cid',
+        _.config,
         'assetId',
-        'target',
-        'cssClass',
-        'rootId',
-        'zIndex'
+        'cssClass'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    asset.dispatch = mixins.dispatch();
-
-    /*
-     * Gets the root selection of this component.
-     * @public
-     * @return {d3.selection}
-     */
-    asset.root = function() {
-      return root_;
-    };
+    asset.init();
 
     /**
      * Renders the component to the specified selection,
@@ -74,8 +55,8 @@ function(obj, config, string, mixins, d3util) {
      * @return {components.overlay}
      */
     asset.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(asset, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(asset, selection, function(target) {
           return target.append('g')
             .attr({
               'class': string.classes('component', 'asset')
@@ -96,41 +77,27 @@ function(obj, config, string, mixins, d3util) {
     asset.update = function() {
       var useEl;
 
-      if (!root_) {
+      if (!_.root) {
         return asset;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
-      useEl = root_.select('use');
+      useEl = _.root.select('use');
       if (useEl.empty()) {
-        useEl = root_.append('use');
+        useEl = _.root.append('use');
       }
       useEl.attr({
-        'class': config_.assetId,
-        'xlink:href': '#' + config_.assetId
+        'class': _.config.assetId,
+        'xlink:href': '#' + _.config.assetId
       });
-      root_.position(config_.position);
+      _.root.position(_.config.position);
       asset.applyZIndex();
       asset.dispatch.update.call(this);
       return asset;
-    };
-
-    /**
-     * Destroys this component and cleans up after itself.
-     * @public
-     */
-    asset.destroy = function() {
-      if(root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      asset.dispatch.destroy.call(this);
     };
 
     return asset();
