@@ -6,12 +6,13 @@ define([
   'core/array',
   'core/config',
   'core/object',
+  'core/function',
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
   'data/functions'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns) {
+function(array, config, obj, fn, string, d3util, mixins, dataFns) {
   'use strict';
 
   return function() {
@@ -195,18 +196,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
     /**
      * Destroys the area and removes everything from the DOM.
      */
-    area.destroy = function() {
-      var scope;
-      if(_.root) {
-        _.root.remove();
-      }
-      scope = area.scope();
+    area.destroy = fn.compose(area.destroy, function() {
+      var scope = area.scope();
       _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      _.root = null;
-      _.config = null;
-      _.defaults = null;
-      area.dispatch.destroy.call(this);
-    };
+    });
 
     return area();
 

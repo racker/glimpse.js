@@ -9,9 +9,10 @@ define([
   'core/string',
   'core/array',
   'd3-ext/util',
-  'mixins/mixins'
+  'mixins/mixins',
+  'events/pubsub'
 ],
-function(obj, config, string, array, d3util, mixins) {
+function(obj, config, string, array, d3util, mixins, pubsub) {
   'use strict';
 
   return function() {
@@ -19,8 +20,14 @@ function(obj, config, string, array, d3util, mixins) {
     // PRIVATE
 
     var _ = {
-        config: {}
-      },
+      defaults: {},
+      config: {},
+      root: null,
+      enter: null,
+      update: null,
+      remove: null,
+      dataCollection: null,
+    },
       onClickHandler;
 
 
@@ -45,6 +52,8 @@ function(obj, config, string, array, d3util, mixins) {
       hideOnClick: true,
       zIndex: 10
     };
+
+    _.globalPubsub = pubsub.getSingleton();
 
     /**
      * Handles the click event on legend.
@@ -182,17 +191,27 @@ function(obj, config, string, array, d3util, mixins) {
       legend,
       config.mixin(
         _.config,
+        'cid',
         'keys',
         'fontColor',
         'fontFamily',
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight'
+        'indicatorHeight',
+        'rootId',
+        'zIndex'
       ),
-      mixins.component);
+      mixins.lifecycle,
+      mixins.toggle,
+      mixins.zIndex);
 
-    legend.super();
+    /**
+     * Event dispatcher.
+     * @public
+     */
+    legend.dispatch = mixins.dispatch();
+
 
     /**
      * Gets/Sets the data to be used with the legend.
@@ -242,7 +261,6 @@ function(obj, config, string, array, d3util, mixins) {
       _.update(selection);
       _.root.layout({type: _.config.layout, gap: _.config.gap});
       _.root.position(_.config.position);
-      legend.applyZIndex();
       legend.dispatch.update.call(this);
       return legend;
     };
@@ -265,6 +283,21 @@ function(obj, config, string, array, d3util, mixins) {
       legend.update();
       legend.dispatch.render.call(this);
       return legend;
+    };
+
+    /**
+     * Destroys the legend and removes everything from the DOM.
+     * @public
+     */
+    legend.destroy = function() {
+      if (_.root) {
+        _.root.remove();
+      }
+      _.root = null;
+      _.config = null;
+      _.defaults = null;
+      legend.applyZIndex();
+      legend.dispatch.destroy.call(this);
     };
 
     return legend();

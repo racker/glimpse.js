@@ -16,8 +16,7 @@ function(obj, config, string, mixins, d3util) {
 
     var _ = {
         config: {}
-      },
-      d3axis_;
+      };
 
     _.defaults = {
       type: 'axis',
@@ -102,9 +101,9 @@ function(obj, config, string, mixins, d3util) {
      */
     function axis() {
       obj.extend(_.config, _.defaults);
-      d3axis_ = d3.svg.axis();
+      _.d3axis = d3.svg.axis();
       axis.rebind(
-        d3axis_,
+        _.d3axis,
         'scale',
         'orient',
         'ticks',
@@ -133,7 +132,7 @@ function(obj, config, string, mixins, d3util) {
       }
       _.root.selectAll('g').remove();
       axis.reapply();
-      _.root.call(d3axis_);
+      _.root.call(_.d3axis);
       _.root.attr({
         'font-family': _.config.fontFamily,
         'font-size': _.config.fontSize,
@@ -180,25 +179,10 @@ function(obj, config, string, mixins, d3util) {
      */
     axis.d3axis = function(d3Axis) {
       if (d3Axis) {
-        d3axis_ = d3Axis;
+        _.d3axis = d3Axis;
         return axis;
       }
-      return d3axis_;
-    };
-
-    /**
-     * Destroys the axis and removes everything from the DOM.
-     * @public
-     */
-    axis.destroy = function() {
-      if (_.root) {
-        _.root.remove();
-      }
-      _.root = null;
-      _.config = null;
-      _.defaults = null;
-      d3axis_ = null;
-      axis.dispatch.destroy.call(this);
+      return _.d3axis;
     };
 
     return axis();

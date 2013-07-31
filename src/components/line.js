@@ -6,12 +6,13 @@ define([
   'core/array',
   'core/config',
   'core/object',
+  'core/function',
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
   'data/functions'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns) {
+function(array, config, obj, fn, string, d3util, mixins, dataFns) {
   'use strict';
 
 
@@ -194,19 +195,10 @@ function(array, config, obj, string, d3util, mixins, dataFns) {
      * Destroys the line and removes everything from the DOM.
      * @public
      */
-    line.destroy = function() {
-      var scope;
-
-      if (_.root) {
-        _.root.remove();
-      }
-      scope = line.scope();
+    line.destroy = fn.compose(line.destroy, function() {
+      var scope = line.scope();
       _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      _.root = null;
-      _.config = null;
-      _.defaults = null;
-      line.dispatch.destroy.call(this);
-    };
+    });
 
     return line();
 
