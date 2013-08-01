@@ -23,7 +23,7 @@ function(graphBuilder, graph, d3interaction) {
           x: 'x',
           y: 'y'
         }
-      },
+      };
       testData1 = {
         id: 'test-data1',
         data: [{ x: 1, y: 1 }, { x: 2, y: 50 }, { x: 3, y: 100 }],
@@ -52,7 +52,8 @@ function(graphBuilder, graph, d3interaction) {
       });
 
       it('reports the available buildable types', function() {
-        expect(graphBuilder.types()).toEqual(['line', 'area', 'stacked-area']);
+        expect(graphBuilder.types()).toEqual(['line', 'area', 'stacked-area',
+          'scatter']);
       });
 
       it('creates a graph', function() {
