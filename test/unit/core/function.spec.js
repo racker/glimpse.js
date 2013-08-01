@@ -39,6 +39,55 @@ function (fn) {
 
     });
 
+    describe('compose()', function() {
+
+      var a, b, c;
+
+      beforeEach(function() {
+        a = 0;
+        b = 0;
+        c = 0;
+      });
+
+      it('composes a single function', function() {
+        var singleComp = fn.compose(function() { a = 1000; });
+        singleComp();
+        expect(a).toBe(1000);
+      });
+
+      it('composes two function together', function() {
+        var dualComp = fn.compose(function() { a = 1000; },
+          function() { b = 2000; });
+        dualComp();
+        expect(a).toBe(1000);
+        expect(b).toBe(2000);
+      });
+
+      it('executes left most function arguments last', function() {
+        var dualComp = fn.compose(function() { a = 1000; },
+          function() { a = 2000; });
+        dualComp();
+        expect(a).toBe(1000);
+      });
+
+      it('it composes functions by passing inputs correctly', function() {
+        var dualComp = fn.compose(function(i) { a = i; },
+          function() { return 2000; });
+        dualComp();
+        expect(a).toBe(2000);
+      });
+
+      it('composes three functions', function() {
+        var triComp = fn.compose(function() { a = 1000; },
+          function() { b = 2000; }, function() { c = 3000; });
+        triComp();
+        expect(a).toBe(1000);
+        expect(b).toBe(2000);
+        expect(c).toBe(3000);
+      });
+
+    });
+
   });
 
 });

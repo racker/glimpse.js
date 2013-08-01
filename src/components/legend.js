@@ -9,30 +9,22 @@ define([
   'core/string',
   'core/array',
   'd3-ext/util',
-  'mixins/mixins',
-  'events/pubsub'
+  'mixins/mixins'
 ],
-function(obj, config, string, array, d3util, mixins, pubsub) {
+function(obj, config, string, array, d3util, mixins) {
   'use strict';
 
   return function() {
 
     // PRIVATE
 
-    var defaults_,
-      config_,
-      root_,
-      enter_,
-      update_,
-      remove_,
-      dataCollection_,
-      onClickHandler,
-      globalPubsub;
+    var _ = {
+      config: {}
+    },
+      onClickHandler;
 
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'legend',
       position: 'center-left',
       target: null,
@@ -54,17 +46,15 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       zIndex: 10
     };
 
-    globalPubsub = pubsub.getSingleton();
-
     /**
      * Handles the click event on legend.
      */
     onClickHandler = function(d) {
       var sel = d3.select(this),
-      inactive = config_.inactiveColor,
-      fontColor = config_.fontColor;
+      inactive = _.config.inactiveColor,
+      fontColor = _.config.fontColor;
 
-      if (dataCollection_.hasTags(d.dataId, 'inactive')) {
+      if (_.dataCollection.hasTags(d.dataId, 'inactive')) {
         sel.select('text').attr('fill', fontColor);
         sel.select('rect').attr('fill', d.color);
       } else {
@@ -72,14 +62,14 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         sel.select('rect').attr('fill', inactive);
       }
       // toggles data's tag on the data collection
-      dataCollection_.toggleTags(d.dataId, 'inactive', config_.rootId);
+      _.dataCollection.toggleTags(d.dataId, 'inactive', _.config.rootId);
     };
 
     /**
      * Inserts new keys.
      * @param {d3.selection} selection
      */
-    enter_ = function(selection) {
+    _.enter = function(selection) {
       var enterSelection;
 
       enterSelection = selection
@@ -115,11 +105,11 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * Apply updates to the update selection.
      * @param {d3.selection} selection
      */
-    update_ = function(selection) {
+    _.update = function(selection) {
       var inactive, color;
 
       // Handle click event- toggle data inactive
-      if(config_.hideOnClick) {
+      if(_.config.hideOnClick) {
         selection
           .on('click', onClickHandler);
       } else {
@@ -130,22 +120,22 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       // The outer <g> element for each key.
       selection
         .attr({
-          'font-family': config_.fontFamily,
-          'font-size': config_.fontSize,
-          'font-weight': config_.fontWeight
+          'font-family': _.config.fontFamily,
+          'font-size': _.config.fontSize,
+          'font-weight': _.config.fontWeight
         });
 
       // Update key indicators.
       selection.selectAll('.gl-legend-key-indicator')
         .attr({
-          'width': config_.indicatorWidth,
-          'height': config_.indicatorHeight,
+          'width': _.config.indicatorWidth,
+          'height': _.config.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor: pointer;' : null;
+            return _.config.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
-            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
-            color = inactive ? config_.inactiveColor : d3.functor(d.color)();
+            inactive = _.dataCollection.hasTags(d.dataId, 'inactive');
+            color = inactive ? _.config.inactiveColor : d3.functor(d.color)();
             return color;
           }
         });
@@ -154,14 +144,14 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       selection.selectAll('.gl-legend-key-label')
         .text(function(d) { return d.label; })
         .attr({
-          'x': config_.indicatorWidth + config_.indicatorSpacing,
-          'y': config_.indicatorHeight,
+          'x': _.config.indicatorWidth + _.config.indicatorSpacing,
+          'y': _.config.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor: pointer;' : null;
+            return _.config.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
-            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
-            color = inactive ? config_.inactiveColor : config_.fontColor;
+            inactive = _.dataCollection.hasTags(d.dataId, 'inactive');
+            color = inactive ? _.config.inactiveColor : _.config.fontColor;
             return color;
           }
         });
@@ -171,7 +161,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * Remove any keys that were removed.
      * @param {d3.selection} selection
      */
-    remove_ = function(selection) {
+    _.remove = function(selection) {
       selection.exit().remove();
     };
 
@@ -181,35 +171,27 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * The main function.
      */
     function legend() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return legend;
     }
+
+    legend._ = _;
 
     // Apply Mixins.
     obj.extend(
       legend,
       config.mixin(
-        config_,
-        'cid',
+        _.config,
         'keys',
         'fontColor',
         'fontFamily',
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight',
-        'rootId',
-        'zIndex'
+        'indicatorHeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    legend.dispatch = mixins.dispatch();
+      mixins.component);
+    legend.init();
 
 
     /**
@@ -219,13 +201,13 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      */
     legend.data = function(data) {
       if (data) {
-        dataCollection_ = data;
+        _.dataCollection = data;
         return legend;
       }
-      if (!dataCollection_) {
+      if (!_.dataCollection) {
         return null;
       }
-      return dataCollection_;
+      return _.dataCollection;
     };
 
     /**
@@ -236,11 +218,11 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       var selection, dataConfig;
 
       // Return early if no data or render() hasn't been called yet.
-      if (!config_.keys || !root_) {
+      if (!_.config.keys || !_.root) {
         return legend;
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
 
       dataConfig = legend.data();
@@ -250,16 +232,16 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       }
 
       // The selection of legend keys.
-      selection = root_
+      selection = _.root
         .selectAll('.gl-legend-key')
-        .data(config_.keys, function(d) {
+        .data(_.config.keys, function(d) {
           return d.dataId;
         });
-      remove_(selection);
-      enter_(selection);
-      update_(selection);
-      root_.layout({type: config_.layout, gap: config_.gap});
-      root_.position(config_.position);
+      _.remove(selection);
+      _.enter(selection);
+      _.update(selection);
+      _.root.layout({type: _.config.layout, gap: _.config.gap});
+      _.root.position(_.config.position);
       legend.dispatch.update.call(this);
       return legend;
     };
@@ -271,8 +253,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      *    or a selector string.
      */
     legend.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(legend, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(legend, selection, function(target) {
           return target.append('g')
             .attr({
               'class': string.classes('component', 'legend')
@@ -282,29 +264,6 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       legend.update();
       legend.dispatch.render.call(this);
       return legend;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    legend.root = function () {
-      return root_;
-    };
-
-    /**
-     * Destroys the legend and removes everything from the DOM.
-     * @public
-     */
-    legend.destroy = function() {
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      legend.applyZIndex();
-      legend.dispatch.destroy.call(this);
     };
 
     return legend();

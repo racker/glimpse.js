@@ -1,15 +1,15 @@
 define([
   'mixins/toggle',
+  'mixins/component',
   'mixins/dispatch',
-  'mixins/lifecycle',
   'mixins/zIndex'
 ],
-function(toggle, dispatch, lifecycle, zIndex) {
+function(toggle, component, dispatch, zIndex) {
   'use strict';
 
   return {
     toggle: toggle,
-    lifecycle: lifecycle,
+    component: component,
     dispatch: dispatch,
     zIndex: zIndex
   };
