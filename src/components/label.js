@@ -17,14 +17,11 @@ function(obj, config, string, array, d3util, mixins) {
 
     // PRIVATE
 
-    var defaults_,
-      config_,
-      dataCollection_,
-      root_;
+    var _ = {
+      config: {}
+    };
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'label',
       cid: null,
       target: null,
@@ -50,54 +47,26 @@ function(obj, config, string, array, d3util, mixins) {
      * @return {components.label}
      */
     function label() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return label;
     }
+
+    label._ = _;
 
     // Apply Mixins
     obj.extend(
       label,
       config.mixin(
-        config_,
-        'cid',
-        'target',
+        _.config,
         'cssClass',
         'color',
         'fontFamily',
         'fontSize',
-        'fontWeight',
-        'rootId',
-        'zIndex'
+        'fontWeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    label.dispatch = mixins.dispatch();
-
-    /**
-     * Gets/Sets the data source to be used with the label.
-     * Uses the configurable "text" accessor function to retrieve text.
-     * @param {Object} data Any data source.
-     * @return {Object|components.label}
-     */
-    label.data = function(data) {
-      // Set data if provided.
-      if (data) {
-        dataCollection_ = data;
-        return label;
-      }
-      // Find corresponding data group if dataId is set.
-      if (dataCollection_ && config_.dataId) {
-        return dataCollection_.get(config_.dataId);
-      }
-      // Otherwise return the entire raw data.
-      return dataCollection_;
-    };
+    label.init();
 
     /**
      * @description Gets/sets the static text to display.
@@ -107,10 +76,10 @@ function(obj, config, string, array, d3util, mixins) {
      */
     label.text = function(text) {
       if (text) {
-        config_.text = d3.functor(text);
+        _.config.text = d3.functor(text);
         return label;
       }
-      return d3.functor(config_.text).call(this);
+      return d3.functor(_.config.text).call(this);
     };
 
     /**
@@ -120,8 +89,8 @@ function(obj, config, string, array, d3util, mixins) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(label, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(label, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'label')
@@ -148,51 +117,28 @@ function(obj, config, string, array, d3util, mixins) {
 
       text = label.text();
       // Return early if no data or render() hasn't been called yet.
-      if (!root_ || !text) {
+      if (!_.root || !text) {
         return label;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
-      root_.select('text').attr({
-        'fill': config_.color,
-        'font-family': config_.fontFamily,
-        'font-size': config_.fontSize,
-        'font-weight': config_.fontWeight,
+      _.root.select('text').attr({
+        'fill': _.config.color,
+        'font-family': _.config.fontFamily,
+        'font-size': _.config.fontSize,
+        'font-weight': _.config.fontWeight,
         // NOTE: Need to manually set y position since dominant-baseline
         //   doesn't work in FF or IE.
-        'y': config_.fontSize
+        'y': _.config.fontSize
       })
       .text(text);
-      root_.position(config_.position);
+      _.root.position(_.config.position);
       label.dispatch.update.call(this);
       return label;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    label.root = function () {
-      return root_;
-    };
-
-    /**
-     * Destroys the label and removes everything from the DOM.
-     * @public
-     */
-    label.destroy = function() {
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      label.applyZIndex();
-      label.dispatch.destroy.call(this);
     };
 
     return label();
