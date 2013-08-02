@@ -9,20 +9,20 @@ define([
   'd3-ext/util',
   'mixins/mixins',
   'data/functions',
-  'events/pubsub'
+  'events/pubsub',
+  'core/function'
 ],
-function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
+function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
   'use strict';
 
   return function() {
 
-    var config = {},
-      defaults,
-      dataCollection,
-      root,
-      globalPubsub = pubsub.getSingleton();
+    //Private variables
+    var _ = {
+      config: {}
+    };
 
-    defaults = {
+    _.defaults = {
       type: 'scatter',
       target: null,
       cid: null,
@@ -54,9 +54,9 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
      * @param  {string} dataId
      */
      function handleDataToggle(args) {
-      var id = config.dataId;
+      var id = _.config.dataId;
       if (args === id) {
-        if (dataCollection.hasTags(id, 'inactive')) {
+        if (_.dataCollection.hasTags(id, 'inactive')) {
           scatter.hide();
         } else {
           scatter.show();
@@ -74,10 +74,10 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
       selection
         .attr({
           cx: function(d, i) {
-            return config.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+            return _.config.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
           },
           cy: function(d, i) {
-            return config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
+            return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
           },
           r: function(d, i) {
             var radiusDim;
@@ -85,7 +85,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
             if (radiusDim !== null) {
               return radiusDim;
             }
-            return config.radius;
+            return _.config.radius;
           },
           fill: function(d, i) {
             var colorDim;
@@ -93,9 +93,9 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
             if (colorDim !== null) {
               return colorDim;
             }
-            return config.color;
+            return _.config.color;
           },
-          opacity: config.opacity,
+          opacity: _.config.opacity,
           'class': string.classes('scatter-point')
         });
     }
@@ -105,43 +105,25 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.scatter}
      */
     function scatter() {
-      obj.extend(config, defaults);
+      obj.extend(_.config, _.defaults);
       return scatter;
     }
+
+    scatter._ = _;
 
     obj.extend(
       scatter,
       configMixin.mixin(
-        config,
-        'cid',
+        _.config,
         'xScale',
         'yScale',
         'color',
         'opacity',
-        'radius',
-        'rootId'
+        'radius'
       ),
-      mixins.lifecycle,
-      mixins.toggle);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    scatter.dispatch = mixins.dispatch();
-
-    // TODO: this will be the same for all components
-    // put this func somewhere else and apply as needed
-    scatter.data = function(data) {
-      if (data) {
-        dataCollection = data;
-        return scatter;
-      }
-      if (!dataCollection) {
-        return;
-      }
-      return dataCollection.get(config.dataId);
-    };
+    scatter.init();
 
     /**
      * Updates the scatter component with new/updated data/config
@@ -150,11 +132,11 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
     scatter.update = function() {
       var dataConfig, selection;
 
-      if (!root) {
+      if (!_.root) {
         return scatter;
       }
-      if (config.cid) {
-        root.attr('gl-cid', config.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       dataConfig = scatter.data();
       // Return early if there's no data.
@@ -162,7 +144,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
         return scatter;
       }
 
-      selection = root.selectAll('.gl-scatter-point')
+      selection = _.root.selectAll('.gl-scatter-point')
         .data(dataConfig.data);
 
       selection
@@ -182,8 +164,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
      */
     scatter.render = function(selection) {
       var scope;
-      if (!root) {
-        root = d3util.applyTarget(scatter, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(scatter, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'scatter')
@@ -192,43 +174,20 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub) {
         });
       }
       scope = scatter.scope();
-      globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
       scatter.update();
       scatter.dispatch.render.call(this);
       return scatter;
     };
 
     /**
-     * Returns the root
-     * @return {d3.selection}
-     */
-    scatter.root = function() {
-      return root;
-    };
-
-    /** Defines the rootId for scatter */
-    //TODO create a mixin for scope
-    scatter.scope = function() {
-      return pubsub.scope(config.rootId);
-    };
-
-    /**
      * Destroys the scatter and removes everything from the DOM.
      * @public
      */
-    scatter.destroy = function() {
-      var scope;
-
-      if (root) {
-        root.remove();
-      }
-      scope = scatter.scope();
-      globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      root = null;
-      config = null;
-      defaults = null;
-      scatter.dispatch.destroy.call(this);
-    };
+    scatter.destroy = fn.compose(scatter.destroy, function() {
+      var scope = scatter.scope();
+      _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
+    });
 
     return scatter();
 
