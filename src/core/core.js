@@ -5,6 +5,8 @@ define([
   'core/array',
   'core/function',
   'core/format',
+  'data/selection/selection',
+  'data/dimension/dimension',
   'graphs/graph',
   'layout/layouts',
   'graphs/graph-builder',
@@ -15,8 +17,8 @@ define([
 
   'd3-ext/d3-ext'
 ],
-function(obj, string, array, fn, format, graph, layouts,
-    graphBuilder, component, collection, assets, pubsub) {
+function(obj, string, array, fn, format, selection, dimension, graph,
+    layouts, graphBuilder, component, collection, assets, pubsub) {
   'use strict';
 
   var core = {
@@ -30,6 +32,10 @@ function(obj, string, array, fn, format, graph, layouts,
     graph: graph,
     layouts: layouts,
     components: component,
+    data: {
+      selection: selection,
+      dimension: dimension
+    },
     dataCollection: collection,
     assetLoader: assets,
     pubsub: pubsub,
