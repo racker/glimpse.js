@@ -1,12 +1,13 @@
 define([
   'core/object',
-  'mixins/mixins'
+  'mixins/mixins',
+  'events/pubsub'
 ],
-function(obj, mixins) {
+function(obj, mixins, pubsubModule) {
   'use strict';
 
   describe('mixins.component', function() {
-    var component;
+    var component, pubsub;
 
     function createComponent() {
       var component = function() {};
@@ -17,6 +18,7 @@ function(obj, mixins) {
     beforeEach(function() {
       component = createComponent();
       obj.extend(component, mixins.component);
+      pubsub = pubsubModule.getSingleton();
     });
 
     it('call to init defines its internal state', function() {
@@ -37,6 +39,26 @@ function(obj, mixins) {
       expect(component.render).toBeDefined();
       expect(component.destroy).toBeDefined();
       expect(component.isRendered).toBeDefined();
+      expect(component.on).toBeDefined();
+      expect(component.off).toBeDefined();
+    });
+
+    it('the callback is executed when on is called', function() {
+      var callbackSpy;
+      component.init();
+      callbackSpy = jasmine.createSpy();
+      component.on('foo', callbackSpy);
+      pubsub.pub('foo');
+      expect(callbackSpy).toHaveBeenCalledOnce();
+    });
+
+    it('the callback is not executed when off is called', function() {
+      var callbackSpy;
+      component.init();
+      callbackSpy = jasmine.createSpy();
+      component.off('foo', callbackSpy);
+      pubsub.pub('foo');
+      expect(callbackSpy).not.toHaveBeenCalled();
     });
 
   });
