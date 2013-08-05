@@ -34,7 +34,13 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       yScale: null,
       opacity: 0.4,
       hiddenStates: null,
-      rootId: null
+      rootId: null,
+      showTransition: false,
+      preTransitionRadius: 5,
+      preTransitionColor: '#333',
+      delay: 100,
+      duration: 1000,
+      ease: 'linear'
     };
 
     /**
@@ -64,6 +70,24 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       }
     }
 
+    function getRadius(d, i) {
+      var radiusDim;
+      radiusDim = dataFns.dimension(scatter.data(), 'r')(d, i);
+      if (radiusDim !== null) {
+        return radiusDim;
+      }
+      return _.config.radius;
+    }
+
+    function getColor(d, i) {
+      var colorDim;
+      colorDim = dataFns.dimension(scatter.data(), 'color')(d, i);
+      if (colorDim !== null) {
+        return colorDim;
+      }
+      return _.config.color;
+    }
+
     /**
      * Updates the scatter component
      * @param  {d3.selection} selection
@@ -79,25 +103,15 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
           cy: function(d, i) {
             return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
           },
-          r: function(d, i) {
-            var radiusDim;
-            radiusDim = dataFns.dimension(dataConfig, 'r')(d, i);
-            if (radiusDim !== null) {
-              return radiusDim;
-            }
-            return _.config.radius;
-          },
-          fill: function(d, i) {
-            var colorDim;
-            colorDim = dataFns.dimension(dataConfig, 'color')(d, i);
-            if (colorDim !== null) {
-              return colorDim;
-            }
-            return _.config.color;
-          },
+          r: _.config.showTransition ? _.config.preTransitionRadius : getRadius,
+          fill: _.config.showTransition ? _.config.preTransitionColor
+            : getColor,
           opacity: _.config.opacity,
           'class': string.classes('scatter-point')
         });
+      if (_.config.showTransition) {
+        scatter.applyTransition(selection);
+      }
     }
 
     /**
@@ -177,6 +191,22 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
       scatter.update();
       scatter.dispatch.render.call(this);
+      return scatter;
+    };
+
+    /**
+     * Applies transitions to the scatter plot
+     * @param {d3.selection|Node|string} selection
+     */
+    scatter.applyTransition = function(selection) {
+      selection.transition()
+        .delay(_.config.delay)
+        .duration(_.config.duration)
+        .ease(_.config.ease)
+        .attr({
+          r: getRadius,
+          fill: getColor
+        });
       return scatter;
     };
 

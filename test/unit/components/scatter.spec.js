@@ -87,7 +87,14 @@ function(scatter, dc) {
         inLegend: true,
         opacity: 0.4,
         radius: 6,
-        strokeWidth: 1.5
+        strokeWidth: 1.5,
+        showTransition: false,
+        preTransitionRadius: 5,
+        preTransitionColor: '#333',
+        delay: 100,
+        duration: 1000,
+        ease: 'linear'
+
       };
 
       beforeEach(function(){
@@ -124,6 +131,29 @@ function(scatter, dc) {
 
       it('has default strokeWidth', function() {
         expect(config.strokeWidth).toBe(defaults.strokeWidth);
+      });
+
+      it('has default showTransition', function() {
+        expect(config.showTransition).toBe(defaults.showTransition);
+      });
+
+      it('has default preTransitionRadius', function() {
+        expect(config.preTransitionRadius).toBe(defaults.preTransitionRadius);
+      });
+      it('has default preTransitionColor', function() {
+        expect(config.preTransitionColor).toBe(defaults.preTransitionColor);
+      });
+
+      it('has default delay', function() {
+        expect(config.delay).toBe(defaults.delay);
+      });
+
+      it('has default duration', function() {
+        expect(config.duration).toBe(defaults.duration);
+      });
+
+      it('has default ease', function() {
+        expect(config.ease).toBe(defaults.ease);
       });
 
     });
@@ -300,6 +330,54 @@ function(scatter, dc) {
         testScatter.update();
         circle = root.select('circle').node();
         expect(circle).toHaveAttr('fill', 'blue');
+      });
+
+    });
+
+    describe('applyTransition()', function() {
+      var root;
+
+      beforeEach(function() {
+        setData();
+        dataCollection.add(getTestData()[1]);
+        spyOn(testScatter, 'applyTransition').andCallThrough();
+        testScatter.render(selection);
+        root = selection.select('g');
+      });
+
+      it('does not call applyTransition by default', function() {
+        expect(testScatter.applyTransition).not.toHaveBeenCalled();
+      });
+
+      it('applies default color and radius if showTransition is false',
+        function() {
+          var circle = root.select('circle').node();
+          expect(circle).toHaveAttr({'fill':'#333', 'r': 6 } );
+      });
+
+      it('calls applyTransition if showTranstion is set to true',
+        function() {
+          testScatter.config({'showTransition': true});
+          testScatter.update();
+          expect(testScatter.applyTransition).toHaveBeenCalled();
+      });
+
+      it('applies transition color and radius', function() {
+        var circle = null;
+        runs(function () {
+          testScatter.config({
+            'dataId': 'fakeData2',
+            'showTransition': true,
+            delay: 50,
+            duration: 100
+          });
+          testScatter.update();
+        });
+        waits(200);
+        runs(function () {
+          circle = root.selectAll('circle');
+          expect(circle.node()).toHaveAttr({'r': 10, 'fill': '#0000ff'});
+        });
       });
 
     });
