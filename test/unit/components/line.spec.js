@@ -193,6 +193,40 @@ function(d3, object, line, dc) {
 
     });
 
+    describe('handle dashed config option', function() {
+      var selection;
+
+      beforeEach(function() {
+        selection = jasmine.svgFixture();
+        setData();
+        setScales();
+        testLine.render('#svg-fixture');
+      });
+
+      it('doesnt add dash-array attr if dashed config is false', function() {
+        var lineSel = testLine.root().select('path');
+        expect(lineSel.attr('stroke-dasharray')).toBe(null);
+      });
+
+      it('adds default dash-array attribute', function() {
+        var lineSel;
+        testLine.config('dashed', true);
+        testLine.update();
+        lineSel = testLine.root().select('path');
+        expect(lineSel.attr('stroke-dasharray')).toBe('5, 5');
+      });
+
+      it('adds explicitly specified dash-array attribute', function() {
+        var lineSel;
+        testLine.config({ 'dashed': true, 'strokeDashArray': '6, 6' });
+        testLine.update();
+        lineSel = testLine.root().select('path');
+        expect(lineSel.attr('stroke-dasharray')).toBe('6, 6');
+      });
+
+    });
+
+
     describe('handleDataToggle()', function() {
       var selection;
 

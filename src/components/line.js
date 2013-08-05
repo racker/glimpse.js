@@ -28,6 +28,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       target: null,
       cid: null,
       color: null,
+      dashed: false,
+      strokeDashArray: '5, 5',
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
@@ -49,6 +51,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         .datum(line.data().data)
         .attr({
           'stroke-width': _.config.strokeWidth,
+          'stroke-dasharray': _.config.dashed ? _.config.strokeDashArray : null,
           'stroke': _.config.color,
           'opacity': _.config.opacity,
           'd': _.config.lineGenerator
