@@ -103,10 +103,9 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
           cy: function(d, i) {
             return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
           },
-          r: _.config.showTransition ? _.config.preTransitionRadius
-            : function (d, i) { return getRadius(d, i); },
+          r: _.config.showTransition ? _.config.preTransitionRadius : getRadius,
           fill: _.config.showTransition ? _.config.preTransitionColor
-            : function (d, i) { return getColor(d, i); },
+            : getColor,
           opacity: _.config.opacity,
           'class': string.classes('scatter-point')
         });
@@ -205,8 +204,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
         .duration(_.config.duration)
         .ease(_.config.ease)
         .attr({
-          r: function (d, i) { return getRadius(d, i); },
-          fill: function (d, i) { return getColor(d, i); }
+          r: getRadius,
+          fill: getColor
         });
       return scatter;
     };
