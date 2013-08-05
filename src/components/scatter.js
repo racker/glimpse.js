@@ -177,7 +177,6 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
      * @return {components.scatter}
      */
     scatter.render = function(selection) {
-      var scope;
       if (!_.root) {
         _.root = d3util.applyTarget(scatter, selection, function(target) {
           var root = target.append('g')
@@ -187,8 +186,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
           return root;
         });
       }
-      scope = scatter.scope();
-      _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      scatter.on('data-toggle', handleDataToggle);
       scatter.update();
       scatter.dispatch.render.call(this);
       return scatter;
@@ -215,8 +213,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
      * @public
      */
     scatter.destroy = fn.compose(scatter.destroy, function() {
-      var scope = scatter.scope();
-      _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
+      scatter.off('data-toggle', handleDataToggle);
     });
 
     return scatter();

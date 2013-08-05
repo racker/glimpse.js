@@ -172,7 +172,6 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @return {components.line}
      */
     line.render = function(selection) {
-      var scope;
       if (!_.root) {
         _.root = d3util.applyTarget(line, selection, function(target) {
           var root = target.append('g')
@@ -187,8 +186,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
           return root;
         });
       }
-      scope = line.scope();
-      _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      line.on('data-toggle', handleDataToggle);
       line.update();
       line.dispatch.render.call(this);
       return line;
@@ -199,8 +197,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @public
      */
     line.destroy = fn.compose(line.destroy, function() {
-      var scope = line.scope();
-      _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
+      line.off('data-toggle', handleDataToggle);
     });
 
     return line();

@@ -172,7 +172,6 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.render = function(selection) {
-      var scope;
       if (!_.root) {
         _.root = d3util.applyTarget(area, selection, function(target) {
           var root = target.append('g')
@@ -186,8 +185,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
           return root;
         });
       }
-      scope = area.scope();
-      _.globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      area.on('data-toggle', handleDataToggle);
       area.update();
       area.dispatch.render.call(this);
       return area;
@@ -197,8 +195,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * Destroys the area and removes everything from the DOM.
      */
     area.destroy = fn.compose(area.destroy, function() {
-      var scope = area.scope();
-      _.globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
+      area.off('data-toggle', handleDataToggle);
     });
 
     return area();
