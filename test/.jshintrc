@@ -31,6 +31,8 @@
     "expect": true,
     "spyOn": true,
     "beforeEach": true,
-    "afterEach": true
+    "afterEach": true,
+    "runs": true,
+    "waits": true
   }
 }
