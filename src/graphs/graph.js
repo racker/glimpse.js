@@ -55,6 +55,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     NO_COLORED_COMPONENTS = ['axis', 'legend', 'label'];
 
     _.defaults = {
+      type: 'graph',
       layout: 'default',
       width: 700,
       height: 230,
@@ -77,7 +78,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
       domainIntervalUnit: null,
-      id: string.random(),
+      id: null,
       domainSources: null,
       domainConfig: null
     };
@@ -439,6 +440,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      */
     function graph() {
       obj.extend(_.config, _.defaults);
+      if (!obj.isDefAndNotNull(_.config.id)) {
+        _.config.id = string.random();
+      }
       _.dataCollection = collection.create();
       // TODO: move these specific components to graphBuilder.
       componentManager_ = componentManager.create([
