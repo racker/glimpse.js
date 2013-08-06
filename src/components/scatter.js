@@ -167,7 +167,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
 
       update(selection);
       remove(selection);
-      scatter.dispatch.update.call(this);
+      scatter.emit('update');
       return scatter;
     };
 
@@ -188,7 +188,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       }
       scatter.on('data-toggle', handleDataToggle);
       scatter.update();
-      scatter.dispatch.render.call(this);
+      scatter.emit('render');
       return scatter;
     };
 

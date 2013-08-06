@@ -162,7 +162,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
           'd': _.config.areaGenerator
         });
       area.applyZIndex();
-      area.dispatch.update.call(this);
+      area.emit('update');
       return area;
     };
 
@@ -187,7 +187,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       }
       area.on('data-toggle', handleDataToggle);
       area.update();
-      area.dispatch.render.call(this);
+      area.emit('render');
       return area;
     };
 

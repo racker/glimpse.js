@@ -42,7 +42,7 @@ function(label, dc) {
     describe('render()', function() {
 
       beforeEach(function() {
-        testLabel.dispatch.on('render', handlerSpy);
+        testLabel.on('render', handlerSpy);
         testLabel.render(selection);
         root = selection.select('.gl-label');
       });
@@ -89,7 +89,7 @@ function(label, dc) {
         testLabel.render(selection);
         root = selection.select('.gl-label');
         textSelection = root.select('text');
-        testLabel.dispatch.on('update', handlerSpy);
+        testLabel.on('update', handlerSpy);
       });
 
       it('dispatches an "update" event', function() {
@@ -205,7 +205,7 @@ function(label, dc) {
 
       beforeEach(function() {
         testLabel.render(selection);
-        testLabel.dispatch.on('destroy', handlerSpy);
+        testLabel.on('destroy', handlerSpy);
         testLabel.destroy();
       });
 

@@ -214,7 +214,7 @@ function(scatter, dc) {
       beforeEach(function() {
         setData();
         spyOn(testScatter, 'update').andCallThrough();
-        testScatter.dispatch.on('render', handlerSpy);
+        testScatter.on('render', handlerSpy);
         testScatter.config('color', 'green');
         testScatter.render(selection);
       });
@@ -254,7 +254,7 @@ function(scatter, dc) {
       beforeEach(function() {
         setData();
         testScatter.render(selection);
-        testScatter.dispatch.on('destroy', handlerSpy);
+        testScatter.on('destroy', handlerSpy);
         testScatter.destroy();
       });
 
@@ -279,7 +279,7 @@ function(scatter, dc) {
           color: 'red',
           opacity: 0.5
         });
-        testScatter.dispatch.on('update', handlerSpy);
+        testScatter.on('update', handlerSpy);
         dataCollection.add(getTestData()[1]);
         testScatter.data(dataCollection);
         testScatter.update();

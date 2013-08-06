@@ -104,7 +104,7 @@ function(obj, config, string, array, d3util, mixins) {
         });
       }
       label.update();
-      label.dispatch.render.call(this);
+      label.emit('render');
       return label;
     };
 
@@ -137,7 +137,7 @@ function(obj, config, string, array, d3util, mixins) {
       })
       .text(text);
       _.root.position(_.config.position);
-      label.dispatch.update.call(this);
+      label.emit('update');
       return label;
     };
 
