@@ -2,11 +2,10 @@ define([
   'core/object',
   'core/config',
   'core/array',
-  'mixins/dispatch',
   'mixins/toggle',
   'mixins/zIndex',
   'events/pubsub'
-], function (obj, config, array, dispatch, toggle, zIndex, pubsub) {
+], function (obj, config, array, toggle, zIndex, pubsub) {
 
   'use strict';
 
@@ -34,7 +33,6 @@ define([
         ),
         toggle,
         zIndex);
-      this.dispatch = dispatch();
     },
 
     data: function(data) {
@@ -61,8 +59,8 @@ define([
       if(_.root) {
         _.root.remove();
       }
+      this.emit('destroy');
       this._ = null;
-      this.dispatch.destroy.call(this);
     },
 
     render: function() {

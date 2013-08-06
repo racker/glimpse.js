@@ -24,7 +24,6 @@ function(obj, mixins, pubsubModule) {
     it('call to init defines its internal state', function() {
       component.init();
       expect(component._.globalPubsub).toBeDefined();
-      expect(component.dispatch).toBeDefined();
       expect(component.zIndex).toBeDefined();
       expect(component.target).toBeDefined();
       expect(component.cid).toBeDefined();
@@ -39,8 +38,12 @@ function(obj, mixins, pubsubModule) {
       expect(component.render).toBeDefined();
       expect(component.destroy).toBeDefined();
       expect(component.isRendered).toBeDefined();
+    });
+
+    it('defines event methods', function() {
       expect(component.on).toBeDefined();
       expect(component.off).toBeDefined();
+      expect(component.emit).toBeDefined();
     });
 
     it('the callback is executed when on is called', function() {
