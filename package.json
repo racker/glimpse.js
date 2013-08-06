@@ -16,6 +16,13 @@
     "doc": "docs"
   },
   "devDependencies": {
+    "karma": "~0.9.4",
+    "karma-jasmine": "~0.0.1",
+    "karma-chrome-launcher": "~0.0.2",
+    "karma-firefox-launcher": "~0.0.1",
+    "karma-sauce-launcher": "~0.0.4",
+    "karma-script-launcher": "~0.0.1",
+    "karma-requirejs": "latest",
     "grunt": "~0.4.0",
     "grunt-contrib-clean": "~0.4.0",
     "grunt-contrib-jshint": "~0.1.1",
