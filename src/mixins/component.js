@@ -47,8 +47,16 @@ define([
       return _.dataCollection.get(_.config.dataId);
     },
 
-    scope: function(eventName) {
+    globalScope: function(eventName) {
       return pubsub.scope(this._.config.rootId)(eventName);
+    },
+
+    scope: function(eventName) {
+      var scope = this._.config.rootId;
+      if (this._.config.type !== 'graph') {
+        scope = [scope, this._.config.cid].join(':');
+      }
+      return pubsub.scope(scope)(eventName);
     },
 
     destroy: function() {

@@ -46,12 +46,21 @@ function(obj, mixins, pubsubModule) {
       expect(component.emit).toBeDefined();
     });
 
+    describe('scope helpers', function() {
+
+      it('defines scope helpers', function() {
+        expect(component.scope).toBeDefined();
+        expect(component.globalScope).toBeDefined();
+      });
+
+    });
+
     it('the callback is executed when on is called', function() {
       var callbackSpy;
       component.init();
       callbackSpy = jasmine.createSpy();
       component.on('foo', callbackSpy);
-      pubsub.pub('foo');
+      component.emit('foo');
       expect(callbackSpy).toHaveBeenCalledOnce();
     });
 
@@ -60,7 +69,7 @@ function(obj, mixins, pubsubModule) {
       component.init();
       callbackSpy = jasmine.createSpy();
       component.off('foo', callbackSpy);
-      pubsub.pub('foo');
+      component.emit('foo');
       expect(callbackSpy).not.toHaveBeenCalled();
     });
 

@@ -185,7 +185,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
           return root;
         });
       }
-      area.on('data-toggle', handleDataToggle);
+      _.globalPubsub.sub(area.globalScope('data-toggle'), handleDataToggle);
       area.update();
       area.emit('render');
       return area;
@@ -195,7 +195,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * Destroys the area and removes everything from the DOM.
      */
     area.destroy = fn.compose(area.destroy, function() {
-      area.off('data-toggle', handleDataToggle);
+      _.globalPubsub.unsub(area.globalScope('data-toggle'), handleDataToggle);
     });
 
     return area();
