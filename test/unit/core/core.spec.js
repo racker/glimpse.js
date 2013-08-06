@@ -31,6 +31,18 @@ function(core, pubsub) {
 
     });
 
+    describe('data api', function() {
+
+      it('should have data selections exposed', function () {
+        expect(core.data.selection).toBeDefined();
+      });
+
+      it('should have dimensions exposed ', function () {
+        expect(core.data.dimension).toBeDefined();
+      });
+
+    });
+
     it('should have a version', function () {
       expect(core.version).toBeDefined();
     });
