@@ -89,6 +89,13 @@ define([
       var _ = this._;
       _.globalPubsub.unsub(this.scope(
           this._.config.rootId)(eventName), callback);
+    },
+
+    emit: function(eventName) {
+      var _ = this._,
+          args = array.convertArgs(arguments);
+      args[0] = this.scope(this._.config.rootId)(eventName);
+      _.globalPubsub.pub.apply(this, args);
     }
 
   };

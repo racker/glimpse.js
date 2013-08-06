@@ -38,7 +38,7 @@ function(array) {
         args = array.convertArgs(arguments, 1);
         callbackCache[topic].forEach(function(callback) {
           callback.apply(this, args);
-        });
+        }, this);
         return this;
       },
 
