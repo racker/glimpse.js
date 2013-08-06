@@ -27,12 +27,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     /**
      * Private variables.
      */
-    var config_,
-      defaults_,
-      root_,
-      defaultXaccessor_,
-      defaultYaccessor_,
-      dataCollection_,
+    var _ = {
+      config: {}
+    },
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
@@ -57,9 +54,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      */
     NO_COLORED_COMPONENTS = ['axis', 'legend', 'label'];
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       layout: 'default',
       width: 700,
       height: 230,
@@ -88,32 +83,12 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     };
 
     /**
-     * Default x accessor for data
-     * @private
-     * @param  {Object} d
-     * @return {Object}
-     */
-    defaultXaccessor_ = function(d) {
-      return d.x;
-    };
-
-    /**
-     * Default x accessor for data
-     * @private
-     * @param  {Object} d
-     * @return {Object}
-     */
-    defaultYaccessor_ = function(d) {
-      return d.y;
-    };
-
-    /**
      * Gets the main container selection.
      * @private
      * @return {d3.selection}
      */
     function getPrimaryContainer() {
-      return root_.selectAttr('gl-container-name', config_.primaryContainer);
+      return _.root.selectAttr('gl-container-name', _.config.primaryContainer);
     }
 
     /**
@@ -134,7 +109,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       var colors, len;
 
       if (!array.contains(NO_COLORED_COMPONENTS, component.config().type)){
-        colors = d3.functor(config_.colorPalette)();
+        colors = d3.functor(_.config.colorPalette)();
         len = colors.length;
         if (component.hasOwnProperty('color')) {
           component.config().color = component.config().color ||
@@ -158,18 +133,18 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @param  {d3.selection} selection
      */
     function renderSvg(selection) {
-      root_ = selection.append('svg')
+      _.root = selection.append('svg')
         .attr({
-          'width': config_.width,
-          'height': config_.height,
+          'width': _.config.width,
+          'height': _.config.height,
           'viewBox': [
             0,
             0,
-            config_.viewBoxWidth,
-            config_.viewBoxHeight].toString(),
-          'preserveAspectRatio': config_.preserveAspectRatio
+            _.config.viewBoxWidth,
+            _.config.viewBoxHeight].toString(),
+          'preserveAspectRatio': _.config.preserveAspectRatio
         });
-      return root_;
+      return _.root;
     }
 
     /**
@@ -178,14 +153,14 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @param  {d3.selection} selection
      */
     function renderPanel(selection) {
-      root_ = renderSvg(selection);
-      renderDefs(root_);
+      _.root = renderSvg(selection);
+      renderDefs(_.root);
       layoutManager.setLayout(
-        config_.layout,
-        root_,
-        config_.viewBoxWidth,
-        config_.viewBoxHeight);
-      root_.select('g').attr('gl-id', config_.id);
+        _.config.layout,
+        _.root,
+        _.config.viewBoxWidth,
+        _.config.viewBoxHeight);
+      _.root.select('g').attr('gl-id', _.config.id);
     }
 
     function getDomainConfig(sources) {
@@ -194,20 +169,20 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           sources: sources,
           compute: 'interval',
           args: {
-            unit: config_.domainIntervalUnit,
-            period: config_.domainIntervalPeriod
+            unit: _.config.domainIntervalUnit,
+            period: _.config.domainIntervalPeriod
           },
           modifier: {
-            force: config_.forceX
+            force: _.config.forceX
           },
           'default': [0, 0]
         },
         y: {
           sources: sources,
-          compute: config_.yCompute,
+          compute: _.config.yCompute,
           modifier: {
-            force: config_.forceY,
-            maxMultiplier: config_.yDomainModifier
+            force: _.config.forceY,
+            maxMultiplier: _.config.yDomainModifier
           },
           'default': [0, 0]
         }
@@ -223,20 +198,20 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           domainSources,
           domainConfig;
 
-      domainSources = config_.domainSources || '*';
+      domainSources = _.config.domainSources || '*';
       domainConfig = getDomainConfig(domainSources);
-      if (config_.domainConfig) {
-        domainConfig = obj.extend(domainConfig, config_.domainConfig);
+      if (_.config.domainConfig) {
+        domainConfig = obj.extend(domainConfig, _.config.domainConfig);
       }
-      domain.addDomainDerivation(domainConfig, dataCollection_);
+      domain.addDomainDerivation(domainConfig, _.dataCollection);
 
-      dataCollection_.updateDerivations();
-      graphDomain = dataCollection_.get('$domain');
-      if (dataCollection_.select(domainSources).length() > 0) {
-        config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
+      _.dataCollection.updateDerivations();
+      graphDomain = _.dataCollection.get('$domain');
+      if (_.dataCollection.select(domainSources).length() > 0) {
+        _.config.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
           .domain(graphDomain.x);
 
-        config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
+        _.config.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
           .domain(graphDomain.y);
       }
     }
@@ -245,7 +220,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * Add legend component to the graph
      */
     function addLegend() {
-      if (!componentManager_.first('gl-legend') && config_.showLegend) {
+      if (!componentManager_.first('gl-legend') && _.config.showLegend) {
         componentManager_.add({
           cid: 'gl-legend',
           type: 'legend',
@@ -294,18 +269,18 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         xaxisComponent = componentManager_.first('gl-xaxis');
         if (xaxisComponent) {
           xaxisComponent.config({
-            scale: config_.xScale,
-            ticks: config_.xTicks,
-            unit: config_.xAxisUnit
+            scale: _.config.xScale,
+            ticks: _.config.xTicks,
+            unit: _.config.xAxisUnit
           });
         }
         yaxisComponent = componentManager_.first('gl-yaxis');
         if (yaxisComponent) {
           yaxisComponent.config({
-            scale: config_.yScale,
-            ticks: config_.yTicks,
-            unit: config_.yAxisUnit,
-            target: config_.primaryContainer
+            scale: _.config.yScale,
+            ticks: _.config.yTicks,
+            unit: _.config.yAxisUnit,
+            target: _.config.primaryContainer
           });
         }
         componentManager_.update();
@@ -324,7 +299,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       layoutConfig = {
         type: 'vertical', position: 'center', gap: 6
       };
-      labelTexts = array.getArray(config_.emptyMessage);
+      labelTexts = array.getArray(_.config.emptyMessage);
       labels = labelTexts.map(function(text, idx) {
         var label = components.label().text(text);
         if (idx === 0) {
@@ -347,7 +322,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           layoutConfig: layoutConfig,
           components: labels
         });
-      componentManager_.render(root_, 'gl-empty-overlay');
+      componentManager_.render(_.root, 'gl-empty-overlay');
     }
 
     /**
@@ -362,7 +337,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         assetId: 'gl-asset-spinner'
       });
       label = components.label()
-        .text(config_.loadingMessage)
+        .text(_.config.loadingMessage)
         .config({
           color: '#666',
           fontSize: 13
@@ -372,7 +347,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           cid: 'gl-loading-overlay',
           components: [spinner, label]
         });
-      componentManager_.render(root_, 'gl-loading-overlay');
+      componentManager_.render(_.root, 'gl-loading-overlay');
     }
 
     /**
@@ -387,7 +362,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         assetId: 'gl-asset-icon-error'
       });
       label = components.label()
-        .text(config_.errorMessage)
+        .text(_.config.errorMessage)
         .config({
           color: '#C40022',
           fontSize: 13
@@ -397,7 +372,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           cid: 'gl-error-overlay',
           components: [icon, label]
         });
-      componentManager_.render(root_, 'gl-error-overlay');
+      componentManager_.render(_.root, 'gl-error-overlay');
     }
 
     /**
@@ -431,14 +406,14 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       componentManager_.get().forEach(function(c) {
         var hiddenStates = c.config('hiddenStates'),
             dataId = c.config('dataId');
-        if (array.contains(hiddenStates, config_.state) ||
-              (dataId && dataCollection_.hasTags(dataId, 'inactive'))) {
+        if (array.contains(hiddenStates, _.config.state) ||
+              (dataId && _.dataCollection.hasTags(dataId, 'inactive'))) {
           c.hide();
         } else {
           c.show();
         }
       });
-      switch (config_.state) {
+      switch (_.config.state) {
         case STATES.EMPTY:
           showEmptyOverlay();
           break;
@@ -450,7 +425,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           break;
         case STATES.NORMAL:
           // Hide x-axis if theres no data.
-          if (domainIsEmpty(config_.xScale.domain())) {
+          if (domainIsEmpty(_.config.xScale.domain())) {
             componentManager_.first('gl-xaxis').hide();
             componentManager_.first('gl-yaxis').hide();
           }
@@ -463,8 +438,8 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {graphs.graph}
      */
     function graph() {
-      obj.extend(config_, defaults_);
-      dataCollection_ = collection.create();
+      obj.extend(_.config, _.defaults);
+      _.dataCollection = collection.create();
       // TODO: move these specific components to graphBuilder.
       componentManager_ = componentManager.create([
         {
@@ -485,25 +460,23 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         }
       ]);
       componentManager_
-        .registerSharedObject('xScale', config_.xScale, true)
-        .registerSharedObject('yScale', config_.yScale, true)
-        .registerSharedObject('data', dataCollection_, true);
+        .registerSharedObject('xScale', _.config.xScale, true)
+        .registerSharedObject('yScale', _.config.yScale, true)
+        .registerSharedObject('data', _.dataCollection, true);
       coloredComponentsCount = 0;
       return graph;
     }
 
+    graph._ = _;
+
     obj.extend(
       graph,
-      config.mixin(config_, 'id', 'width', 'height'),
-      mixins.toggle);
+      config.mixin(_.config, 'id', 'width', 'height'),
+      mixins.component);
+
+    graph.init();
 
     graph.STATES = STATES;
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    graph.dispatch = mixins.dispatch('state');
 
     /**
      * Configures the graph state and triggers overlays updates.
@@ -511,16 +484,16 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {graph.STATES}
      */
     graph.state = function(newState) {
-      var oldState = config_.state;
+      var oldState = _.config.state;
 
       if (!newState) {
         return oldState;
       }
-      config_.state = newState;
+      _.config.state = newState;
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
-      graph.dispatch.state.call(this);
+      graph.emit('state');
       return graph;
     };
 
@@ -533,15 +506,15 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       if (data) {
         // Single string indicates id of data to return.
         if (typeof data === 'string') {
-          return dataCollection_.get(data);
+          return _.dataCollection.get(data);
         }
         array.getArray(data).forEach(function(d) {
-          dataCollection_.extend(d);
+          _.dataCollection.extend(d);
         });
         return graph;
       }
 
-      return dataCollection_;
+      return _.dataCollection;
     };
 
     /**
@@ -568,7 +541,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       components = componentManager_.add(componentConfig);
       components.forEach(function(c) {
         if (!c.config('target')) {
-          c.config('target', config_.primaryContainer);
+          c.config('target', _.config.primaryContainer);
         }
         setDefaultColor(c);
       });
@@ -587,7 +560,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
-      graph.dispatch.update.call(this);
+      graph.emit('update');
       return graph;
     };
 
@@ -603,7 +576,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       renderPanel(selection);
       //Add legend before applying shared objects.
       addLegend();
-      componentManager_.registerSharedObject('rootId', config_.id, true);
+      componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();
       componentManager_.render(graph.root());
@@ -612,7 +585,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
-      graph.dispatch.render.call(this);
+      graph.emit('render');
       return graph;
     };
 
@@ -629,24 +602,16 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @public
      */
     graph.destroy = function() {
-      config_.state = STATES.DESTROYED;
+      _.config.state = STATES.DESTROYED;
       componentManager_.destroy();
-      if (root_) {
-        root_.remove();
-        root_ = null;
+      if (_.root) {
+        _.root.remove();
+        _.root = null;
       }
-      config_ = null;
-      defaults_ = null;
+      _.defaults = null;
       componentManager_ = null;
-      graph.dispatch.destroy.call(this);
-    };
-
-     /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    graph.root = function() {
-      return root_;
+      graph.emit('destroy');
+      _.config = null;
     };
 
     return graph();
