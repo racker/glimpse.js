@@ -47,8 +47,8 @@ define([
       return _.dataCollection.get(_.config.dataId);
     },
 
-    scope: function() {
-      return pubsub.scope(this._.config.rootId);
+    scope: function(eventName) {
+      return pubsub.scope(this._.config.rootId)(eventName);
     },
 
     destroy: function() {
@@ -79,20 +79,18 @@ define([
 
     on: function(eventName, callback) {
       var _ = this._;
-      _.globalPubsub.sub(this.scope(
-          this._.config.rootId)(eventName), callback);
+      _.globalPubsub.sub(this.scope(eventName), callback);
     },
 
     off: function(eventName, callback) {
       var _ = this._;
-      _.globalPubsub.unsub(this.scope(
-          this._.config.rootId)(eventName), callback);
+      _.globalPubsub.unsub(this.scope(eventName), callback);
     },
 
     emit: function(eventName) {
       var _ = this._,
           args = array.convertArgs(arguments);
-      args[0] = this.scope(this._.config.rootId)(eventName);
+      args[0] = this.scope(eventName);
       _.globalPubsub.pub.apply(this, args);
     }
 
