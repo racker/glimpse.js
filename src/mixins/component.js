@@ -77,6 +77,18 @@ define([
     update: function() {
       // noop
       return this;
+    },
+
+    on: function(eventName, callback) {
+      var _ = this._;
+      _.globalPubsub.sub(this.scope(
+          this._.config.rootId)(eventName), callback);
+    },
+
+    off: function(eventName, callback) {
+      var _ = this._;
+      _.globalPubsub.unsub(this.scope(
+          this._.config.rootId)(eventName), callback);
     }
 
   };
