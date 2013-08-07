@@ -778,7 +778,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       });
 
       it('sets root to null', function() {
-        expect(testGraph.root()).toBe(null);
+        expect(testGraph._).toBe(null);
       });
 
     });

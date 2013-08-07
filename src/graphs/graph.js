@@ -7,6 +7,7 @@ define([
   'core/object',
   'core/config',
   'core/array',
+  'core/function',
   'core/asset-loader',
   'core/component-manager',
   'core/string',
@@ -18,8 +19,8 @@ define([
   'data/collection',
   'data/domain'
 ],
-function(obj, config, array, assetLoader, componentManager, string, components,
-  layoutManager, d3util, mixins, dataFns, collection, domain) {
+function(obj, config, array, fn, assetLoader, componentManager, string,
+  components, layoutManager, d3util, mixins, dataFns, collection, domain) {
   'use strict';
 
   return function() {
@@ -605,18 +606,10 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * Removes everything from the DOM, cleans up all references.
      * @public
      */
-    graph.destroy = function() {
-      _.config.state = STATES.DESTROYED;
+    graph.destroy = fn.compose(graph.destroy, function() {
       componentManager_.destroy();
-      if (_.root) {
-        _.root.remove();
-        _.root = null;
-      }
-      _.defaults = null;
       componentManager_ = null;
-      graph.emit('destroy');
-      _.config = null;
-    };
+    });
 
     return graph();
   };
