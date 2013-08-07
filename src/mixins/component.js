@@ -54,7 +54,7 @@ define([
     },
 
     /**
-     * Returns a pubsub scope that spans the entire graph.
+     * Returns a pubsub event scoped to the rootId of the graph.
      * @param {String} The event name.
      * @return {String} The scoped (prefixed) event name.
      */
@@ -63,8 +63,10 @@ define([
     },
 
     /**
-     * Returns a scope local to the component.
-     * @param {String} The event name.
+     * Returns a scope local to the component i.e caller is a
+     * graph: Events are scoped to the graph rootId
+     * component: Events are scope to component cid
+     * @param {String} eventName event name.
      * @return {String} The scoped (prefixed) event name.
      */
     scope: function(eventName) {
@@ -127,8 +129,9 @@ define([
 
     /**
      * Event handler detacher.
+     * If the callback isn't specified, it deregisters all subscribed events.
      * @param {String} eventName The event name
-     * @param {Function} callback
+     * @param {Function?} callback
      */
     off: function(eventName, callback) {
       var _ = this._;
