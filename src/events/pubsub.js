@@ -38,7 +38,7 @@ function(array) {
         args = array.convertArgs(arguments, 1);
         callbackCache[topic].forEach(function(callback) {
           callback.apply(this, args);
-        });
+        }, this);
         return this;
       },
 
@@ -123,6 +123,11 @@ function(array) {
       return globalInstance;
     },
 
+    /**
+     * Gives context to pubsub events.
+     * @param {String?} context
+     * @return {String}
+     */
     scope: function() {
       var scope =  arguments[0] ? arguments[0] + ':' : '';
       return function() {

@@ -105,7 +105,7 @@ function(obj, config, string, label, mixins, d3util) {
         });
       }
       overlay.update();
-      overlay.dispatch.render.call(this);
+      overlay.emit('render');
       return overlay;
     };
 
@@ -127,7 +127,7 @@ function(obj, config, string, label, mixins, d3util) {
       }
       updateChildren_();
       overlay.applyZIndex();
-      overlay.dispatch.update.call(this);
+      overlay.emit('update');
       return overlay;
     };
 

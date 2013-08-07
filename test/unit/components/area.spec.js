@@ -230,7 +230,7 @@ function(area, dc) {
       beforeEach(function() {
         setData();
         spyOn(testArea, 'update').andCallThrough();
-        testArea.dispatch.on('render', handlerSpy);
+        testArea.on('render', handlerSpy);
         testArea.config('color', 'green');
         testArea.render(selection);
       });
@@ -292,7 +292,7 @@ function(area, dc) {
       beforeEach(function() {
         setData();
         testArea.render(selection);
-        testArea.dispatch.on('destroy', handlerSpy);
+        testArea.on('destroy', handlerSpy);
         testArea.destroy();
       });
 
@@ -322,7 +322,7 @@ function(area, dc) {
         testData[0].dimensions.y = function(d) { return d.y + 2; };
         testData[0].dimensions.y0 = null;
         setData();
-        testArea.dispatch.on('update', handlerSpy);
+        testArea.on('update', handlerSpy);
         testArea.update();
         path = selection.select('path').node();
       });

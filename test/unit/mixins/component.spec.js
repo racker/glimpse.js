@@ -24,7 +24,6 @@ function(obj, mixins, pubsubModule) {
     it('call to init defines its internal state', function() {
       component.init();
       expect(component._.globalPubsub).toBeDefined();
-      expect(component.dispatch).toBeDefined();
       expect(component.zIndex).toBeDefined();
       expect(component.target).toBeDefined();
       expect(component.cid).toBeDefined();
@@ -39,8 +38,21 @@ function(obj, mixins, pubsubModule) {
       expect(component.render).toBeDefined();
       expect(component.destroy).toBeDefined();
       expect(component.isRendered).toBeDefined();
+    });
+
+    it('defines event methods', function() {
       expect(component.on).toBeDefined();
       expect(component.off).toBeDefined();
+      expect(component.emit).toBeDefined();
+    });
+
+    describe('scope helpers', function() {
+
+      it('defines scope helpers', function() {
+        expect(component.scope).toBeDefined();
+        expect(component.globalScope).toBeDefined();
+      });
+
     });
 
     it('the callback is executed when on is called', function() {
@@ -48,7 +60,7 @@ function(obj, mixins, pubsubModule) {
       component.init();
       callbackSpy = jasmine.createSpy();
       component.on('foo', callbackSpy);
-      pubsub.pub('foo');
+      component.emit('foo');
       expect(callbackSpy).toHaveBeenCalledOnce();
     });
 
@@ -57,7 +69,7 @@ function(obj, mixins, pubsubModule) {
       component.init();
       callbackSpy = jasmine.createSpy();
       component.off('foo', callbackSpy);
-      pubsub.pub('foo');
+      component.emit('foo');
       expect(callbackSpy).not.toHaveBeenCalled();
     });
 

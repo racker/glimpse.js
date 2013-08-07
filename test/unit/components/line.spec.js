@@ -258,7 +258,7 @@ function(d3, object, line, dc) {
         setData();
         setScales();
         testLine.render('#svg-fixture');
-        testLine.dispatch.on('update', handlerSpy);
+        testLine.on('update', handlerSpy);
         testLine.update();
         path = selection.select('path').node();
       });
@@ -306,7 +306,7 @@ function(d3, object, line, dc) {
         selection = jasmine.svgFixture();
         setData();
         spyOn(testLine, 'update');
-        testLine.dispatch.on('render', handlerSpy);
+        testLine.on('render', handlerSpy);
         testLine.render('#svg-fixture');
       });
 
@@ -345,7 +345,7 @@ function(d3, object, line, dc) {
         setData();
         spyOn(testLine, 'update');
         testLine.render(selection);
-        testLine.dispatch.on('destroy', handlerSpy);
+        testLine.on('destroy', handlerSpy);
         testLine.destroy();
       });
 

@@ -130,7 +130,7 @@ function(legend, dc) {
     describe('render()', function() {
 
       beforeEach(function() {
-        testLegend.dispatch.on('render', handlerSpy);
+        testLegend.on('render', handlerSpy);
         testLegend.render('#svg-fixture');
         rootNode = select('.gl-legend').node();
       });
@@ -291,7 +291,7 @@ function(legend, dc) {
 
         beforeEach(function() {
           testLegend.render('#svg-fixture');
-          testLegend.dispatch.on('update', handlerSpy);
+          testLegend.on('update', handlerSpy);
         });
 
         it('dispatches an "update" event', function() {
@@ -364,7 +364,7 @@ function(legend, dc) {
       beforeEach(function() {
         selection = jasmine.svgFixture();
         testLegend.render(selection);
-        testLegend.dispatch.on('destroy', handlerSpy);
+        testLegend.on('destroy', handlerSpy);
         testLegend.destroy();
       });
 
