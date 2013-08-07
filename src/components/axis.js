@@ -147,7 +147,7 @@ function(obj, config, string, mixins, d3util) {
 
       formatAxis();
       axis.applyZIndex();
-      axis.dispatch.update.call(this);
+      axis.emit('update');
       return axis;
     };
 
@@ -168,7 +168,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       axis.update();
-      axis.dispatch.render.call(this);
+      axis.emit('render');
       return axis;
     };
 

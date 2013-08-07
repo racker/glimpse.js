@@ -42,7 +42,7 @@ function(asset) {
     describe('render()', function() {
 
       beforeEach(function() {
-        testAsset.dispatch.on('render', handlerSpy);
+        testAsset.on('render', handlerSpy);
         testAsset.render(selection);
         root = testAsset.root();
         useEl = root.select('use');
@@ -77,7 +77,7 @@ function(asset) {
     describe('update()', function() {
 
       beforeEach(function() {
-        testAsset.dispatch.on('update', handlerSpy);
+        testAsset.on('update', handlerSpy);
         testAsset.render(selection);
         root = testAsset.root();
         useEl = root.select('use');
@@ -117,7 +117,7 @@ function(asset) {
     describe('destroy()', function() {
 
       beforeEach(function() {
-        testAsset.dispatch.on('destroy', handlerSpy);
+        testAsset.on('destroy', handlerSpy);
         testAsset.render(selection);
         testAsset.destroy();
       });

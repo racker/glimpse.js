@@ -44,7 +44,7 @@ function(overlay, componentUtil) {
     describe('render()', function() {
 
       beforeEach(function() {
-        testOverlay.dispatch.on('render', handlerSpy);
+        testOverlay.on('render', handlerSpy);
         testOverlay.render(selection);
         root = testOverlay.root();
         rect = root.select('rect');
@@ -90,7 +90,7 @@ function(overlay, componentUtil) {
         testOverlay.render(selection);
         root = testOverlay.root();
         mockComponent.target = root;
-        testOverlay.dispatch.on('update', handlerSpy);
+        testOverlay.on('update', handlerSpy);
       });
 
       it('dispatches an "update" event', function() {
@@ -151,7 +151,7 @@ function(overlay, componentUtil) {
         mockComponent.target = root;
         spyOn(mockComponent, 'destroy');
         testOverlay.config('components', [mockComponent]);
-        testOverlay.dispatch.on('destroy', handlerSpy);
+        testOverlay.on('destroy', handlerSpy);
         testOverlay.destroy();
       });
 

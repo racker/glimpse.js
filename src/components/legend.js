@@ -242,7 +242,7 @@ function(obj, config, string, array, d3util, mixins) {
       _.update(selection);
       _.root.layout({type: _.config.layout, gap: _.config.gap});
       _.root.position(_.config.position);
-      legend.dispatch.update.call(this);
+      legend.emit('update');
       return legend;
     };
 
@@ -262,7 +262,7 @@ function(obj, config, string, array, d3util, mixins) {
         });
       }
       legend.update();
-      legend.dispatch.render.call(this);
+      legend.emit('render');
       return legend;
     };
 

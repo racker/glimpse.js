@@ -36,7 +36,7 @@ function(axisComponent) {
     describe('.render()', function() {
 
       it('dispatches a "render" event', function() {
-        axis.dispatch.on('render', handlerSpy);
+        axis.on('render', handlerSpy);
         axis.render(container);
         expect(handlerSpy).toHaveBeenCalledOnce();
       });
@@ -216,7 +216,7 @@ function(axisComponent) {
       });
 
       it('dispatches an "update" event', function() {
-        axis.dispatch.on('update', handlerSpy);
+        axis.on('update', handlerSpy);
         axis.update();
         expect(handlerSpy).toHaveBeenCalledOnce();
       });
@@ -239,7 +239,7 @@ function(axisComponent) {
           orient: 'bottom'
         });
         axis.render(container);
-        axis.dispatch.on('destroy', handlerSpy);
+        axis.on('destroy', handlerSpy);
         axis.destroy();
       });
 

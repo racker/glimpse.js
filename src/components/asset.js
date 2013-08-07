@@ -64,7 +64,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       asset.update();
-      asset.dispatch.render.call(this);
+      asset.emit('render');
       return asset;
     };
 
@@ -96,7 +96,7 @@ function(obj, config, string, mixins, d3util) {
       });
       _.root.position(_.config.position);
       asset.applyZIndex();
-      asset.dispatch.update.call(this);
+      asset.emit('update');
       return asset;
     };
 

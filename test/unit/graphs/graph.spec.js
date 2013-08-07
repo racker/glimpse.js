@@ -778,7 +778,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       });
 
       it('sets root to null', function() {
-        expect(testGraph.root()).toBe(null);
+        expect(testGraph._).toBe(null);
       });
 
     });
@@ -789,23 +789,13 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       beforeEach(function() {
         newGraph = graph();
         renderSpy = jasmine.createSpy();
-        testGraph.dispatch.on('render', renderSpy);
+        testGraph.on('render', renderSpy);
       });
 
-      it('contains a render method', function() {
-        expect(testGraph.dispatch.render).toBeOfType('function');
-      });
-
-      it('contains an update method', function() {
-        expect(testGraph.dispatch.update).toBeOfType('function');
-      });
-
-      it('contains a destroy method', function() {
-        expect(testGraph.dispatch.destroy).toBeOfType('function');
-      });
-
-      it('contains a state method', function() {
-        expect(testGraph.dispatch.state).toBeOfType('function');
+      it('contains event methods', function() {
+        expect(testGraph.on).toBeOfType('function');
+        expect(testGraph.off).toBeOfType('function');
+        expect(testGraph.emit).toBeOfType('function');
       });
 
     });

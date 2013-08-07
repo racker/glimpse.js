@@ -162,7 +162,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       update(selection);
       remove(selection);
       line.applyZIndex();
-      line.dispatch.update.call(this);
+      line.emit('update');
       return line;
     };
 
@@ -186,9 +186,9 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
           return root;
         });
       }
-      line.on('data-toggle', handleDataToggle);
+      _.globalPubsub.sub(line.globalScope('data-toggle'), handleDataToggle);
       line.update();
-      line.dispatch.render.call(this);
+      line.emit('render');
       return line;
     };
 
@@ -197,7 +197,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @public
      */
     line.destroy = fn.compose(line.destroy, function() {
-      line.off('data-toggle', handleDataToggle);
+      _.globalPubsub.unsub(line.globalScope('data-toggle'), handleDataToggle);
     });
 
     return line();

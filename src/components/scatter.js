@@ -167,7 +167,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
 
       update(selection);
       remove(selection);
-      scatter.dispatch.update.call(this);
+      scatter.emit('update');
       return scatter;
     };
 
@@ -186,9 +186,9 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
           return root;
         });
       }
-      scatter.on('data-toggle', handleDataToggle);
+      _.globalPubsub.sub(scatter.globalScope('data-toggle'), handleDataToggle);
       scatter.update();
-      scatter.dispatch.render.call(this);
+      scatter.emit('render');
       return scatter;
     };
 
@@ -213,7 +213,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
      * @public
      */
     scatter.destroy = fn.compose(scatter.destroy, function() {
-      scatter.off('data-toggle', handleDataToggle);
+      _.globalPubsub.unsub(
+        scatter.globalScope('data-toggle'), handleDataToggle);
     });
 
     return scatter();
