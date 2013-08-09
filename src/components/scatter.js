@@ -171,7 +171,19 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
 
       selection
         .enter()
-        .append('circle');
+        .append('circle')
+        .on('mouseover', function(e){
+          var sel = d3.select(this),
+              data = {
+                x: parseFloat(sel.attr('cx')),
+                y: parseFloat(sel.attr('cy'))
+              };
+          _.globalPubsub.pub('tooltip-show', data,
+            this, dataFns.dimension(scatter.data(), 'tooltip')(e));
+        })
+        .on('mouseout', function() {
+          _.globalPubsub.pub('tooltip-hide');
+        });
 
       update(selection);
       remove(selection);

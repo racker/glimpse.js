@@ -36,26 +36,35 @@
             { x: oneHr*3, y: 46 }
           ];
 
+        var tooltipFn = function(d) {
+          return 'x: ' + d.x + '\n' + 'y: ' + d.y;
+        };
+
         // Configure which data to show.
         var dataConfig = [
           {
             id: 'set1',
             title: 'Set 1',
             data: sampleData1,
-            // NOTE: optional dimension for radius
             dimensions: {
-              r: 'y'
+              tooltip: tooltipFn
             }
           },
           {
             id: 'set2',
             title: 'Set 2',
-            data: sampleData2
+            data: sampleData2,
+            dimensions: {
+              tooltip: tooltipFn
+            }
           },
           {
             id: 'set3',
             title: 'Set 3',
-            data: sampleData3
+            data: sampleData3,
+            dimensions: {
+              tooltip: tooltipFn
+            }
           }
         ];
 
