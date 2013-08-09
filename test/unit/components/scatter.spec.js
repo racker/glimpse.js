@@ -93,8 +93,11 @@ function(scatter, dc) {
         preTransitionColor: '#333',
         delay: 100,
         duration: 1000,
-        ease: 'linear'
-
+        ease: 'linear',
+        highlightRadius: 4,
+        highlightFill: '#fff',
+        highlightStrokeWidth: 2,
+        showHighlight: false
       };
 
       beforeEach(function(){
@@ -154,6 +157,22 @@ function(scatter, dc) {
 
       it('has default ease', function() {
         expect(config.ease).toBe(defaults.ease);
+      });
+
+      it('has default highlightRadius', function() {
+        expect(config.highlightRadius).toBe(defaults.highlightRadius);
+      });
+
+      it('has default highlightFill', function() {
+        expect(config.highlightFill).toBe(defaults.highlightFill);
+      });
+
+      it('has default highlightStrokeWidth', function() {
+        expect(config.highlightStrokeWidth).toBe(defaults.highlightStrokeWidth);
+      });
+
+      it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
       });
 
     });
@@ -216,6 +235,7 @@ function(scatter, dc) {
         spyOn(testScatter, 'update').andCallThrough();
         testScatter.on('render', handlerSpy);
         testScatter.config('color', 'green');
+        spyOn(testScatter, 'highlight');
         testScatter.render(selection);
       });
 
@@ -235,6 +255,11 @@ function(scatter, dc) {
 
       it('calls the update function', function() {
         expect(testScatter.update).toHaveBeenCalled();
+      });
+
+      it('does not call highlight if showHighlight is set to false',
+        function() {
+          expect(testScatter.highlight).not.toHaveBeenCalled();
       });
 
     });
@@ -282,6 +307,9 @@ function(scatter, dc) {
         testScatter.on('update', handlerSpy);
         dataCollection.add(getTestData()[1]);
         testScatter.data(dataCollection);
+        testScatter.config('showHighlight', true);
+        spyOn(testScatter, 'highlight');
+        spyOn(testScatter, 'pubsubHighlightEvents');
         testScatter.update();
         root = selection.select('g');
       });
@@ -291,36 +319,36 @@ function(scatter, dc) {
       });
 
       it('adds one circle per data point', function() {
-        var circles = root.selectAll('circle');
+        var circles = root.selectAll('.gl-scatter-point');
         expect(circles[0].length).toBe(4);
       });
 
       it('updates the fill attribute', function() {
-        var circle = root.select('circle').node();
+        var circle = root.select('.gl-scatter-point').node();
         expect(circle).toHaveAttr('fill', 'red');
       });
 
       it('updates the opacity attribute', function() {
-        var circle = root.select('circle').node();
+        var circle = root.select('.gl-scatter-point').node();
         expect(circle).toHaveAttr('opacity', '0.5');
       });
 
       it('updates the class attribute', function() {
-        var circle = root.select('circle').node();
+        var circle = root.select('.gl-scatter-point').node();
         expect(circle).toHaveAttr('class', 'gl-scatter-point');
       });
 
       it('updates the number of circles if data is updated', function() {
         testScatter.config({ 'dataId': 'fakeData2' });
         testScatter.update();
-        expect(root.selectAll('circle')[0].length).toBe(3);
+        expect(root.selectAll('.gl-scatter-point')[0].length).toBe(3);
       });
 
       it('sets the radius for element if specified', function() {
         var circle;
         testScatter.config({ 'dataId': 'fakeData2' });
         testScatter.update();
-        circle = root.select('circle').node();
+        circle = root.select('.gl-scatter-point').node();
         expect(circle).toHaveAttr('r', 10);
       });
 
@@ -328,8 +356,17 @@ function(scatter, dc) {
         var circle;
         testScatter.config({ 'dataId': 'fakeData2' });
         testScatter.update();
-        circle = root.select('circle').node();
+        circle = root.select('.gl-scatter-point').node();
         expect(circle).toHaveAttr('fill', 'blue');
+      });
+
+      it('calls the highlight method when showHighlight is true', function() {
+        expect(testScatter.highlight).toHaveBeenCalled();
+      });
+
+      it('calls the highlight method when pubsubHightlightEvents is true',
+        function() {
+          expect(testScatter.pubsubHighlightEvents).toHaveBeenCalled();
       });
 
     });
@@ -351,7 +388,7 @@ function(scatter, dc) {
 
       it('applies default color and radius if showTransition is false',
         function() {
-          var circle = root.select('circle').node();
+          var circle = root.select('.gl-scatter-point').node();
           expect(circle).toHaveAttr({'fill':'#333', 'r': 6 } );
       });
 
@@ -375,7 +412,7 @@ function(scatter, dc) {
         });
         waits(200);
         runs(function () {
-          circle = root.selectAll('circle');
+          circle = root.selectAll('.gl-scatter-point');
           expect(circle.node()).toHaveAttr({'r': 10, 'fill': '#0000ff'});
         });
       });
