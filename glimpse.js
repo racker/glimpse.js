@@ -408,16 +408,22 @@ var requirejs, require, define;
 
 d3 = function() {
   var d3 = {
-    version: "3.1.10"
+    version: "3.2.8"
   };
   if (!Date.now) Date.now = function() {
     return +new Date();
   };
-  var d3_document = document, d3_window = window;
+  var d3_document = document, d3_documentElement = d3_document.documentElement, d3_window = window;
   try {
     d3_document.createElement("div").style.setProperty("opacity", 0, "");
   } catch (error) {
-    var d3_style_prototype = d3_window.CSSStyleDeclaration.prototype, d3_style_setProperty = d3_style_prototype.setProperty;
+    var d3_element_prototype = d3_window.Element.prototype, d3_element_setAttribute = d3_element_prototype.setAttribute, d3_element_setAttributeNS = d3_element_prototype.setAttributeNS, d3_style_prototype = d3_window.CSSStyleDeclaration.prototype, d3_style_setProperty = d3_style_prototype.setProperty;
+    d3_element_prototype.setAttribute = function(name, value) {
+      d3_element_setAttribute.call(this, name, value + "");
+    };
+    d3_element_prototype.setAttributeNS = function(space, local, value) {
+      d3_element_setAttributeNS.call(this, space, local, value + "");
+    };
     d3_style_prototype.setProperty = function(name, value, priority) {
       d3_style_setProperty.call(this, name, value + "", priority);
     };
@@ -431,10 +437,10 @@ d3 = function() {
   d3.min = function(array, f) {
     var i = -1, n = array.length, a, b;
     if (arguments.length === 1) {
-      while (++i < n && ((a = array[i]) == null || a != a)) a = undefined;
+      while (++i < n && !((a = array[i]) != null && a <= a)) a = undefined;
       while (++i < n) if ((b = array[i]) != null && a > b) a = b;
     } else {
-      while (++i < n && ((a = f.call(array, array[i], i)) == null || a != a)) a = undefined;
+      while (++i < n && !((a = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
       while (++i < n) if ((b = f.call(array, array[i], i)) != null && a > b) a = b;
     }
     return a;
@@ -442,10 +448,10 @@ d3 = function() {
   d3.max = function(array, f) {
     var i = -1, n = array.length, a, b;
     if (arguments.length === 1) {
-      while (++i < n && ((a = array[i]) == null || a != a)) a = undefined;
+      while (++i < n && !((a = array[i]) != null && a <= a)) a = undefined;
       while (++i < n) if ((b = array[i]) != null && b > a) a = b;
     } else {
-      while (++i < n && ((a = f.call(array, array[i], i)) == null || a != a)) a = undefined;
+      while (++i < n && !((a = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
       while (++i < n) if ((b = f.call(array, array[i], i)) != null && b > a) a = b;
     }
     return a;
@@ -453,13 +459,13 @@ d3 = function() {
   d3.extent = function(array, f) {
     var i = -1, n = array.length, a, b, c;
     if (arguments.length === 1) {
-      while (++i < n && ((a = c = array[i]) == null || a != a)) a = c = undefined;
+      while (++i < n && !((a = c = array[i]) != null && a <= a)) a = c = undefined;
       while (++i < n) if ((b = array[i]) != null) {
         if (a > b) a = b;
         if (c < b) c = b;
       }
     } else {
-      while (++i < n && ((a = c = f.call(array, array[i], i)) == null || a != a)) a = undefined;
+      while (++i < n && !((a = c = f.call(array, array[i], i)) != null && a <= a)) a = undefined;
       while (++i < n) if ((b = f.call(array, array[i], i)) != null) {
         if (a > b) a = b;
         if (c < b) c = b;
@@ -533,8 +539,8 @@ d3 = function() {
     return array;
   };
   d3.permute = function(array, indexes) {
-    var permutes = [], i = -1, n = indexes.length;
-    while (++i < n) permutes[i] = array[indexes[i]];
+    var i = indexes.length, permutes = new Array(i);
+    while (i--) permutes[i] = array[indexes[i]];
     return permutes;
   };
   d3.zip = function() {
@@ -606,7 +612,9 @@ d3 = function() {
   }
   d3.map = function(object) {
     var map = new d3_Map();
-    for (var key in object) map.set(key, object[key]);
+    if (object instanceof d3_Map) object.forEach(function(key, value) {
+      map.set(key, value);
+    }); else for (var key in object) map.set(key, object[key]);
     return map;
   };
   function d3_Map() {}
@@ -722,7 +730,7 @@ d3 = function() {
   };
   d3.set = function(array) {
     var set = new d3_Set();
-    if (array) for (var i = 0; i < array.length; i++) set.add(array[i]);
+    if (array) for (var i = 0, n = array.length; i < n; ++i) set.add(array[i]);
     return set;
   };
   function d3_Set() {}
@@ -765,6 +773,30 @@ d3 = function() {
       return value === source ? target : value;
     };
   }
+  function d3_vendorSymbol(object, name) {
+    if (name in object) return name;
+    name = name.charAt(0).toUpperCase() + name.substring(1);
+    for (var i = 0, n = d3_vendorPrefixes.length; i < n; ++i) {
+      var prefixName = d3_vendorPrefixes[i] + name;
+      if (prefixName in object) return prefixName;
+    }
+  }
+  var d3_vendorPrefixes = [ "webkit", "ms", "moz", "Moz", "o", "O" ];
+  var d3_array = d3_arraySlice;
+  function d3_arrayCopy(pseudoarray) {
+    var i = pseudoarray.length, array = new Array(i);
+    while (i--) array[i] = pseudoarray[i];
+    return array;
+  }
+  function d3_arraySlice(pseudoarray) {
+    return Array.prototype.slice.call(pseudoarray);
+  }
+  try {
+    d3_array(d3_documentElement.childNodes)[0].nodeType;
+  } catch (e) {
+    d3_array = d3_arrayCopy;
+  }
+  function d3_noop() {}
   d3.dispatch = function() {
     var dispatch = new d3_dispatch(), i = -1, n = arguments.length;
     while (++i < n) dispatch[arguments[i]] = d3_dispatch_event(dispatch);
@@ -808,24 +840,13 @@ d3 = function() {
     return event;
   }
   d3.event = null;
-  function d3_eventCancel() {
-    d3.event.stopPropagation();
+  function d3_eventPreventDefault() {
     d3.event.preventDefault();
   }
   function d3_eventSource() {
     var e = d3.event, s;
     while (s = e.sourceEvent) e = s;
     return e;
-  }
-  function d3_eventSuppress(target, type) {
-    function off() {
-      target.on(type, null);
-    }
-    target.on(type, function() {
-      d3_eventCancel();
-      off();
-    }, true);
-    setTimeout(off, 0);
   }
   function d3_eventDispatch(target) {
     var dispatch = new d3_dispatch(), i = 0, n = arguments.length;
@@ -844,125 +865,24 @@ d3 = function() {
     };
     return dispatch;
   }
-  d3.mouse = function(container) {
-    return d3_mousePoint(container, d3_eventSource());
+  d3.requote = function(s) {
+    return s.replace(d3_requote_re, "\\$&");
   };
-  var d3_mouse_bug44083 = /WebKit/.test(d3_window.navigator.userAgent) ? -1 : 0;
-  function d3_mousePoint(container, e) {
-    var svg = container.ownerSVGElement || container;
-    if (svg.createSVGPoint) {
-      var point = svg.createSVGPoint();
-      if (d3_mouse_bug44083 < 0 && (d3_window.scrollX || d3_window.scrollY)) {
-        svg = d3.select(d3_document.body).append("svg").style("position", "absolute").style("top", 0).style("left", 0);
-        var ctm = svg[0][0].getScreenCTM();
-        d3_mouse_bug44083 = !(ctm.f || ctm.e);
-        svg.remove();
-      }
-      if (d3_mouse_bug44083) {
-        point.x = e.pageX;
-        point.y = e.pageY;
-      } else {
-        point.x = e.clientX;
-        point.y = e.clientY;
-      }
-      point = point.matrixTransform(container.getScreenCTM().inverse());
-      return [ point.x, point.y ];
-    }
-    var rect = container.getBoundingClientRect();
-    return [ e.clientX - rect.left - container.clientLeft, e.clientY - rect.top - container.clientTop ];
-  }
-  var d3_array = d3_arraySlice;
-  function d3_arrayCopy(pseudoarray) {
-    var i = -1, n = pseudoarray.length, array = [];
-    while (++i < n) array.push(pseudoarray[i]);
-    return array;
-  }
-  function d3_arraySlice(pseudoarray) {
-    return Array.prototype.slice.call(pseudoarray);
-  }
-  try {
-    d3_array(d3_document.documentElement.childNodes)[0].nodeType;
-  } catch (e) {
-    d3_array = d3_arrayCopy;
-  }
-  var d3_arraySubclass = [].__proto__ ? function(array, prototype) {
-    array.__proto__ = prototype;
-  } : function(array, prototype) {
-    for (var property in prototype) array[property] = prototype[property];
-  };
-  d3.touches = function(container, touches) {
-    if (arguments.length < 2) touches = d3_eventSource().touches;
-    return touches ? d3_array(touches).map(function(touch) {
-      var point = d3_mousePoint(container, touch);
-      point.identifier = touch.identifier;
-      return point;
-    }) : [];
-  };
-  d3.behavior.drag = function() {
-    var event = d3_eventDispatch(drag, "drag", "dragstart", "dragend"), origin = null;
-    function drag() {
-      this.on("mousedown.drag", mousedown).on("touchstart.drag", mousedown);
-    }
-    function mousedown() {
-      var target = this, event_ = event.of(target, arguments), eventTarget = d3.event.target, touchId = d3.event.touches ? d3.event.changedTouches[0].identifier : null, offset, origin_ = point(), moved = 0;
-      var w = d3.select(d3_window).on(touchId != null ? "touchmove.drag-" + touchId : "mousemove.drag", dragmove).on(touchId != null ? "touchend.drag-" + touchId : "mouseup.drag", dragend, true);
-      if (origin) {
-        offset = origin.apply(target, arguments);
-        offset = [ offset.x - origin_[0], offset.y - origin_[1] ];
-      } else {
-        offset = [ 0, 0 ];
-      }
-      if (touchId == null) d3_eventCancel();
-      event_({
-        type: "dragstart"
-      });
-      function point() {
-        var p = target.parentNode;
-        return touchId != null ? d3.touches(p).filter(function(p) {
-          return p.identifier === touchId;
-        })[0] : d3.mouse(p);
-      }
-      function dragmove() {
-        if (!target.parentNode) return dragend();
-        var p = point(), dx = p[0] - origin_[0], dy = p[1] - origin_[1];
-        moved |= dx | dy;
-        origin_ = p;
-        d3_eventCancel();
-        event_({
-          type: "drag",
-          x: p[0] + offset[0],
-          y: p[1] + offset[1],
-          dx: dx,
-          dy: dy
-        });
-      }
-      function dragend() {
-        event_({
-          type: "dragend"
-        });
-        if (moved) {
-          d3_eventCancel();
-          if (d3.event.target === eventTarget) d3_eventSuppress(w, "click");
-        }
-        w.on(touchId != null ? "touchmove.drag-" + touchId : "mousemove.drag", null).on(touchId != null ? "touchend.drag-" + touchId : "mouseup.drag", null);
-      }
-    }
-    drag.origin = function(x) {
-      if (!arguments.length) return origin;
-      origin = x;
-      return drag;
-    };
-    return d3.rebind(drag, event, "on");
+  var d3_requote_re = /[\\\^\$\*\+\?\|\[\]\(\)\.\{\}]/g;
+  var d3_subclass = {}.__proto__ ? function(object, prototype) {
+    object.__proto__ = prototype;
+  } : function(object, prototype) {
+    for (var property in prototype) object[property] = prototype[property];
   };
   function d3_selection(groups) {
-    d3_arraySubclass(groups, d3_selectionPrototype);
+    d3_subclass(groups, d3_selectionPrototype);
     return groups;
   }
   var d3_select = function(s, n) {
     return n.querySelector(s);
   }, d3_selectAll = function(s, n) {
     return n.querySelectorAll(s);
-  }, d3_selectRoot = d3_document.documentElement, d3_selectMatcher = d3_selectRoot.matchesSelector || d3_selectRoot.webkitMatchesSelector || d3_selectRoot.mozMatchesSelector || d3_selectRoot.msMatchesSelector || d3_selectRoot.oMatchesSelector, d3_selectMatches = function(n, s) {
+  }, d3_selectMatcher = d3_documentElement[d3_vendorSymbol(d3_documentElement, "matchesSelector")], d3_selectMatches = function(n, s) {
     return d3_selectMatcher.call(n, s);
   };
   if (typeof Sizzle === "function") {
@@ -980,13 +900,13 @@ d3 = function() {
   var d3_selectionPrototype = d3.selection.prototype = [];
   d3_selectionPrototype.select = function(selector) {
     var subgroups = [], subgroup, subnode, group, node;
-    if (typeof selector !== "function") selector = d3_selection_selector(selector);
+    selector = d3_selection_selector(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       subgroups.push(subgroup = []);
       subgroup.parentNode = (group = this[j]).parentNode;
       for (var i = -1, n = group.length; ++i < n; ) {
         if (node = group[i]) {
-          subgroup.push(subnode = selector.call(node, node.__data__, i));
+          subgroup.push(subnode = selector.call(node, node.__data__, i, j));
           if (subnode && "__data__" in node) subnode.__data__ = node.__data__;
         } else {
           subgroup.push(null);
@@ -996,17 +916,17 @@ d3 = function() {
     return d3_selection(subgroups);
   };
   function d3_selection_selector(selector) {
-    return function() {
+    return typeof selector === "function" ? selector : function() {
       return d3_select(selector, this);
     };
   }
   d3_selectionPrototype.selectAll = function(selector) {
     var subgroups = [], subgroup, node;
-    if (typeof selector !== "function") selector = d3_selection_selectorAll(selector);
+    selector = d3_selection_selectorAll(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
         if (node = group[i]) {
-          subgroups.push(subgroup = d3_array(selector.call(node, node.__data__, i)));
+          subgroups.push(subgroup = d3_array(selector.call(node, node.__data__, i, j)));
           subgroup.parentNode = node;
         }
       }
@@ -1014,7 +934,7 @@ d3 = function() {
     return d3_selection(subgroups);
   };
   function d3_selection_selectorAll(selector) {
-    return function() {
+    return typeof selector === "function" ? selector : function() {
       return d3_selectAll(selector, this);
     };
   }
@@ -1078,10 +998,6 @@ d3 = function() {
   function d3_collapse(s) {
     return s.trim().replace(/\s+/g, " ");
   }
-  d3.requote = function(s) {
-    return s.replace(d3_requote_re, "\\$&");
-  };
-  var d3_requote_re = /[\\\^\$\*\+\?\|\[\]\(\)\.\{\}]/g;
   d3_selectionPrototype.classed = function(name, value) {
     if (arguments.length < 2) {
       if (typeof name === "string") {
@@ -1196,25 +1112,24 @@ d3 = function() {
     }) : this.node().innerHTML;
   };
   d3_selectionPrototype.append = function(name) {
-    name = d3.ns.qualify(name);
-    function append() {
-      return this.appendChild(d3_document.createElementNS(this.namespaceURI, name));
-    }
-    function appendNS() {
-      return this.appendChild(d3_document.createElementNS(name.space, name.local));
-    }
-    return this.select(name.local ? appendNS : append);
+    name = d3_selection_creator(name);
+    return this.select(function() {
+      return this.appendChild(name.apply(this, arguments));
+    });
   };
+  function d3_selection_creator(name) {
+    return typeof name === "function" ? name : (name = d3.ns.qualify(name)).local ? function() {
+      return d3_document.createElementNS(name.space, name.local);
+    } : function() {
+      return d3_document.createElementNS(this.namespaceURI, name);
+    };
+  }
   d3_selectionPrototype.insert = function(name, before) {
-    name = d3.ns.qualify(name);
-    if (typeof before !== "function") before = d3_selection_selector(before);
-    function insert(d, i) {
-      return this.insertBefore(d3_document.createElementNS(this.namespaceURI, name), before.call(this, d, i));
-    }
-    function insertNS(d, i) {
-      return this.insertBefore(d3_document.createElementNS(name.space, name.local), before.call(this, d, i));
-    }
-    return this.select(name.local ? insertNS : insert);
+    name = d3_selection_creator(name);
+    before = d3_selection_selector(before);
+    return this.select(function() {
+      return this.insertBefore(name.apply(this, arguments), before.apply(this, arguments));
+    });
   };
   d3_selectionPrototype.remove = function() {
     return this.each(function() {
@@ -1350,10 +1265,116 @@ d3 = function() {
   function d3_selection_sortComparator(comparator) {
     if (!arguments.length) comparator = d3.ascending;
     return function(a, b) {
-      return !a - !b || comparator(a.__data__, b.__data__);
+      return a && b ? comparator(a.__data__, b.__data__) : !a - !b;
     };
   }
-  function d3_noop() {}
+  d3_selectionPrototype.each = function(callback) {
+    return d3_selection_each(this, function(node, i, j) {
+      callback.call(node, node.__data__, i, j);
+    });
+  };
+  function d3_selection_each(groups, callback) {
+    for (var j = 0, m = groups.length; j < m; j++) {
+      for (var group = groups[j], i = 0, n = group.length, node; i < n; i++) {
+        if (node = group[i]) callback(node, i, j);
+      }
+    }
+    return groups;
+  }
+  d3_selectionPrototype.call = function(callback) {
+    var args = d3_array(arguments);
+    callback.apply(args[0] = this, args);
+    return this;
+  };
+  d3_selectionPrototype.empty = function() {
+    return !this.node();
+  };
+  d3_selectionPrototype.node = function() {
+    for (var j = 0, m = this.length; j < m; j++) {
+      for (var group = this[j], i = 0, n = group.length; i < n; i++) {
+        var node = group[i];
+        if (node) return node;
+      }
+    }
+    return null;
+  };
+  d3_selectionPrototype.size = function() {
+    var n = 0;
+    this.each(function() {
+      ++n;
+    });
+    return n;
+  };
+  function d3_selection_enter(selection) {
+    d3_subclass(selection, d3_selection_enterPrototype);
+    return selection;
+  }
+  var d3_selection_enterPrototype = [];
+  d3.selection.enter = d3_selection_enter;
+  d3.selection.enter.prototype = d3_selection_enterPrototype;
+  d3_selection_enterPrototype.append = d3_selectionPrototype.append;
+  d3_selection_enterPrototype.empty = d3_selectionPrototype.empty;
+  d3_selection_enterPrototype.node = d3_selectionPrototype.node;
+  d3_selection_enterPrototype.call = d3_selectionPrototype.call;
+  d3_selection_enterPrototype.size = d3_selectionPrototype.size;
+  d3_selection_enterPrototype.select = function(selector) {
+    var subgroups = [], subgroup, subnode, upgroup, group, node;
+    for (var j = -1, m = this.length; ++j < m; ) {
+      upgroup = (group = this[j]).update;
+      subgroups.push(subgroup = []);
+      subgroup.parentNode = group.parentNode;
+      for (var i = -1, n = group.length; ++i < n; ) {
+        if (node = group[i]) {
+          subgroup.push(upgroup[i] = subnode = selector.call(group.parentNode, node.__data__, i, j));
+          subnode.__data__ = node.__data__;
+        } else {
+          subgroup.push(null);
+        }
+      }
+    }
+    return d3_selection(subgroups);
+  };
+  d3_selection_enterPrototype.insert = function(name, before) {
+    if (arguments.length < 2) before = d3_selection_enterInsertBefore(this);
+    return d3_selectionPrototype.insert.call(this, name, before);
+  };
+  function d3_selection_enterInsertBefore(enter) {
+    var i0, j0;
+    return function(d, i, j) {
+      var group = enter[j].update, n = group.length, node;
+      if (j != j0) j0 = j, i0 = 0;
+      if (i >= i0) i0 = i + 1;
+      while (!(node = group[i0]) && ++i0 < n) ;
+      return node;
+    };
+  }
+  d3_selectionPrototype.transition = function() {
+    var id = d3_transitionInheritId || ++d3_transitionId, subgroups = [], subgroup, node, transition = d3_transitionInherit || {
+      time: Date.now(),
+      ease: d3_ease_cubicInOut,
+      delay: 0,
+      duration: 250
+    };
+    for (var j = -1, m = this.length; ++j < m; ) {
+      subgroups.push(subgroup = []);
+      for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
+        if (node = group[i]) d3_transitionNode(node, i, id, transition);
+        subgroup.push(node);
+      }
+    }
+    return d3_transition(subgroups, id);
+  };
+  d3.select = function(node) {
+    var group = [ typeof node === "string" ? d3_select(node, d3_document) : node ];
+    group.parentNode = d3_documentElement;
+    return d3_selection([ group ]);
+  };
+  d3.selectAll = function(nodes) {
+    var group = d3_array(typeof nodes === "string" ? d3_selectAll(nodes, d3_document) : nodes);
+    group.parentNode = d3_documentElement;
+    return d3_selection([ group ]);
+  };
+  var d3_selectionRoot = d3.select(d3_documentElement);
   d3_selectionPrototype.on = function(type, listener, capture) {
     var n = arguments.length;
     if (n < 3) {
@@ -1425,91 +1446,125 @@ d3 = function() {
       }
     };
   }
-  d3_selectionPrototype.each = function(callback) {
-    return d3_selection_each(this, function(node, i, j) {
-      callback.call(node, node.__data__, i, j);
-    });
-  };
-  function d3_selection_each(groups, callback) {
-    for (var j = 0, m = groups.length; j < m; j++) {
-      for (var group = groups[j], i = 0, n = group.length, node; i < n; i++) {
-        if (node = group[i]) callback(node, i, j);
-      }
-    }
-    return groups;
-  }
-  d3_selectionPrototype.call = function(callback) {
-    var args = d3_array(arguments);
-    callback.apply(args[0] = this, args);
-    return this;
-  };
-  d3_selectionPrototype.empty = function() {
-    return !this.node();
-  };
-  d3_selectionPrototype.node = function() {
-    for (var j = 0, m = this.length; j < m; j++) {
-      for (var group = this[j], i = 0, n = group.length; i < n; i++) {
-        var node = group[i];
-        if (node) return node;
-      }
-    }
-    return null;
-  };
-  function d3_selection_enter(selection) {
-    d3_arraySubclass(selection, d3_selection_enterPrototype);
-    return selection;
-  }
-  var d3_selection_enterPrototype = [];
-  d3.selection.enter = d3_selection_enter;
-  d3.selection.enter.prototype = d3_selection_enterPrototype;
-  d3_selection_enterPrototype.append = d3_selectionPrototype.append;
-  d3_selection_enterPrototype.insert = d3_selectionPrototype.insert;
-  d3_selection_enterPrototype.empty = d3_selectionPrototype.empty;
-  d3_selection_enterPrototype.node = d3_selectionPrototype.node;
-  d3_selection_enterPrototype.select = function(selector) {
-    var subgroups = [], subgroup, subnode, upgroup, group, node;
-    for (var j = -1, m = this.length; ++j < m; ) {
-      upgroup = (group = this[j]).update;
-      subgroups.push(subgroup = []);
-      subgroup.parentNode = group.parentNode;
-      for (var i = -1, n = group.length; ++i < n; ) {
-        if (node = group[i]) {
-          subgroup.push(upgroup[i] = subnode = selector.call(group.parentNode, node.__data__, i));
-          subnode.__data__ = node.__data__;
-        } else {
-          subgroup.push(null);
+  var d3_event_dragSelect = d3_vendorSymbol(d3_documentElement.style, "userSelect"), d3_event_dragId = 0;
+  function d3_event_dragSuppress() {
+    var name = ".dragsuppress-" + ++d3_event_dragId, touchmove = "touchmove" + name, selectstart = "selectstart" + name, dragstart = "dragstart" + name, click = "click" + name, w = d3.select(d3_window).on(touchmove, d3_eventPreventDefault).on(selectstart, d3_eventPreventDefault).on(dragstart, d3_eventPreventDefault), style = d3_documentElement.style, select = style[d3_event_dragSelect];
+    style[d3_event_dragSelect] = "none";
+    return function(suppressClick) {
+      w.on(name, null);
+      style[d3_event_dragSelect] = select;
+      if (suppressClick) {
+        function off() {
+          w.on(click, null);
         }
+        w.on(click, function() {
+          d3_eventPreventDefault();
+          off();
+        }, true);
+        setTimeout(off, 0);
       }
-    }
-    return d3_selection(subgroups);
+    };
+  }
+  d3.mouse = function(container) {
+    return d3_mousePoint(container, d3_eventSource());
   };
-  d3_selectionPrototype.transition = function() {
-    var id = d3_transitionInheritId || ++d3_transitionId, subgroups = [], subgroup, node, transition = Object.create(d3_transitionInherit);
-    transition.time = Date.now();
-    for (var j = -1, m = this.length; ++j < m; ) {
-      subgroups.push(subgroup = []);
-      for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
-        if (node = group[i]) d3_transitionNode(node, i, id, transition);
-        subgroup.push(node);
+  var d3_mouse_bug44083 = /WebKit/.test(d3_window.navigator.userAgent) ? -1 : 0;
+  function d3_mousePoint(container, e) {
+    var svg = container.ownerSVGElement || container;
+    if (svg.createSVGPoint) {
+      var point = svg.createSVGPoint();
+      if (d3_mouse_bug44083 < 0 && (d3_window.scrollX || d3_window.scrollY)) {
+        svg = d3.select("body").append("svg").style({
+          position: "absolute",
+          top: 0,
+          left: 0,
+          margin: 0,
+          padding: 0,
+          border: "none"
+        }, "important");
+        var ctm = svg[0][0].getScreenCTM();
+        d3_mouse_bug44083 = !(ctm.f || ctm.e);
+        svg.remove();
       }
+      if (d3_mouse_bug44083) {
+        point.x = e.pageX;
+        point.y = e.pageY;
+      } else {
+        point.x = e.clientX;
+        point.y = e.clientY;
+      }
+      point = point.matrixTransform(container.getScreenCTM().inverse());
+      return [ point.x, point.y ];
     }
-    return d3_transition(subgroups, id);
+    var rect = container.getBoundingClientRect();
+    return [ e.clientX - rect.left - container.clientLeft, e.clientY - rect.top - container.clientTop ];
+  }
+  d3.touches = function(container, touches) {
+    if (arguments.length < 2) touches = d3_eventSource().touches;
+    return touches ? d3_array(touches).map(function(touch) {
+      var point = d3_mousePoint(container, touch);
+      point.identifier = touch.identifier;
+      return point;
+    }) : [];
   };
-  d3.select = function(node) {
-    var group = [ typeof node === "string" ? d3_select(node, d3_document) : node ];
-    group.parentNode = d3_selectRoot;
-    return d3_selection([ group ]);
+  d3.behavior.drag = function() {
+    var event = d3_eventDispatch(drag, "drag", "dragstart", "dragend"), origin = null, mousedown = dragstart(d3_noop, d3.mouse, "mousemove", "mouseup"), touchstart = dragstart(touchid, touchposition, "touchmove", "touchend");
+    function drag() {
+      this.on("mousedown.drag", mousedown).on("touchstart.drag", touchstart);
+    }
+    function touchid() {
+      return d3.event.changedTouches[0].identifier;
+    }
+    function touchposition(parent, id) {
+      return d3.touches(parent).filter(function(p) {
+        return p.identifier === id;
+      })[0];
+    }
+    function dragstart(id, position, move, end) {
+      return function() {
+        var target = this, parent = target.parentNode, event_ = event.of(target, arguments), eventTarget = d3.event.target, eventId = id(), drag = eventId == null ? "drag" : "drag-" + eventId, origin_ = position(parent, eventId), dragged = 0, offset, w = d3.select(d3_window).on(move + "." + drag, moved).on(end + "." + drag, ended), dragRestore = d3_event_dragSuppress();
+        if (origin) {
+          offset = origin.apply(target, arguments);
+          offset = [ offset.x - origin_[0], offset.y - origin_[1] ];
+        } else {
+          offset = [ 0, 0 ];
+        }
+        event_({
+          type: "dragstart"
+        });
+        function moved() {
+          if (!parent) return ended();
+          var p = position(parent, eventId), dx = p[0] - origin_[0], dy = p[1] - origin_[1];
+          dragged |= dx | dy;
+          origin_ = p;
+          event_({
+            type: "drag",
+            x: p[0] + offset[0],
+            y: p[1] + offset[1],
+            dx: dx,
+            dy: dy
+          });
+        }
+        function ended() {
+          w.on(move + "." + drag, null).on(end + "." + drag, null);
+          dragRestore(dragged && d3.event.target === eventTarget);
+          event_({
+            type: "dragend"
+          });
+        }
+      };
+    }
+    drag.origin = function(x) {
+      if (!arguments.length) return origin;
+      origin = x;
+      return drag;
+    };
+    return d3.rebind(drag, event, "on");
   };
-  d3.selectAll = function(nodes) {
-    var group = d3_array(typeof nodes === "string" ? d3_selectAll(nodes, d3_document) : nodes);
-    group.parentNode = d3_selectRoot;
-    return d3_selection([ group ]);
-  };
-  var d3_selectionRoot = d3.select(d3_selectRoot);
   d3.behavior.zoom = function() {
-    var translate = [ 0, 0 ], translate0, scale = 1, scale0, scaleExtent = d3_behavior_zoomInfinity, event = d3_eventDispatch(zoom, "zoom"), x0, x1, y0, y1, touchtime;
+    var translate = [ 0, 0 ], translate0, scale = 1, scaleExtent = d3_behavior_zoomInfinity, mousedown = "mousedown.zoom", mousemove = "mousemove.zoom", mouseup = "mouseup.zoom", touchstart = "touchstart.zoom", touchmove = "touchmove.zoom", touchend = "touchend.zoom", touchtime, event = d3_eventDispatch(zoom, "zoom"), x0, x1, y0, y1;
     function zoom() {
-      this.on("mousedown.zoom", mousedown).on("mousemove.zoom", mousemove).on(d3_behavior_zoomWheel + ".zoom", mousewheel).on("dblclick.zoom", dblclick).on("touchstart.zoom", touchstart).on("touchmove.zoom", touchmove).on("touchend.zoom", touchstart);
+      this.on(mousedown, mousedowned).on(d3_behavior_zoomWheel + ".zoom", mousewheeled).on(mousemove, mousewheelreset).on("dblclick.zoom", dblclicked).on(touchstart, touchstarted);
     }
     zoom.translate = function(x) {
       if (!arguments.length) return translate;
@@ -1568,71 +1623,92 @@ d3 = function() {
     }
     function dispatch(event) {
       rescale();
-      d3.event.preventDefault();
       event({
         type: "zoom",
         scale: scale,
         translate: translate
       });
     }
-    function mousedown() {
-      var target = this, event_ = event.of(target, arguments), eventTarget = d3.event.target, moved = 0, w = d3.select(d3_window).on("mousemove.zoom", mousemove).on("mouseup.zoom", mouseup), l = location(d3.mouse(target));
-      d3_window.focus();
-      d3_eventCancel();
-      function mousemove() {
-        moved = 1;
+    function mousedowned() {
+      var target = this, event_ = event.of(target, arguments), eventTarget = d3.event.target, dragged = 0, w = d3.select(d3_window).on(mousemove, moved).on(mouseup, ended), l = location(d3.mouse(target)), dragRestore = d3_event_dragSuppress();
+      function moved() {
+        dragged = 1;
         translateTo(d3.mouse(target), l);
         dispatch(event_);
       }
-      function mouseup() {
-        if (moved) d3_eventCancel();
-        w.on("mousemove.zoom", null).on("mouseup.zoom", null);
-        if (moved && d3.event.target === eventTarget) d3_eventSuppress(w, "click.zoom");
+      function ended() {
+        w.on(mousemove, d3_window === target ? mousewheelreset : null).on(mouseup, null);
+        dragRestore(dragged && d3.event.target === eventTarget);
       }
     }
-    function mousewheel() {
+    function touchstarted() {
+      var target = this, event_ = event.of(target, arguments), locations0, distance0 = 0, scale0, w = d3.select(d3_window).on(touchmove, moved).on(touchend, ended), t = d3.select(target).on(mousedown, null).on(touchstart, started), dragRestore = d3_event_dragSuppress();
+      started();
+      function relocate() {
+        var touches = d3.touches(target);
+        scale0 = scale;
+        locations0 = {};
+        touches.forEach(function(t) {
+          locations0[t.identifier] = location(t);
+        });
+        return touches;
+      }
+      function started() {
+        var now = Date.now(), touches = relocate();
+        if (touches.length === 1) {
+          if (now - touchtime < 500) {
+            var p = touches[0], l = locations0[p.identifier];
+            scaleTo(scale * 2);
+            translateTo(p, l);
+            d3_eventPreventDefault();
+            dispatch(event_);
+          }
+          touchtime = now;
+        } else if (touches.length > 1) {
+          var p = touches[0], q = touches[1], dx = p[0] - q[0], dy = p[1] - q[1];
+          distance0 = dx * dx + dy * dy;
+        }
+      }
+      function moved() {
+        var touches = d3.touches(target), p0 = touches[0], l0 = locations0[p0.identifier];
+        if (p1 = touches[1]) {
+          var p1, l1 = locations0[p1.identifier], scale1 = d3.event.scale;
+          if (scale1 == null) {
+            var distance1 = (distance1 = p1[0] - p0[0]) * distance1 + (distance1 = p1[1] - p0[1]) * distance1;
+            scale1 = distance0 && Math.sqrt(distance1 / distance0);
+          }
+          p0 = [ (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 ];
+          l0 = [ (l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2 ];
+          scaleTo(scale1 * scale0);
+        }
+        touchtime = null;
+        translateTo(p0, l0);
+        dispatch(event_);
+      }
+      function ended() {
+        if (d3.event.touches.length) {
+          relocate();
+        } else {
+          w.on(touchmove, null).on(touchend, null);
+          t.on(mousedown, mousedowned).on(touchstart, touchstarted);
+          dragRestore();
+        }
+      }
+    }
+    function mousewheeled() {
+      d3_eventPreventDefault();
       if (!translate0) translate0 = location(d3.mouse(this));
       scaleTo(Math.pow(2, d3_behavior_zoomDelta() * .002) * scale);
       translateTo(d3.mouse(this), translate0);
       dispatch(event.of(this, arguments));
     }
-    function mousemove() {
+    function mousewheelreset() {
       translate0 = null;
     }
-    function dblclick() {
+    function dblclicked() {
       var p = d3.mouse(this), l = location(p), k = Math.log(scale) / Math.LN2;
       scaleTo(Math.pow(2, d3.event.shiftKey ? Math.ceil(k) - 1 : Math.floor(k) + 1));
       translateTo(p, l);
-      dispatch(event.of(this, arguments));
-    }
-    function touchstart() {
-      var touches = d3.touches(this), now = Date.now();
-      scale0 = scale;
-      translate0 = {};
-      touches.forEach(function(t) {
-        translate0[t.identifier] = location(t);
-      });
-      d3_eventCancel();
-      if (touches.length === 1) {
-        if (now - touchtime < 500) {
-          var p = touches[0], l = location(touches[0]);
-          scaleTo(scale * 2);
-          translateTo(p, l);
-          dispatch(event.of(this, arguments));
-        }
-        touchtime = now;
-      }
-    }
-    function touchmove() {
-      var touches = d3.touches(this), p0 = touches[0], l0 = translate0[p0.identifier];
-      if (p1 = touches[1]) {
-        var p1, l1 = translate0[p1.identifier];
-        p0 = [ (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 ];
-        l0 = [ (l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2 ];
-        scaleTo(d3.event.scale * scale0);
-      }
-      translateTo(p0, l0);
-      touchtime = null;
       dispatch(event.of(this, arguments));
     }
     return d3.rebind(zoom, event, "on");
@@ -1691,12 +1767,12 @@ d3 = function() {
     }
     return d3_rgb(vv(h + 120), vv(h), vv(h - 120));
   }
-  var π = Math.PI, ε = 1e-6, d3_radians = π / 180, d3_degrees = 180 / π;
+  var π = Math.PI, ε = 1e-6, ε2 = ε * ε, d3_radians = π / 180, d3_degrees = 180 / π;
   function d3_sgn(x) {
     return x > 0 ? 1 : x < 0 ? -1 : 0;
   }
   function d3_acos(x) {
-    return Math.acos(Math.max(-1, Math.min(1, x)));
+    return x > 1 ? 0 : x < -1 ? π : Math.acos(x);
   }
   function d3_asin(x) {
     return x > 1 ? π / 2 : x < -1 ? -π / 2 : Math.asin(x);
@@ -1781,6 +1857,12 @@ d3 = function() {
   d3.rgb = function(r, g, b) {
     return arguments.length === 1 ? r instanceof d3_Rgb ? d3_rgb(r.r, r.g, r.b) : d3_rgb_parse("" + r, d3_rgb, d3_hsl_rgb) : d3_rgb(~~r, ~~g, ~~b);
   };
+  function d3_rgbNumber(value) {
+    return d3_rgb(value >> 16, value >> 8 & 255, value & 255);
+  }
+  function d3_rgbString(value) {
+    return d3_rgbNumber(value) + "";
+  }
   function d3_rgb(r, g, b) {
     return new d3_Rgb(r, g, b);
   }
@@ -1797,11 +1879,11 @@ d3 = function() {
     if (r && r < i) r = i;
     if (g && g < i) g = i;
     if (b && b < i) b = i;
-    return d3_rgb(Math.min(255, Math.floor(r / k)), Math.min(255, Math.floor(g / k)), Math.min(255, Math.floor(b / k)));
+    return d3_rgb(Math.min(255, ~~(r / k)), Math.min(255, ~~(g / k)), Math.min(255, ~~(b / k)));
   };
   d3_rgbPrototype.darker = function(k) {
     k = Math.pow(.7, arguments.length ? k : 1);
-    return d3_rgb(Math.floor(k * this.r), Math.floor(k * this.g), Math.floor(k * this.b));
+    return d3_rgb(~~(k * this.r), ~~(k * this.g), ~~(k * this.b));
   };
   d3_rgbPrototype.hsl = function() {
     return d3_rgb_hsl(this.r, this.g, this.b);
@@ -1876,156 +1958,156 @@ d3 = function() {
     return c.charAt(c.length - 1) === "%" ? Math.round(f * 2.55) : f;
   }
   var d3_rgb_names = d3.map({
-    aliceblue: "#f0f8ff",
-    antiquewhite: "#faebd7",
-    aqua: "#00ffff",
-    aquamarine: "#7fffd4",
-    azure: "#f0ffff",
-    beige: "#f5f5dc",
-    bisque: "#ffe4c4",
-    black: "#000000",
-    blanchedalmond: "#ffebcd",
-    blue: "#0000ff",
-    blueviolet: "#8a2be2",
-    brown: "#a52a2a",
-    burlywood: "#deb887",
-    cadetblue: "#5f9ea0",
-    chartreuse: "#7fff00",
-    chocolate: "#d2691e",
-    coral: "#ff7f50",
-    cornflowerblue: "#6495ed",
-    cornsilk: "#fff8dc",
-    crimson: "#dc143c",
-    cyan: "#00ffff",
-    darkblue: "#00008b",
-    darkcyan: "#008b8b",
-    darkgoldenrod: "#b8860b",
-    darkgray: "#a9a9a9",
-    darkgreen: "#006400",
-    darkgrey: "#a9a9a9",
-    darkkhaki: "#bdb76b",
-    darkmagenta: "#8b008b",
-    darkolivegreen: "#556b2f",
-    darkorange: "#ff8c00",
-    darkorchid: "#9932cc",
-    darkred: "#8b0000",
-    darksalmon: "#e9967a",
-    darkseagreen: "#8fbc8f",
-    darkslateblue: "#483d8b",
-    darkslategray: "#2f4f4f",
-    darkslategrey: "#2f4f4f",
-    darkturquoise: "#00ced1",
-    darkviolet: "#9400d3",
-    deeppink: "#ff1493",
-    deepskyblue: "#00bfff",
-    dimgray: "#696969",
-    dimgrey: "#696969",
-    dodgerblue: "#1e90ff",
-    firebrick: "#b22222",
-    floralwhite: "#fffaf0",
-    forestgreen: "#228b22",
-    fuchsia: "#ff00ff",
-    gainsboro: "#dcdcdc",
-    ghostwhite: "#f8f8ff",
-    gold: "#ffd700",
-    goldenrod: "#daa520",
-    gray: "#808080",
-    green: "#008000",
-    greenyellow: "#adff2f",
-    grey: "#808080",
-    honeydew: "#f0fff0",
-    hotpink: "#ff69b4",
-    indianred: "#cd5c5c",
-    indigo: "#4b0082",
-    ivory: "#fffff0",
-    khaki: "#f0e68c",
-    lavender: "#e6e6fa",
-    lavenderblush: "#fff0f5",
-    lawngreen: "#7cfc00",
-    lemonchiffon: "#fffacd",
-    lightblue: "#add8e6",
-    lightcoral: "#f08080",
-    lightcyan: "#e0ffff",
-    lightgoldenrodyellow: "#fafad2",
-    lightgray: "#d3d3d3",
-    lightgreen: "#90ee90",
-    lightgrey: "#d3d3d3",
-    lightpink: "#ffb6c1",
-    lightsalmon: "#ffa07a",
-    lightseagreen: "#20b2aa",
-    lightskyblue: "#87cefa",
-    lightslategray: "#778899",
-    lightslategrey: "#778899",
-    lightsteelblue: "#b0c4de",
-    lightyellow: "#ffffe0",
-    lime: "#00ff00",
-    limegreen: "#32cd32",
-    linen: "#faf0e6",
-    magenta: "#ff00ff",
-    maroon: "#800000",
-    mediumaquamarine: "#66cdaa",
-    mediumblue: "#0000cd",
-    mediumorchid: "#ba55d3",
-    mediumpurple: "#9370db",
-    mediumseagreen: "#3cb371",
-    mediumslateblue: "#7b68ee",
-    mediumspringgreen: "#00fa9a",
-    mediumturquoise: "#48d1cc",
-    mediumvioletred: "#c71585",
-    midnightblue: "#191970",
-    mintcream: "#f5fffa",
-    mistyrose: "#ffe4e1",
-    moccasin: "#ffe4b5",
-    navajowhite: "#ffdead",
-    navy: "#000080",
-    oldlace: "#fdf5e6",
-    olive: "#808000",
-    olivedrab: "#6b8e23",
-    orange: "#ffa500",
-    orangered: "#ff4500",
-    orchid: "#da70d6",
-    palegoldenrod: "#eee8aa",
-    palegreen: "#98fb98",
-    paleturquoise: "#afeeee",
-    palevioletred: "#db7093",
-    papayawhip: "#ffefd5",
-    peachpuff: "#ffdab9",
-    peru: "#cd853f",
-    pink: "#ffc0cb",
-    plum: "#dda0dd",
-    powderblue: "#b0e0e6",
-    purple: "#800080",
-    red: "#ff0000",
-    rosybrown: "#bc8f8f",
-    royalblue: "#4169e1",
-    saddlebrown: "#8b4513",
-    salmon: "#fa8072",
-    sandybrown: "#f4a460",
-    seagreen: "#2e8b57",
-    seashell: "#fff5ee",
-    sienna: "#a0522d",
-    silver: "#c0c0c0",
-    skyblue: "#87ceeb",
-    slateblue: "#6a5acd",
-    slategray: "#708090",
-    slategrey: "#708090",
-    snow: "#fffafa",
-    springgreen: "#00ff7f",
-    steelblue: "#4682b4",
-    tan: "#d2b48c",
-    teal: "#008080",
-    thistle: "#d8bfd8",
-    tomato: "#ff6347",
-    turquoise: "#40e0d0",
-    violet: "#ee82ee",
-    wheat: "#f5deb3",
-    white: "#ffffff",
-    whitesmoke: "#f5f5f5",
-    yellow: "#ffff00",
-    yellowgreen: "#9acd32"
+    aliceblue: 15792383,
+    antiquewhite: 16444375,
+    aqua: 65535,
+    aquamarine: 8388564,
+    azure: 15794175,
+    beige: 16119260,
+    bisque: 16770244,
+    black: 0,
+    blanchedalmond: 16772045,
+    blue: 255,
+    blueviolet: 9055202,
+    brown: 10824234,
+    burlywood: 14596231,
+    cadetblue: 6266528,
+    chartreuse: 8388352,
+    chocolate: 13789470,
+    coral: 16744272,
+    cornflowerblue: 6591981,
+    cornsilk: 16775388,
+    crimson: 14423100,
+    cyan: 65535,
+    darkblue: 139,
+    darkcyan: 35723,
+    darkgoldenrod: 12092939,
+    darkgray: 11119017,
+    darkgreen: 25600,
+    darkgrey: 11119017,
+    darkkhaki: 12433259,
+    darkmagenta: 9109643,
+    darkolivegreen: 5597999,
+    darkorange: 16747520,
+    darkorchid: 10040012,
+    darkred: 9109504,
+    darksalmon: 15308410,
+    darkseagreen: 9419919,
+    darkslateblue: 4734347,
+    darkslategray: 3100495,
+    darkslategrey: 3100495,
+    darkturquoise: 52945,
+    darkviolet: 9699539,
+    deeppink: 16716947,
+    deepskyblue: 49151,
+    dimgray: 6908265,
+    dimgrey: 6908265,
+    dodgerblue: 2003199,
+    firebrick: 11674146,
+    floralwhite: 16775920,
+    forestgreen: 2263842,
+    fuchsia: 16711935,
+    gainsboro: 14474460,
+    ghostwhite: 16316671,
+    gold: 16766720,
+    goldenrod: 14329120,
+    gray: 8421504,
+    green: 32768,
+    greenyellow: 11403055,
+    grey: 8421504,
+    honeydew: 15794160,
+    hotpink: 16738740,
+    indianred: 13458524,
+    indigo: 4915330,
+    ivory: 16777200,
+    khaki: 15787660,
+    lavender: 15132410,
+    lavenderblush: 16773365,
+    lawngreen: 8190976,
+    lemonchiffon: 16775885,
+    lightblue: 11393254,
+    lightcoral: 15761536,
+    lightcyan: 14745599,
+    lightgoldenrodyellow: 16448210,
+    lightgray: 13882323,
+    lightgreen: 9498256,
+    lightgrey: 13882323,
+    lightpink: 16758465,
+    lightsalmon: 16752762,
+    lightseagreen: 2142890,
+    lightskyblue: 8900346,
+    lightslategray: 7833753,
+    lightslategrey: 7833753,
+    lightsteelblue: 11584734,
+    lightyellow: 16777184,
+    lime: 65280,
+    limegreen: 3329330,
+    linen: 16445670,
+    magenta: 16711935,
+    maroon: 8388608,
+    mediumaquamarine: 6737322,
+    mediumblue: 205,
+    mediumorchid: 12211667,
+    mediumpurple: 9662683,
+    mediumseagreen: 3978097,
+    mediumslateblue: 8087790,
+    mediumspringgreen: 64154,
+    mediumturquoise: 4772300,
+    mediumvioletred: 13047173,
+    midnightblue: 1644912,
+    mintcream: 16121850,
+    mistyrose: 16770273,
+    moccasin: 16770229,
+    navajowhite: 16768685,
+    navy: 128,
+    oldlace: 16643558,
+    olive: 8421376,
+    olivedrab: 7048739,
+    orange: 16753920,
+    orangered: 16729344,
+    orchid: 14315734,
+    palegoldenrod: 15657130,
+    palegreen: 10025880,
+    paleturquoise: 11529966,
+    palevioletred: 14381203,
+    papayawhip: 16773077,
+    peachpuff: 16767673,
+    peru: 13468991,
+    pink: 16761035,
+    plum: 14524637,
+    powderblue: 11591910,
+    purple: 8388736,
+    red: 16711680,
+    rosybrown: 12357519,
+    royalblue: 4286945,
+    saddlebrown: 9127187,
+    salmon: 16416882,
+    sandybrown: 16032864,
+    seagreen: 3050327,
+    seashell: 16774638,
+    sienna: 10506797,
+    silver: 12632256,
+    skyblue: 8900331,
+    slateblue: 6970061,
+    slategray: 7372944,
+    slategrey: 7372944,
+    snow: 16775930,
+    springgreen: 65407,
+    steelblue: 4620980,
+    tan: 13808780,
+    teal: 32896,
+    thistle: 14204888,
+    tomato: 16737095,
+    turquoise: 4251856,
+    violet: 15631086,
+    wheat: 16113331,
+    white: 16777215,
+    whitesmoke: 16119285,
+    yellow: 16776960,
+    yellowgreen: 10145074
   });
   d3_rgb_names.forEach(function(key, value) {
-    d3_rgb_names.set(key, d3_rgb_parse(value, d3_rgb, d3_hsl_rgb));
+    d3_rgb_names.set(key, d3_rgbNumber(value));
   });
   function d3_functor(v) {
     return typeof v === "function" ? v : function() {
@@ -2045,7 +2127,8 @@ d3 = function() {
     };
   }
   function d3_xhr(url, mimeType, response, callback) {
-    var xhr = {}, dispatch = d3.dispatch("progress", "load", "error"), headers = {}, request = new (d3_window.XDomainRequest && /^(http(s)?:)?\/\//.test(url) ? XDomainRequest : XMLHttpRequest)();
+    var xhr = {}, dispatch = d3.dispatch("progress", "load", "error"), headers = {}, request = new XMLHttpRequest(), responseType = null;
+    if (d3_window.XDomainRequest && !("withCredentials" in request) && /^(http(s)?:)?\/\//.test(url)) request = new XDomainRequest();
     "onload" in request ? request.onload = request.onerror = respond : request.onreadystatechange = function() {
       request.readyState > 3 && respond();
     };
@@ -2083,6 +2166,11 @@ d3 = function() {
       mimeType = value == null ? null : value + "";
       return xhr;
     };
+    xhr.responseType = function(value) {
+      if (!arguments.length) return responseType;
+      responseType = value;
+      return xhr;
+    };
     xhr.response = function(value) {
       response = value;
       return xhr;
@@ -2098,6 +2186,7 @@ d3 = function() {
       if (mimeType != null && !("accept" in headers)) headers["accept"] = mimeType + ",*/*";
       if (request.setRequestHeader) for (var name in headers) request.setRequestHeader(name, headers[name]);
       if (mimeType != null && request.overrideMimeType) request.overrideMimeType(mimeType);
+      if (responseType != null) request.responseType = responseType;
       if (callback != null) xhr.on("error", callback).on("load", function(request) {
         callback(null, request);
       });
@@ -2116,7 +2205,7 @@ d3 = function() {
       callback(error == null ? request : null);
     } : callback;
   }
-  function d3_dsv(delimiter, mimeType) {
+  d3.dsv = function(delimiter, mimeType) {
     var reFormat = new RegExp('["' + delimiter + "\n]"), delimiterCode = delimiter.charCodeAt(0);
     function dsv(url, row, callback) {
       if (arguments.length < 3) callback = row, row = null;
@@ -2217,17 +2306,17 @@ d3 = function() {
       return reFormat.test(text) ? '"' + text.replace(/\"/g, '""') + '"' : text;
     }
     return dsv;
-  }
-  d3.csv = d3_dsv(",", "text/csv");
-  d3.tsv = d3_dsv("	", "text/tab-separated-values");
-  var d3_timer_queueHead, d3_timer_queueTail, d3_timer_interval, d3_timer_timeout;
+  };
+  d3.csv = d3.dsv(",", "text/csv");
+  d3.tsv = d3.dsv("	", "text/tab-separated-values");
+  var d3_timer_queueHead, d3_timer_queueTail, d3_timer_interval, d3_timer_timeout, d3_timer_active, d3_timer_frame = d3_window[d3_vendorSymbol(d3_window, "requestAnimationFrame")] || function(callback) {
+    setTimeout(callback, 17);
+  };
   d3.timer = function(callback, delay, then) {
-    if (arguments.length < 3) {
-      if (arguments.length < 2) delay = 0; else if (!isFinite(delay)) return;
-      then = Date.now();
-    }
-    var time = then + delay;
-    var timer = {
+    var n = arguments.length;
+    if (n < 2) delay = 0;
+    if (n < 3) then = Date.now();
+    var time = then + delay, timer = {
       callback: callback,
       time: time,
       next: null
@@ -2257,11 +2346,19 @@ d3 = function() {
     d3_timer_mark();
     d3_timer_sweep();
   };
+  function d3_timer_replace(callback, delay, then) {
+    var n = arguments.length;
+    if (n < 2) delay = 0;
+    if (n < 3) then = Date.now();
+    d3_timer_active.callback = callback;
+    d3_timer_active.time = then + delay;
+  }
   function d3_timer_mark() {
-    var now = Date.now(), timer = d3_timer_queueHead;
-    while (timer) {
-      if (now >= timer.time) timer.flush = timer.callback(now - timer.time);
-      timer = timer.next;
+    var now = Date.now();
+    d3_timer_active = d3_timer_queueHead;
+    while (d3_timer_active) {
+      if (now >= d3_timer_active.time) d3_timer_active.flush = d3_timer_active.callback(now - d3_timer_active.time);
+      d3_timer_active = d3_timer_active.next;
     }
     return now;
   }
@@ -2278,10 +2375,7 @@ d3 = function() {
     d3_timer_queueTail = t0;
     return time;
   }
-  var d3_timer_frame = d3_window.requestAnimationFrame || d3_window.webkitRequestAnimationFrame || d3_window.mozRequestAnimationFrame || d3_window.oRequestAnimationFrame || d3_window.msRequestAnimationFrame || function(callback) {
-    setTimeout(callback, 17);
-  };
-  var d3_format_decimalPoint = ".", d3_format_thousandsSeparator = ",", d3_format_grouping = [ 3, 3 ];
+  var d3_format_decimalPoint = ".", d3_format_thousandsSeparator = ",", d3_format_grouping = [ 3, 3 ], d3_format_currencySymbol = "$";
   var d3_formatPrefixes = [ "y", "z", "a", "f", "p", "n", "µ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" ].map(d3_formatPrefix);
   d3.formatPrefix = function(value, precision) {
     var i = 0;
@@ -2308,7 +2402,7 @@ d3 = function() {
     return n ? Math.round(x * (n = Math.pow(10, n))) / n : Math.round(x);
   };
   d3.format = function(specifier) {
-    var match = d3_format_re.exec(specifier), fill = match[1] || " ", align = match[2] || ">", sign = match[3] || "", basePrefix = match[4] || "", zfill = match[5], width = +match[6], comma = match[7], precision = match[8], type = match[9], scale = 1, suffix = "", integer = false;
+    var match = d3_format_re.exec(specifier), fill = match[1] || " ", align = match[2] || ">", sign = match[3] || "", symbol = match[4] || "", zfill = match[5], width = +match[6], comma = match[7], precision = match[8], type = match[9], scale = 1, suffix = "", integer = false;
     if (precision) precision = +precision.substring(1);
     if (zfill || fill === "0" && align === "=") {
       zfill = fill = "0";
@@ -2337,7 +2431,7 @@ d3 = function() {
      case "o":
      case "x":
      case "X":
-      if (basePrefix) basePrefix = "0" + type.toLowerCase();
+      if (symbol === "#") symbol = "0" + type.toLowerCase();
 
      case "c":
      case "d":
@@ -2350,7 +2444,7 @@ d3 = function() {
       type = "r";
       break;
     }
-    if (basePrefix === "#") basePrefix = "";
+    if (symbol === "#") symbol = ""; else if (symbol === "$") symbol = d3_format_currencySymbol;
     if (type == "r" && !precision) type = "g";
     if (precision != null) {
       if (type == "g") precision = Math.max(1, Math.min(21, precision)); else if (type == "e" || type == "f") precision = Math.max(0, Math.min(20, precision));
@@ -2368,15 +2462,16 @@ d3 = function() {
         value *= scale;
       }
       value = type(value, precision);
-      if (!zfill && comma) value = d3_format_group(value);
-      var length = basePrefix.length + value.length + (zcomma ? 0 : negative.length), padding = length < width ? new Array(length = width - length + 1).join(fill) : "";
-      if (zcomma) value = d3_format_group(padding + value);
-      if (d3_format_decimalPoint) value.replace(".", d3_format_decimalPoint);
-      negative += basePrefix;
+      var i = value.lastIndexOf("."), before = i < 0 ? value : value.substring(0, i), after = i < 0 ? "" : d3_format_decimalPoint + value.substring(i + 1);
+      if (!zfill && comma) before = d3_format_group(before);
+      var length = symbol.length + before.length + after.length + (zcomma ? 0 : negative.length), padding = length < width ? new Array(length = width - length + 1).join(fill) : "";
+      if (zcomma) before = d3_format_group(padding + before);
+      negative += symbol;
+      value = before + after;
       return (align === "<" ? negative + value + padding : align === ">" ? padding + negative + value : align === "^" ? padding.substring(0, length >>= 1) + negative + value + padding.substring(length) : negative + (zcomma ? value : padding + value)) + suffix;
     };
   };
-  var d3_format_re = /(?:([^{])?([<>=^]))?([+\- ])?(#)?(0)?(\d+)?(,)?(\.-?\d+)?([a-z%])?/i;
+  var d3_format_re = /(?:([^{])?([<>=^]))?([+\- ])?([$#])?(0)?(\d+)?(,)?(\.-?\d+)?([a-z%])?/i;
   var d3_format_types = d3.map({
     b: function(x) {
       return x.toString(2);
@@ -2416,16 +2511,36 @@ d3 = function() {
   if (d3_format_grouping) {
     var d3_format_groupingLength = d3_format_grouping.length;
     d3_format_group = function(value) {
-      var i = value.lastIndexOf("."), f = i >= 0 ? "." + value.substring(i + 1) : (i = value.length, 
-      ""), t = [], j = 0, g = d3_format_grouping[0];
+      var i = value.length, t = [], j = 0, g = d3_format_grouping[0];
       while (i > 0 && g > 0) {
         t.push(value.substring(i -= g, i + g));
         g = d3_format_grouping[j = (j + 1) % d3_format_groupingLength];
       }
-      return t.reverse().join(d3_format_thousandsSeparator || "") + f;
+      return t.reverse().join(d3_format_thousandsSeparator);
     };
   }
   d3.geo = {};
+  function d3_adder() {}
+  d3_adder.prototype = {
+    s: 0,
+    t: 0,
+    add: function(y) {
+      d3_adderSum(y, this.t, d3_adderTemp);
+      d3_adderSum(d3_adderTemp.s, this.s, this);
+      if (this.s) this.t += d3_adderTemp.t; else this.s = d3_adderTemp.t;
+    },
+    reset: function() {
+      this.s = this.t = 0;
+    },
+    valueOf: function() {
+      return this.s;
+    }
+  };
+  var d3_adderTemp = new d3_adder();
+  function d3_adderSum(a, b, o) {
+    var x = o.s = a + b, bv = x - a, av = x - bv;
+    o.t = a - av + (b - bv);
+  }
   d3.geo.stream = function(object, listener) {
     if (object && d3_geo_streamObjectType.hasOwnProperty(object.type)) {
       d3_geo_streamObjectType[object.type](object, listener);
@@ -2495,7 +2610,7 @@ d3 = function() {
     d3.geo.stream(object, d3_geo_area);
     return d3_geo_areaSum;
   };
-  var d3_geo_areaSum, d3_geo_areaRingSum;
+  var d3_geo_areaSum, d3_geo_areaRingSum = new d3_adder();
   var d3_geo_area = {
     sphere: function() {
       d3_geo_areaSum += 4 * π;
@@ -2504,7 +2619,7 @@ d3 = function() {
     lineStart: d3_noop,
     lineEnd: d3_noop,
     polygonStart: function() {
-      d3_geo_areaRingSum = 0;
+      d3_geo_areaRingSum.reset();
       d3_geo_area.lineStart = d3_geo_areaRingStart;
     },
     polygonEnd: function() {
@@ -2524,7 +2639,7 @@ d3 = function() {
       λ *= d3_radians;
       φ = φ * d3_radians / 2 + π / 4;
       var dλ = λ - λ0, cosφ = Math.cos(φ), sinφ = Math.sin(φ), k = sinφ0 * sinφ, u = cosφ0 * cosφ + k * Math.cos(dλ), v = k * Math.sin(dλ);
-      d3_geo_areaRingSum += Math.atan2(v, u);
+      d3_geo_areaRingSum.add(Math.atan2(v, u));
       λ0 = λ, cosφ0 = cosφ, sinφ0 = sinφ;
     }
     d3_geo_area.lineEnd = function() {
@@ -2556,7 +2671,7 @@ d3 = function() {
     d[2] /= l;
   }
   function d3_geo_spherical(cartesian) {
-    return [ Math.atan2(cartesian[1], cartesian[0]), Math.asin(Math.max(-1, Math.min(1, cartesian[2]))) ];
+    return [ Math.atan2(cartesian[1], cartesian[0]), d3_asin(cartesian[2]) ];
   }
   function d3_geo_sphericalEqual(a, b) {
     return Math.abs(a[0] - b[0]) < ε && Math.abs(a[1] - b[1]) < ε;
@@ -2667,49 +2782,47 @@ d3 = function() {
       φ1 = λ1 = -(λ0 = φ0 = Infinity);
       ranges = [];
       d3.geo.stream(feature, bound);
-      ranges.sort(compareRanges);
-      for (var i = 1, n = ranges.length, a = ranges[0], b, merged = [ a ]; i < n; ++i) {
-        b = ranges[i];
-        if (withinRange(b[0], a) || withinRange(b[1], a)) {
-          if (angle(a[0], b[1]) > angle(a[0], a[1])) a[1] = b[1];
-          if (angle(b[0], a[1]) > angle(a[0], a[1])) a[0] = b[0];
-        } else {
-          merged.push(a = b);
+      var n = ranges.length;
+      if (n) {
+        ranges.sort(compareRanges);
+        for (var i = 1, a = ranges[0], b, merged = [ a ]; i < n; ++i) {
+          b = ranges[i];
+          if (withinRange(b[0], a) || withinRange(b[1], a)) {
+            if (angle(a[0], b[1]) > angle(a[0], a[1])) a[1] = b[1];
+            if (angle(b[0], a[1]) > angle(a[0], a[1])) a[0] = b[0];
+          } else {
+            merged.push(a = b);
+          }
+        }
+        var best = -Infinity, dλ;
+        for (var n = merged.length - 1, i = 0, a = merged[n], b; i <= n; a = b, ++i) {
+          b = merged[i];
+          if ((dλ = angle(a[1], b[0])) > best) best = dλ, λ0 = b[0], λ1 = a[1];
         }
       }
-      var best = -Infinity, dλ;
-      for (var n = merged.length - 1, i = 0, a = merged[n], b; i <= n; a = b, ++i) {
-        b = merged[i];
-        if ((dλ = angle(a[1], b[0])) > best) best = dλ, λ0 = b[0], λ1 = a[1];
-      }
       ranges = range = null;
-      return [ [ λ0, φ0 ], [ λ1, φ1 ] ];
+      return λ0 === Infinity || φ0 === Infinity ? [ [ NaN, NaN ], [ NaN, NaN ] ] : [ [ λ0, φ0 ], [ λ1, φ1 ] ];
     };
   }();
   d3.geo.centroid = function(object) {
-    d3_geo_centroidDimension = d3_geo_centroidW = d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
+    d3_geo_centroidW0 = d3_geo_centroidW1 = d3_geo_centroidX0 = d3_geo_centroidY0 = d3_geo_centroidZ0 = d3_geo_centroidX1 = d3_geo_centroidY1 = d3_geo_centroidZ1 = d3_geo_centroidX2 = d3_geo_centroidY2 = d3_geo_centroidZ2 = 0;
     d3.geo.stream(object, d3_geo_centroid);
-    var m;
-    if (d3_geo_centroidW && Math.abs(m = Math.sqrt(d3_geo_centroidX * d3_geo_centroidX + d3_geo_centroidY * d3_geo_centroidY + d3_geo_centroidZ * d3_geo_centroidZ)) > ε) {
-      return [ Math.atan2(d3_geo_centroidY, d3_geo_centroidX) * d3_degrees, Math.asin(Math.max(-1, Math.min(1, d3_geo_centroidZ / m))) * d3_degrees ];
+    var x = d3_geo_centroidX2, y = d3_geo_centroidY2, z = d3_geo_centroidZ2, m = x * x + y * y + z * z;
+    if (m < ε2) {
+      x = d3_geo_centroidX1, y = d3_geo_centroidY1, z = d3_geo_centroidZ1;
+      if (d3_geo_centroidW1 < ε) x = d3_geo_centroidX0, y = d3_geo_centroidY0, z = d3_geo_centroidZ0;
+      m = x * x + y * y + z * z;
+      if (m < ε2) return [ NaN, NaN ];
     }
+    return [ Math.atan2(y, x) * d3_degrees, d3_asin(z / Math.sqrt(m)) * d3_degrees ];
   };
-  var d3_geo_centroidDimension, d3_geo_centroidW, d3_geo_centroidX, d3_geo_centroidY, d3_geo_centroidZ;
+  var d3_geo_centroidW0, d3_geo_centroidW1, d3_geo_centroidX0, d3_geo_centroidY0, d3_geo_centroidZ0, d3_geo_centroidX1, d3_geo_centroidY1, d3_geo_centroidZ1, d3_geo_centroidX2, d3_geo_centroidY2, d3_geo_centroidZ2;
   var d3_geo_centroid = {
-    sphere: function() {
-      if (d3_geo_centroidDimension < 2) {
-        d3_geo_centroidDimension = 2;
-        d3_geo_centroidW = d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-      }
-    },
+    sphere: d3_noop,
     point: d3_geo_centroidPoint,
     lineStart: d3_geo_centroidLineStart,
     lineEnd: d3_geo_centroidLineEnd,
     polygonStart: function() {
-      if (d3_geo_centroidDimension < 2) {
-        d3_geo_centroidDimension = 2;
-        d3_geo_centroidW = d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-      }
       d3_geo_centroid.lineStart = d3_geo_centroidRingStart;
     },
     polygonEnd: function() {
@@ -2717,36 +2830,18 @@ d3 = function() {
     }
   };
   function d3_geo_centroidPoint(λ, φ) {
-    if (d3_geo_centroidDimension) return;
-    ++d3_geo_centroidW;
     λ *= d3_radians;
     var cosφ = Math.cos(φ *= d3_radians);
-    d3_geo_centroidX += (cosφ * Math.cos(λ) - d3_geo_centroidX) / d3_geo_centroidW;
-    d3_geo_centroidY += (cosφ * Math.sin(λ) - d3_geo_centroidY) / d3_geo_centroidW;
-    d3_geo_centroidZ += (Math.sin(φ) - d3_geo_centroidZ) / d3_geo_centroidW;
+    d3_geo_centroidPointXYZ(cosφ * Math.cos(λ), cosφ * Math.sin(λ), Math.sin(φ));
   }
-  function d3_geo_centroidRingStart() {
-    var λ00, φ00;
-    d3_geo_centroidDimension = 1;
-    d3_geo_centroidLineStart();
-    d3_geo_centroidDimension = 2;
-    var linePoint = d3_geo_centroid.point;
-    d3_geo_centroid.point = function(λ, φ) {
-      linePoint(λ00 = λ, φ00 = φ);
-    };
-    d3_geo_centroid.lineEnd = function() {
-      d3_geo_centroid.point(λ00, φ00);
-      d3_geo_centroidLineEnd();
-      d3_geo_centroid.lineEnd = d3_geo_centroidLineEnd;
-    };
+  function d3_geo_centroidPointXYZ(x, y, z) {
+    ++d3_geo_centroidW0;
+    d3_geo_centroidX0 += (x - d3_geo_centroidX0) / d3_geo_centroidW0;
+    d3_geo_centroidY0 += (y - d3_geo_centroidY0) / d3_geo_centroidW0;
+    d3_geo_centroidZ0 += (z - d3_geo_centroidZ0) / d3_geo_centroidW0;
   }
   function d3_geo_centroidLineStart() {
     var x0, y0, z0;
-    if (d3_geo_centroidDimension > 1) return;
-    if (d3_geo_centroidDimension < 1) {
-      d3_geo_centroidDimension = 1;
-      d3_geo_centroidW = d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-    }
     d3_geo_centroid.point = function(λ, φ) {
       λ *= d3_radians;
       var cosφ = Math.cos(φ *= d3_radians);
@@ -2754,18 +2849,50 @@ d3 = function() {
       y0 = cosφ * Math.sin(λ);
       z0 = Math.sin(φ);
       d3_geo_centroid.point = nextPoint;
+      d3_geo_centroidPointXYZ(x0, y0, z0);
     };
     function nextPoint(λ, φ) {
       λ *= d3_radians;
       var cosφ = Math.cos(φ *= d3_radians), x = cosφ * Math.cos(λ), y = cosφ * Math.sin(λ), z = Math.sin(φ), w = Math.atan2(Math.sqrt((w = y0 * z - z0 * y) * w + (w = z0 * x - x0 * z) * w + (w = x0 * y - y0 * x) * w), x0 * x + y0 * y + z0 * z);
-      d3_geo_centroidW += w;
-      d3_geo_centroidX += w * (x0 + (x0 = x));
-      d3_geo_centroidY += w * (y0 + (y0 = y));
-      d3_geo_centroidZ += w * (z0 + (z0 = z));
+      d3_geo_centroidW1 += w;
+      d3_geo_centroidX1 += w * (x0 + (x0 = x));
+      d3_geo_centroidY1 += w * (y0 + (y0 = y));
+      d3_geo_centroidZ1 += w * (z0 + (z0 = z));
+      d3_geo_centroidPointXYZ(x0, y0, z0);
     }
   }
   function d3_geo_centroidLineEnd() {
     d3_geo_centroid.point = d3_geo_centroidPoint;
+  }
+  function d3_geo_centroidRingStart() {
+    var λ00, φ00, x0, y0, z0;
+    d3_geo_centroid.point = function(λ, φ) {
+      λ00 = λ, φ00 = φ;
+      d3_geo_centroid.point = nextPoint;
+      λ *= d3_radians;
+      var cosφ = Math.cos(φ *= d3_radians);
+      x0 = cosφ * Math.cos(λ);
+      y0 = cosφ * Math.sin(λ);
+      z0 = Math.sin(φ);
+      d3_geo_centroidPointXYZ(x0, y0, z0);
+    };
+    d3_geo_centroid.lineEnd = function() {
+      nextPoint(λ00, φ00);
+      d3_geo_centroid.lineEnd = d3_geo_centroidLineEnd;
+      d3_geo_centroid.point = d3_geo_centroidPoint;
+    };
+    function nextPoint(λ, φ) {
+      λ *= d3_radians;
+      var cosφ = Math.cos(φ *= d3_radians), x = cosφ * Math.cos(λ), y = cosφ * Math.sin(λ), z = Math.sin(φ), cx = y0 * z - z0 * y, cy = z0 * x - x0 * z, cz = x0 * y - y0 * x, m = Math.sqrt(cx * cx + cy * cy + cz * cz), u = x0 * x + y0 * y + z0 * z, v = m && -d3_acos(u) / m, w = Math.atan2(m, u);
+      d3_geo_centroidX2 += v * cx;
+      d3_geo_centroidY2 += v * cy;
+      d3_geo_centroidZ2 += v * cz;
+      d3_geo_centroidW1 += w;
+      d3_geo_centroidX1 += w * (x0 + (x0 = x));
+      d3_geo_centroidY1 += w * (y0 + (y0 = y));
+      d3_geo_centroidZ1 += w * (z0 + (z0 = z));
+      d3_geo_centroidPointXYZ(x0, y0, z0);
+    }
   }
   function d3_true() {
     return true;
@@ -2867,7 +2994,7 @@ d3 = function() {
     a.next = b = array[0];
     b.prev = a;
   }
-  function d3_geo_clip(pointVisible, clipLine, interpolate) {
+  function d3_geo_clip(pointVisible, clipLine, interpolate, polygonContains) {
     return function(listener) {
       var line = clipLine(listener);
       var clip = {
@@ -2878,9 +3005,8 @@ d3 = function() {
           clip.point = pointRing;
           clip.lineStart = ringStart;
           clip.lineEnd = ringEnd;
-          invisible = false;
-          invisibleArea = visibleArea = 0;
           segments = [];
+          polygon = [];
           listener.polygonStart();
         },
         polygonEnd: function() {
@@ -2890,13 +3016,13 @@ d3 = function() {
           segments = d3.merge(segments);
           if (segments.length) {
             d3_geo_clipPolygon(segments, d3_geo_clipSort, null, interpolate, listener);
-          } else if (visibleArea < -ε || invisible && invisibleArea < -ε) {
+          } else if (polygonContains(polygon)) {
             listener.lineStart();
             interpolate(null, null, 1, listener);
             listener.lineEnd();
           }
           listener.polygonEnd();
-          segments = null;
+          segments = polygon = null;
         },
         sphere: function() {
           listener.polygonStart();
@@ -2920,8 +3046,8 @@ d3 = function() {
         clip.point = point;
         line.lineEnd();
       }
-      var segments, visibleArea, invisibleArea, invisible;
-      var buffer = d3_geo_clipBufferListener(), ringListener = clipLine(buffer), ring;
+      var segments;
+      var buffer = d3_geo_clipBufferListener(), ringListener = clipLine(buffer), polygon, ring;
       function pointRing(λ, φ) {
         ringListener.point(λ, φ);
         ring.push([ λ, φ ]);
@@ -2934,16 +3060,12 @@ d3 = function() {
         pointRing(ring[0][0], ring[0][1]);
         ringListener.lineEnd();
         var clean = ringListener.clean(), ringSegments = buffer.buffer(), segment, n = ringSegments.length;
-        if (!n) {
-          invisible = true;
-          invisibleArea += d3_geo_clipAreaRing(ring, -1);
-          ring = null;
-          return;
-        }
+        ring.pop();
+        polygon.push(ring);
         ring = null;
+        if (!n) return;
         if (clean & 1) {
           segment = ringSegments[0];
-          visibleArea += d3_geo_clipAreaRing(segment, 1);
           var n = segment.length - 1, i = -1, point;
           listener.lineStart();
           while (++i < n) listener.point((point = segment[i])[0], point[1]);
@@ -2980,26 +3102,41 @@ d3 = function() {
       }
     };
   }
-  function d3_geo_clipAreaRing(ring, invisible) {
-    if (!(n = ring.length)) return 0;
-    var n, i = 0, area = 0, p = ring[0], λ = p[0], φ = p[1], cosφ = Math.cos(φ), x0 = Math.atan2(invisible * Math.sin(λ) * cosφ, Math.sin(φ)), y0 = 1 - invisible * Math.cos(λ) * cosφ, x1 = x0, x, y;
-    while (++i < n) {
-      p = ring[i];
-      cosφ = Math.cos(φ = p[1]);
-      x = Math.atan2(invisible * Math.sin(λ = p[0]) * cosφ, Math.sin(φ));
-      y = 1 - invisible * Math.cos(λ) * cosφ;
-      if (Math.abs(y0 - 2) < ε && Math.abs(y - 2) < ε) continue;
-      if (Math.abs(y) < ε || Math.abs(y0) < ε) {} else if (Math.abs(Math.abs(x - x0) - π) < ε) {
-        if (y + y0 > 2) area += 4 * (x - x0);
-      } else if (Math.abs(y0 - 2) < ε) area += 4 * (x - x1); else area += ((3 * π + x - x0) % (2 * π) - π) * (y0 + y);
-      x1 = x0, x0 = x, y0 = y;
-    }
-    return area;
-  }
   function d3_geo_clipSort(a, b) {
     return ((a = a.point)[0] < 0 ? a[1] - π / 2 - ε : π / 2 - a[1]) - ((b = b.point)[0] < 0 ? b[1] - π / 2 - ε : π / 2 - b[1]);
   }
-  var d3_geo_clipAntimeridian = d3_geo_clip(d3_true, d3_geo_clipAntimeridianLine, d3_geo_clipAntimeridianInterpolate);
+  function d3_geo_pointInPolygon(point, polygon) {
+    var meridian = point[0], parallel = point[1], meridianNormal = [ Math.sin(meridian), -Math.cos(meridian), 0 ], polarAngle = 0, polar = false, southPole = false, winding = 0;
+    d3_geo_areaRingSum.reset();
+    for (var i = 0, n = polygon.length; i < n; ++i) {
+      var ring = polygon[i], m = ring.length;
+      if (!m) continue;
+      var point0 = ring[0], λ0 = point0[0], φ0 = point0[1] / 2 + π / 4, sinφ0 = Math.sin(φ0), cosφ0 = Math.cos(φ0), j = 1;
+      while (true) {
+        if (j === m) j = 0;
+        point = ring[j];
+        var λ = point[0], φ = point[1] / 2 + π / 4, sinφ = Math.sin(φ), cosφ = Math.cos(φ), dλ = λ - λ0, antimeridian = Math.abs(dλ) > π, k = sinφ0 * sinφ;
+        d3_geo_areaRingSum.add(Math.atan2(k * Math.sin(dλ), cosφ0 * cosφ + k * Math.cos(dλ)));
+        if (Math.abs(φ) < ε) southPole = true;
+        polarAngle += antimeridian ? dλ + (dλ >= 0 ? 2 : -2) * π : dλ;
+        if (antimeridian ^ λ0 >= meridian ^ λ >= meridian) {
+          var arc = d3_geo_cartesianCross(d3_geo_cartesian(point0), d3_geo_cartesian(point));
+          d3_geo_cartesianNormalize(arc);
+          var intersection = d3_geo_cartesianCross(meridianNormal, arc);
+          d3_geo_cartesianNormalize(intersection);
+          var φarc = (antimeridian ^ dλ >= 0 ? -1 : 1) * d3_asin(intersection[2]);
+          if (parallel > φarc) {
+            winding += antimeridian ^ dλ >= 0 ? 1 : -1;
+          }
+        }
+        if (!j++) break;
+        λ0 = λ, sinφ0 = sinφ, cosφ0 = cosφ, point0 = point;
+      }
+      if (Math.abs(polarAngle) > ε) polar = true;
+    }
+    return (!southPole && !polar && d3_geo_areaRingSum < 0 || polarAngle < -ε) ^ winding & 1;
+  }
+  var d3_geo_clipAntimeridian = d3_geo_clip(d3_true, d3_geo_clipAntimeridianLine, d3_geo_clipAntimeridianInterpolate, d3_geo_clipAntimeridianPolygonContains);
   function d3_geo_clipAntimeridianLine(listener) {
     var λ0 = NaN, φ0 = NaN, sλ0 = NaN, clean;
     return {
@@ -3066,9 +3203,13 @@ d3 = function() {
       listener.point(to[0], to[1]);
     }
   }
+  var d3_geo_clipAntimeridianPoint = [ -π, 0 ];
+  function d3_geo_clipAntimeridianPolygonContains(polygon) {
+    return d3_geo_pointInPolygon(d3_geo_clipAntimeridianPoint, polygon);
+  }
   function d3_geo_clipCircle(radius) {
-    var cr = Math.cos(radius), smallRadius = cr > 0, notHemisphere = Math.abs(cr) > ε, interpolate = d3_geo_circleInterpolate(radius, 6 * d3_radians);
-    return d3_geo_clip(visible, clipLine, interpolate);
+    var cr = Math.cos(radius), smallRadius = cr > 0, point = [ radius, 0 ], notHemisphere = Math.abs(cr) > ε, interpolate = d3_geo_circleInterpolate(radius, 6 * d3_radians);
+    return d3_geo_clip(visible, clipLine, interpolate, polygonContains);
     function visible(λ, φ) {
       return Math.cos(λ) * Math.cos(φ) > cr;
     }
@@ -3160,6 +3301,9 @@ d3 = function() {
       if (λ < -r) code |= 1; else if (λ > r) code |= 2;
       if (φ < -r) code |= 4; else if (φ > r) code |= 8;
       return code;
+    }
+    function polygonContains(polygon) {
+      return d3_geo_pointInPolygon(point, polygon);
     }
   }
   var d3_geo_clipViewMAX = 1e9;
@@ -3324,17 +3468,306 @@ d3 = function() {
     };
     return compose;
   }
+  function d3_geo_conic(projectAt) {
+    var φ0 = 0, φ1 = π / 3, m = d3_geo_projectionMutator(projectAt), p = m(φ0, φ1);
+    p.parallels = function(_) {
+      if (!arguments.length) return [ φ0 / π * 180, φ1 / π * 180 ];
+      return m(φ0 = _[0] * π / 180, φ1 = _[1] * π / 180);
+    };
+    return p;
+  }
+  function d3_geo_conicEqualArea(φ0, φ1) {
+    var sinφ0 = Math.sin(φ0), n = (sinφ0 + Math.sin(φ1)) / 2, C = 1 + sinφ0 * (2 * n - sinφ0), ρ0 = Math.sqrt(C) / n;
+    function forward(λ, φ) {
+      var ρ = Math.sqrt(C - 2 * n * Math.sin(φ)) / n;
+      return [ ρ * Math.sin(λ *= n), ρ0 - ρ * Math.cos(λ) ];
+    }
+    forward.invert = function(x, y) {
+      var ρ0_y = ρ0 - y;
+      return [ Math.atan2(x, ρ0_y) / n, d3_asin((C - (x * x + ρ0_y * ρ0_y) * n * n) / (2 * n)) ];
+    };
+    return forward;
+  }
+  (d3.geo.conicEqualArea = function() {
+    return d3_geo_conic(d3_geo_conicEqualArea);
+  }).raw = d3_geo_conicEqualArea;
+  d3.geo.albers = function() {
+    return d3.geo.conicEqualArea().rotate([ 96, 0 ]).center([ -.6, 38.7 ]).parallels([ 29.5, 45.5 ]).scale(1070);
+  };
+  d3.geo.albersUsa = function() {
+    var lower48 = d3.geo.albers();
+    var alaska = d3.geo.conicEqualArea().rotate([ 154, 0 ]).center([ -2, 58.5 ]).parallels([ 55, 65 ]);
+    var hawaii = d3.geo.conicEqualArea().rotate([ 157, 0 ]).center([ -3, 19.9 ]).parallels([ 8, 18 ]);
+    var point, pointStream = {
+      point: function(x, y) {
+        point = [ x, y ];
+      }
+    }, lower48Point, alaskaPoint, hawaiiPoint;
+    function albersUsa(coordinates) {
+      var x = coordinates[0], y = coordinates[1];
+      point = null;
+      (lower48Point(x, y), point) || (alaskaPoint(x, y), point) || hawaiiPoint(x, y);
+      return point;
+    }
+    albersUsa.invert = function(coordinates) {
+      var k = lower48.scale(), t = lower48.translate(), x = (coordinates[0] - t[0]) / k, y = (coordinates[1] - t[1]) / k;
+      return (y >= .12 && y < .234 && x >= -.425 && x < -.214 ? alaska : y >= .166 && y < .234 && x >= -.214 && x < -.115 ? hawaii : lower48).invert(coordinates);
+    };
+    albersUsa.stream = function(stream) {
+      var lower48Stream = lower48.stream(stream), alaskaStream = alaska.stream(stream), hawaiiStream = hawaii.stream(stream);
+      return {
+        point: function(x, y) {
+          lower48Stream.point(x, y);
+          alaskaStream.point(x, y);
+          hawaiiStream.point(x, y);
+        },
+        sphere: function() {
+          lower48Stream.sphere();
+          alaskaStream.sphere();
+          hawaiiStream.sphere();
+        },
+        lineStart: function() {
+          lower48Stream.lineStart();
+          alaskaStream.lineStart();
+          hawaiiStream.lineStart();
+        },
+        lineEnd: function() {
+          lower48Stream.lineEnd();
+          alaskaStream.lineEnd();
+          hawaiiStream.lineEnd();
+        },
+        polygonStart: function() {
+          lower48Stream.polygonStart();
+          alaskaStream.polygonStart();
+          hawaiiStream.polygonStart();
+        },
+        polygonEnd: function() {
+          lower48Stream.polygonEnd();
+          alaskaStream.polygonEnd();
+          hawaiiStream.polygonEnd();
+        }
+      };
+    };
+    albersUsa.precision = function(_) {
+      if (!arguments.length) return lower48.precision();
+      lower48.precision(_);
+      alaska.precision(_);
+      hawaii.precision(_);
+      return albersUsa;
+    };
+    albersUsa.scale = function(_) {
+      if (!arguments.length) return lower48.scale();
+      lower48.scale(_);
+      alaska.scale(_ * .35);
+      hawaii.scale(_);
+      return albersUsa.translate(lower48.translate());
+    };
+    albersUsa.translate = function(_) {
+      if (!arguments.length) return lower48.translate();
+      var k = lower48.scale(), x = +_[0], y = +_[1];
+      lower48Point = lower48.translate(_).clipExtent([ [ x - .455 * k, y - .238 * k ], [ x + .455 * k, y + .238 * k ] ]).stream(pointStream).point;
+      alaskaPoint = alaska.translate([ x - .307 * k, y + .201 * k ]).clipExtent([ [ x - .425 * k + ε, y + .12 * k + ε ], [ x - .214 * k - ε, y + .234 * k - ε ] ]).stream(pointStream).point;
+      hawaiiPoint = hawaii.translate([ x - .205 * k, y + .212 * k ]).clipExtent([ [ x - .214 * k + ε, y + .166 * k + ε ], [ x - .115 * k - ε, y + .234 * k - ε ] ]).stream(pointStream).point;
+      return albersUsa;
+    };
+    return albersUsa.scale(1070);
+  };
+  var d3_geo_pathAreaSum, d3_geo_pathAreaPolygon, d3_geo_pathArea = {
+    point: d3_noop,
+    lineStart: d3_noop,
+    lineEnd: d3_noop,
+    polygonStart: function() {
+      d3_geo_pathAreaPolygon = 0;
+      d3_geo_pathArea.lineStart = d3_geo_pathAreaRingStart;
+    },
+    polygonEnd: function() {
+      d3_geo_pathArea.lineStart = d3_geo_pathArea.lineEnd = d3_geo_pathArea.point = d3_noop;
+      d3_geo_pathAreaSum += Math.abs(d3_geo_pathAreaPolygon / 2);
+    }
+  };
+  function d3_geo_pathAreaRingStart() {
+    var x00, y00, x0, y0;
+    d3_geo_pathArea.point = function(x, y) {
+      d3_geo_pathArea.point = nextPoint;
+      x00 = x0 = x, y00 = y0 = y;
+    };
+    function nextPoint(x, y) {
+      d3_geo_pathAreaPolygon += y0 * x - x0 * y;
+      x0 = x, y0 = y;
+    }
+    d3_geo_pathArea.lineEnd = function() {
+      nextPoint(x00, y00);
+    };
+  }
+  var d3_geo_pathBoundsX0, d3_geo_pathBoundsY0, d3_geo_pathBoundsX1, d3_geo_pathBoundsY1;
+  var d3_geo_pathBounds = {
+    point: d3_geo_pathBoundsPoint,
+    lineStart: d3_noop,
+    lineEnd: d3_noop,
+    polygonStart: d3_noop,
+    polygonEnd: d3_noop
+  };
+  function d3_geo_pathBoundsPoint(x, y) {
+    if (x < d3_geo_pathBoundsX0) d3_geo_pathBoundsX0 = x;
+    if (x > d3_geo_pathBoundsX1) d3_geo_pathBoundsX1 = x;
+    if (y < d3_geo_pathBoundsY0) d3_geo_pathBoundsY0 = y;
+    if (y > d3_geo_pathBoundsY1) d3_geo_pathBoundsY1 = y;
+  }
+  function d3_geo_pathBuffer() {
+    var pointCircle = d3_geo_pathBufferCircle(4.5), buffer = [];
+    var stream = {
+      point: point,
+      lineStart: function() {
+        stream.point = pointLineStart;
+      },
+      lineEnd: lineEnd,
+      polygonStart: function() {
+        stream.lineEnd = lineEndPolygon;
+      },
+      polygonEnd: function() {
+        stream.lineEnd = lineEnd;
+        stream.point = point;
+      },
+      pointRadius: function(_) {
+        pointCircle = d3_geo_pathBufferCircle(_);
+        return stream;
+      },
+      result: function() {
+        if (buffer.length) {
+          var result = buffer.join("");
+          buffer = [];
+          return result;
+        }
+      }
+    };
+    function point(x, y) {
+      buffer.push("M", x, ",", y, pointCircle);
+    }
+    function pointLineStart(x, y) {
+      buffer.push("M", x, ",", y);
+      stream.point = pointLine;
+    }
+    function pointLine(x, y) {
+      buffer.push("L", x, ",", y);
+    }
+    function lineEnd() {
+      stream.point = point;
+    }
+    function lineEndPolygon() {
+      buffer.push("Z");
+    }
+    return stream;
+  }
+  function d3_geo_pathBufferCircle(radius) {
+    return "m0," + radius + "a" + radius + "," + radius + " 0 1,1 0," + -2 * radius + "a" + radius + "," + radius + " 0 1,1 0," + 2 * radius + "z";
+  }
+  var d3_geo_pathCentroid = {
+    point: d3_geo_pathCentroidPoint,
+    lineStart: d3_geo_pathCentroidLineStart,
+    lineEnd: d3_geo_pathCentroidLineEnd,
+    polygonStart: function() {
+      d3_geo_pathCentroid.lineStart = d3_geo_pathCentroidRingStart;
+    },
+    polygonEnd: function() {
+      d3_geo_pathCentroid.point = d3_geo_pathCentroidPoint;
+      d3_geo_pathCentroid.lineStart = d3_geo_pathCentroidLineStart;
+      d3_geo_pathCentroid.lineEnd = d3_geo_pathCentroidLineEnd;
+    }
+  };
+  function d3_geo_pathCentroidPoint(x, y) {
+    d3_geo_centroidX0 += x;
+    d3_geo_centroidY0 += y;
+    ++d3_geo_centroidZ0;
+  }
+  function d3_geo_pathCentroidLineStart() {
+    var x0, y0;
+    d3_geo_pathCentroid.point = function(x, y) {
+      d3_geo_pathCentroid.point = nextPoint;
+      d3_geo_pathCentroidPoint(x0 = x, y0 = y);
+    };
+    function nextPoint(x, y) {
+      var dx = x - x0, dy = y - y0, z = Math.sqrt(dx * dx + dy * dy);
+      d3_geo_centroidX1 += z * (x0 + x) / 2;
+      d3_geo_centroidY1 += z * (y0 + y) / 2;
+      d3_geo_centroidZ1 += z;
+      d3_geo_pathCentroidPoint(x0 = x, y0 = y);
+    }
+  }
+  function d3_geo_pathCentroidLineEnd() {
+    d3_geo_pathCentroid.point = d3_geo_pathCentroidPoint;
+  }
+  function d3_geo_pathCentroidRingStart() {
+    var x00, y00, x0, y0;
+    d3_geo_pathCentroid.point = function(x, y) {
+      d3_geo_pathCentroid.point = nextPoint;
+      d3_geo_pathCentroidPoint(x00 = x0 = x, y00 = y0 = y);
+    };
+    function nextPoint(x, y) {
+      var dx = x - x0, dy = y - y0, z = Math.sqrt(dx * dx + dy * dy);
+      d3_geo_centroidX1 += z * (x0 + x) / 2;
+      d3_geo_centroidY1 += z * (y0 + y) / 2;
+      d3_geo_centroidZ1 += z;
+      z = y0 * x - x0 * y;
+      d3_geo_centroidX2 += z * (x0 + x);
+      d3_geo_centroidY2 += z * (y0 + y);
+      d3_geo_centroidZ2 += z * 3;
+      d3_geo_pathCentroidPoint(x0 = x, y0 = y);
+    }
+    d3_geo_pathCentroid.lineEnd = function() {
+      nextPoint(x00, y00);
+    };
+  }
+  function d3_geo_pathContext(context) {
+    var pointRadius = 4.5;
+    var stream = {
+      point: point,
+      lineStart: function() {
+        stream.point = pointLineStart;
+      },
+      lineEnd: lineEnd,
+      polygonStart: function() {
+        stream.lineEnd = lineEndPolygon;
+      },
+      polygonEnd: function() {
+        stream.lineEnd = lineEnd;
+        stream.point = point;
+      },
+      pointRadius: function(_) {
+        pointRadius = _;
+        return stream;
+      },
+      result: d3_noop
+    };
+    function point(x, y) {
+      context.moveTo(x, y);
+      context.arc(x, y, pointRadius, 0, 2 * π);
+    }
+    function pointLineStart(x, y) {
+      context.moveTo(x, y);
+      stream.point = pointLine;
+    }
+    function pointLine(x, y) {
+      context.lineTo(x, y);
+    }
+    function lineEnd() {
+      stream.point = point;
+    }
+    function lineEndPolygon() {
+      context.closePath();
+    }
+    return stream;
+  }
   function d3_geo_resample(project) {
-    var δ2 = .5, maxDepth = 16;
+    var δ2 = .5, cosMinDistance = Math.cos(30 * d3_radians), maxDepth = 16;
     function resample(stream) {
-      var λ0, x0, y0, a0, b0, c0;
+      var λ00, φ00, x00, y00, a00, b00, c00, λ0, x0, y0, a0, b0, c0;
       var resample = {
         point: point,
         lineStart: lineStart,
         lineEnd: lineEnd,
         polygonStart: function() {
           stream.polygonStart();
-          resample.lineStart = polygonLineStart;
+          resample.lineStart = ringStart;
         },
         polygonEnd: function() {
           stream.polygonEnd();
@@ -3359,18 +3792,19 @@ d3 = function() {
         resample.point = point;
         stream.lineEnd();
       }
-      function polygonLineStart() {
-        var λ00, φ00, x00, y00, a00, b00, c00;
+      function ringStart() {
         lineStart();
-        resample.point = function(λ, φ) {
-          linePoint(λ00 = λ, φ00 = φ), x00 = x0, y00 = y0, a00 = a0, b00 = b0, c00 = c0;
-          resample.point = linePoint;
-        };
-        resample.lineEnd = function() {
-          resampleLineTo(x0, y0, λ0, a0, b0, c0, x00, y00, λ00, a00, b00, c00, maxDepth, stream);
-          resample.lineEnd = lineEnd;
-          lineEnd();
-        };
+        resample.point = ringPoint;
+        resample.lineEnd = ringEnd;
+      }
+      function ringPoint(λ, φ) {
+        linePoint(λ00 = λ, φ00 = φ), x00 = x0, y00 = y0, a00 = a0, b00 = b0, c00 = c0;
+        resample.point = linePoint;
+      }
+      function ringEnd() {
+        resampleLineTo(x0, y0, λ0, a0, b0, c0, x00, y00, λ00, a00, b00, c00, maxDepth, stream);
+        resample.lineEnd = lineEnd;
+        lineEnd();
       }
       return resample;
     }
@@ -3378,7 +3812,7 @@ d3 = function() {
       var dx = x1 - x0, dy = y1 - y0, d2 = dx * dx + dy * dy;
       if (d2 > 4 * δ2 && depth--) {
         var a = a0 + a1, b = b0 + b1, c = c0 + c1, m = Math.sqrt(a * a + b * b + c * c), φ2 = Math.asin(c /= m), λ2 = Math.abs(Math.abs(c) - 1) < ε ? (λ0 + λ1) / 2 : Math.atan2(b, a), p = project(λ2, φ2), x2 = p[0], y2 = p[1], dx2 = x2 - x0, dy2 = y2 - y0, dz = dy * dx2 - dx * dy2;
-        if (dz * dz / d2 > δ2 || Math.abs((dx * dx2 + dy * dy2) / d2 - .5) > .3) {
+        if (dz * dz / d2 > δ2 || Math.abs((dx * dx2 + dy * dy2) / d2 - .5) > .3 || a0 * a1 + b0 * b1 + c0 * c1 < cosMinDistance) {
           resampleLineTo(x0, y0, λ0, a0, b0, c0, x2, y2, λ2, a /= m, b /= m, c, depth, stream);
           stream.point(x2, y2);
           resampleLineTo(x2, y2, λ2, a, b, c, x1, y1, λ1, a1, b1, c1, depth, stream);
@@ -3392,6 +3826,81 @@ d3 = function() {
     };
     return resample;
   }
+  d3.geo.path = function() {
+    var pointRadius = 4.5, projection, context, projectStream, contextStream, cacheStream;
+    function path(object) {
+      if (object) {
+        if (typeof pointRadius === "function") contextStream.pointRadius(+pointRadius.apply(this, arguments));
+        if (!cacheStream || !cacheStream.valid) cacheStream = projectStream(contextStream);
+        d3.geo.stream(object, cacheStream);
+      }
+      return contextStream.result();
+    }
+    path.area = function(object) {
+      d3_geo_pathAreaSum = 0;
+      d3.geo.stream(object, projectStream(d3_geo_pathArea));
+      return d3_geo_pathAreaSum;
+    };
+    path.centroid = function(object) {
+      d3_geo_centroidX0 = d3_geo_centroidY0 = d3_geo_centroidZ0 = d3_geo_centroidX1 = d3_geo_centroidY1 = d3_geo_centroidZ1 = d3_geo_centroidX2 = d3_geo_centroidY2 = d3_geo_centroidZ2 = 0;
+      d3.geo.stream(object, projectStream(d3_geo_pathCentroid));
+      return d3_geo_centroidZ2 ? [ d3_geo_centroidX2 / d3_geo_centroidZ2, d3_geo_centroidY2 / d3_geo_centroidZ2 ] : d3_geo_centroidZ1 ? [ d3_geo_centroidX1 / d3_geo_centroidZ1, d3_geo_centroidY1 / d3_geo_centroidZ1 ] : d3_geo_centroidZ0 ? [ d3_geo_centroidX0 / d3_geo_centroidZ0, d3_geo_centroidY0 / d3_geo_centroidZ0 ] : [ NaN, NaN ];
+    };
+    path.bounds = function(object) {
+      d3_geo_pathBoundsX1 = d3_geo_pathBoundsY1 = -(d3_geo_pathBoundsX0 = d3_geo_pathBoundsY0 = Infinity);
+      d3.geo.stream(object, projectStream(d3_geo_pathBounds));
+      return [ [ d3_geo_pathBoundsX0, d3_geo_pathBoundsY0 ], [ d3_geo_pathBoundsX1, d3_geo_pathBoundsY1 ] ];
+    };
+    path.projection = function(_) {
+      if (!arguments.length) return projection;
+      projectStream = (projection = _) ? _.stream || d3_geo_pathProjectStream(_) : d3_identity;
+      return reset();
+    };
+    path.context = function(_) {
+      if (!arguments.length) return context;
+      contextStream = (context = _) == null ? new d3_geo_pathBuffer() : new d3_geo_pathContext(_);
+      if (typeof pointRadius !== "function") contextStream.pointRadius(pointRadius);
+      return reset();
+    };
+    path.pointRadius = function(_) {
+      if (!arguments.length) return pointRadius;
+      pointRadius = typeof _ === "function" ? _ : (contextStream.pointRadius(+_), +_);
+      return path;
+    };
+    function reset() {
+      cacheStream = null;
+      return path;
+    }
+    return path.projection(d3.geo.albersUsa()).context(null);
+  };
+  function d3_geo_pathProjectStream(project) {
+    var resample = d3_geo_resample(function(λ, φ) {
+      return project([ λ * d3_degrees, φ * d3_degrees ]);
+    });
+    return function(stream) {
+      stream = resample(stream);
+      return {
+        point: function(λ, φ) {
+          stream.point(λ * d3_radians, φ * d3_radians);
+        },
+        sphere: function() {
+          stream.sphere();
+        },
+        lineStart: function() {
+          stream.lineStart();
+        },
+        lineEnd: function() {
+          stream.lineEnd();
+        },
+        polygonStart: function() {
+          stream.polygonStart();
+        },
+        polygonEnd: function() {
+          stream.polygonEnd();
+        }
+      };
+    };
+  }
   d3.geo.projection = d3_geo_projection;
   d3.geo.projectionMutator = d3_geo_projectionMutator;
   function d3_geo_projection(project) {
@@ -3403,7 +3912,7 @@ d3 = function() {
     var project, rotate, projectRotate, projectResample = d3_geo_resample(function(x, y) {
       x = project(x, y);
       return [ x[0] * k + δx, δy - x[1] * k ];
-    }), k = 150, x = 480, y = 250, λ = 0, φ = 0, δλ = 0, δφ = 0, δγ = 0, δx, δy, preclip = d3_geo_clipAntimeridian, postclip = d3_identity, clipAngle = null, clipExtent = null;
+    }), k = 150, x = 480, y = 250, λ = 0, φ = 0, δλ = 0, δφ = 0, δγ = 0, δx, δy, preclip = d3_geo_clipAntimeridian, postclip = d3_identity, clipAngle = null, clipExtent = null, stream;
     function projection(point) {
       point = projectRotate(point[0] * d3_radians, point[1] * d3_radians);
       return [ point[0] * k + δx, δy - point[1] * k ];
@@ -3412,19 +3921,22 @@ d3 = function() {
       point = projectRotate.invert((point[0] - δx) / k, (δy - point[1]) / k);
       return point && [ point[0] * d3_degrees, point[1] * d3_degrees ];
     }
-    projection.stream = function(stream) {
-      return d3_geo_projectionRadiansRotate(rotate, preclip(projectResample(postclip(stream))));
+    projection.stream = function(output) {
+      if (stream) stream.valid = false;
+      stream = d3_geo_projectionRadiansRotate(rotate, preclip(projectResample(postclip(output))));
+      stream.valid = true;
+      return stream;
     };
     projection.clipAngle = function(_) {
       if (!arguments.length) return clipAngle;
       preclip = _ == null ? (clipAngle = _, d3_geo_clipAntimeridian) : d3_geo_clipCircle((clipAngle = +_) * d3_radians);
-      return projection;
+      return invalidate();
     };
     projection.clipExtent = function(_) {
       if (!arguments.length) return clipExtent;
       clipExtent = _;
       postclip = _ == null ? d3_identity : d3_geo_clipView(_[0][0], _[0][1], _[1][0], _[1][1]);
-      return projection;
+      return invalidate();
     };
     projection.scale = function(_) {
       if (!arguments.length) return k;
@@ -3456,6 +3968,13 @@ d3 = function() {
       var center = project(λ, φ);
       δx = x - center[0] * k;
       δy = y + center[1] * k;
+      return invalidate();
+    }
+    function invalidate() {
+      if (stream) {
+        stream.valid = false;
+        stream = null;
+      }
       return projection;
     }
     return function() {
@@ -3522,11 +4041,11 @@ d3 = function() {
     var cosδφ = Math.cos(δφ), sinδφ = Math.sin(δφ), cosδγ = Math.cos(δγ), sinδγ = Math.sin(δγ);
     function rotation(λ, φ) {
       var cosφ = Math.cos(φ), x = Math.cos(λ) * cosφ, y = Math.sin(λ) * cosφ, z = Math.sin(φ), k = z * cosδφ + x * sinδφ;
-      return [ Math.atan2(y * cosδγ - k * sinδγ, x * cosδφ - z * sinδφ), Math.asin(Math.max(-1, Math.min(1, k * cosδγ + y * sinδγ))) ];
+      return [ Math.atan2(y * cosδγ - k * sinδγ, x * cosδφ - z * sinδφ), d3_asin(k * cosδγ + y * sinδγ) ];
     }
     rotation.invert = function(λ, φ) {
       var cosφ = Math.cos(φ), x = Math.cos(λ) * cosφ, y = Math.sin(λ) * cosφ, z = Math.sin(φ), k = z * cosδγ - y * sinδγ;
-      return [ Math.atan2(y * cosδγ + z * sinδγ, x * cosδφ + k * sinδφ), Math.asin(Math.max(-1, Math.min(1, k * cosδφ - x * sinδφ))) ];
+      return [ Math.atan2(y * cosδγ + z * sinδγ, x * cosδφ + k * sinδφ), d3_asin(k * cosδφ - x * sinδφ) ];
     };
     return rotation;
   }
@@ -3755,368 +4274,6 @@ d3 = function() {
       λ0 = λ, sinφ0 = sinφ, cosφ0 = cosφ;
     }
   }
-  function d3_geo_conic(projectAt) {
-    var φ0 = 0, φ1 = π / 3, m = d3_geo_projectionMutator(projectAt), p = m(φ0, φ1);
-    p.parallels = function(_) {
-      if (!arguments.length) return [ φ0 / π * 180, φ1 / π * 180 ];
-      return m(φ0 = _[0] * π / 180, φ1 = _[1] * π / 180);
-    };
-    return p;
-  }
-  function d3_geo_conicEqualArea(φ0, φ1) {
-    var sinφ0 = Math.sin(φ0), n = (sinφ0 + Math.sin(φ1)) / 2, C = 1 + sinφ0 * (2 * n - sinφ0), ρ0 = Math.sqrt(C) / n;
-    function forward(λ, φ) {
-      var ρ = Math.sqrt(C - 2 * n * Math.sin(φ)) / n;
-      return [ ρ * Math.sin(λ *= n), ρ0 - ρ * Math.cos(λ) ];
-    }
-    forward.invert = function(x, y) {
-      var ρ0_y = ρ0 - y;
-      return [ Math.atan2(x, ρ0_y) / n, d3_asin((C - (x * x + ρ0_y * ρ0_y) * n * n) / (2 * n)) ];
-    };
-    return forward;
-  }
-  (d3.geo.conicEqualArea = function() {
-    return d3_geo_conic(d3_geo_conicEqualArea);
-  }).raw = d3_geo_conicEqualArea;
-  d3.geo.albers = function() {
-    return d3.geo.conicEqualArea().rotate([ 96, 0 ]).center([ -.6, 38.7 ]).parallels([ 29.5, 45.5 ]).scale(1070);
-  };
-  d3.geo.albersUsa = function() {
-    var lower48 = d3.geo.albers();
-    var alaska = d3.geo.conicEqualArea().rotate([ 154, 0 ]).center([ -2, 58.5 ]).parallels([ 55, 65 ]);
-    var hawaii = d3.geo.conicEqualArea().rotate([ 157, 0 ]).center([ -3, 19.9 ]).parallels([ 8, 18 ]);
-    var point, pointStream = {
-      point: function(x, y) {
-        point = [ x, y ];
-      }
-    }, lower48Point, alaskaPoint, hawaiiPoint;
-    function albersUsa(coordinates) {
-      var x = coordinates[0], y = coordinates[1];
-      point = null;
-      (lower48Point(x, y), point) || (alaskaPoint(x, y), point) || hawaiiPoint(x, y);
-      return point;
-    }
-    albersUsa.invert = function(coordinates) {
-      var k = lower48.scale(), t = lower48.translate(), x = (coordinates[0] - t[0]) / k, y = (coordinates[1] - t[1]) / k;
-      return (y >= .12 && y < .234 && x >= -.425 && x < -.214 ? alaska : y >= .166 && y < .234 && x >= -.214 && x < -.115 ? hawaii : lower48).invert(coordinates);
-    };
-    albersUsa.stream = function(stream) {
-      var lower48Stream = lower48.stream(stream), alaskaStream = alaska.stream(stream), hawaiiStream = hawaii.stream(stream);
-      return {
-        point: function(x, y) {
-          lower48Stream.point(x, y);
-          alaskaStream.point(x, y);
-          hawaiiStream.point(x, y);
-        },
-        sphere: function() {
-          lower48Stream.sphere();
-          alaskaStream.sphere();
-          hawaiiStream.sphere();
-        },
-        lineStart: function() {
-          lower48Stream.lineStart();
-          alaskaStream.lineStart();
-          hawaiiStream.lineStart();
-        },
-        lineEnd: function() {
-          lower48Stream.lineEnd();
-          alaskaStream.lineEnd();
-          hawaiiStream.lineEnd();
-        },
-        polygonStart: function() {
-          lower48Stream.polygonStart();
-          alaskaStream.polygonStart();
-          hawaiiStream.polygonStart();
-        },
-        polygonEnd: function() {
-          lower48Stream.polygonEnd();
-          alaskaStream.polygonEnd();
-          hawaiiStream.polygonEnd();
-        }
-      };
-    };
-    albersUsa.precision = function(_) {
-      if (!arguments.length) return lower48.precision();
-      lower48.precision(_);
-      alaska.precision(_);
-      hawaii.precision(_);
-      return albersUsa;
-    };
-    albersUsa.scale = function(_) {
-      if (!arguments.length) return lower48.scale();
-      lower48.scale(_);
-      alaska.scale(_ * .35);
-      hawaii.scale(_);
-      return albersUsa.translate(lower48.translate());
-    };
-    albersUsa.translate = function(_) {
-      if (!arguments.length) return lower48.translate();
-      var k = lower48.scale(), x = +_[0], y = +_[1];
-      lower48Point = lower48.translate(_).clipExtent([ [ x - .455 * k, y - .238 * k ], [ x + .455 * k, y + .238 * k ] ]).stream(pointStream).point;
-      alaskaPoint = alaska.translate([ x - .307 * k, y + .201 * k ]).clipExtent([ [ x - .425 * k + ε, y + .12 * k + ε ], [ x - .214 * k - ε, y + .234 * k - ε ] ]).stream(pointStream).point;
-      hawaiiPoint = hawaii.translate([ x - .205 * k, y + .212 * k ]).clipExtent([ [ x - .214 * k + ε, y + .166 * k + ε ], [ x - .115 * k - ε, y + .234 * k - ε ] ]).stream(pointStream).point;
-      return albersUsa;
-    };
-    return albersUsa.scale(1070);
-  };
-  var d3_geo_pathAreaSum, d3_geo_pathAreaPolygon, d3_geo_pathArea = {
-    point: d3_noop,
-    lineStart: d3_noop,
-    lineEnd: d3_noop,
-    polygonStart: function() {
-      d3_geo_pathAreaPolygon = 0;
-      d3_geo_pathArea.lineStart = d3_geo_pathAreaRingStart;
-    },
-    polygonEnd: function() {
-      d3_geo_pathArea.lineStart = d3_geo_pathArea.lineEnd = d3_geo_pathArea.point = d3_noop;
-      d3_geo_pathAreaSum += Math.abs(d3_geo_pathAreaPolygon / 2);
-    }
-  };
-  function d3_geo_pathAreaRingStart() {
-    var x00, y00, x0, y0;
-    d3_geo_pathArea.point = function(x, y) {
-      d3_geo_pathArea.point = nextPoint;
-      x00 = x0 = x, y00 = y0 = y;
-    };
-    function nextPoint(x, y) {
-      d3_geo_pathAreaPolygon += y0 * x - x0 * y;
-      x0 = x, y0 = y;
-    }
-    d3_geo_pathArea.lineEnd = function() {
-      nextPoint(x00, y00);
-    };
-  }
-  var d3_geo_pathBoundsX0, d3_geo_pathBoundsY0, d3_geo_pathBoundsX1, d3_geo_pathBoundsY1;
-  var d3_geo_pathBounds = {
-    point: d3_geo_pathBoundsPoint,
-    lineStart: d3_noop,
-    lineEnd: d3_noop,
-    polygonStart: d3_noop,
-    polygonEnd: d3_noop
-  };
-  function d3_geo_pathBoundsPoint(x, y) {
-    if (x < d3_geo_pathBoundsX0) d3_geo_pathBoundsX0 = x;
-    if (x > d3_geo_pathBoundsX1) d3_geo_pathBoundsX1 = x;
-    if (y < d3_geo_pathBoundsY0) d3_geo_pathBoundsY0 = y;
-    if (y > d3_geo_pathBoundsY1) d3_geo_pathBoundsY1 = y;
-  }
-  function d3_geo_pathBuffer() {
-    var pointCircle = d3_geo_pathBufferCircle(4.5), buffer = [];
-    var stream = {
-      point: point,
-      lineStart: function() {
-        stream.point = pointLineStart;
-      },
-      lineEnd: lineEnd,
-      polygonStart: function() {
-        stream.lineEnd = lineEndPolygon;
-      },
-      polygonEnd: function() {
-        stream.lineEnd = lineEnd;
-        stream.point = point;
-      },
-      pointRadius: function(_) {
-        pointCircle = d3_geo_pathBufferCircle(_);
-        return stream;
-      },
-      result: function() {
-        if (buffer.length) {
-          var result = buffer.join("");
-          buffer = [];
-          return result;
-        }
-      }
-    };
-    function point(x, y) {
-      buffer.push("M", x, ",", y, pointCircle);
-    }
-    function pointLineStart(x, y) {
-      buffer.push("M", x, ",", y);
-      stream.point = pointLine;
-    }
-    function pointLine(x, y) {
-      buffer.push("L", x, ",", y);
-    }
-    function lineEnd() {
-      stream.point = point;
-    }
-    function lineEndPolygon() {
-      buffer.push("Z");
-    }
-    return stream;
-  }
-  function d3_geo_pathBufferCircle(radius) {
-    return "m0," + radius + "a" + radius + "," + radius + " 0 1,1 0," + -2 * radius + "a" + radius + "," + radius + " 0 1,1 0," + 2 * radius + "z";
-  }
-  var d3_geo_pathCentroid = {
-    point: d3_geo_pathCentroidPoint,
-    lineStart: d3_geo_pathCentroidLineStart,
-    lineEnd: d3_geo_pathCentroidLineEnd,
-    polygonStart: function() {
-      d3_geo_pathCentroid.lineStart = d3_geo_pathCentroidRingStart;
-    },
-    polygonEnd: function() {
-      d3_geo_pathCentroid.point = d3_geo_pathCentroidPoint;
-      d3_geo_pathCentroid.lineStart = d3_geo_pathCentroidLineStart;
-      d3_geo_pathCentroid.lineEnd = d3_geo_pathCentroidLineEnd;
-    }
-  };
-  function d3_geo_pathCentroidPoint(x, y) {
-    if (d3_geo_centroidDimension) return;
-    d3_geo_centroidX += x;
-    d3_geo_centroidY += y;
-    ++d3_geo_centroidZ;
-  }
-  function d3_geo_pathCentroidLineStart() {
-    var x0, y0;
-    if (d3_geo_centroidDimension !== 1) {
-      if (d3_geo_centroidDimension < 1) {
-        d3_geo_centroidDimension = 1;
-        d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-      } else return;
-    }
-    d3_geo_pathCentroid.point = function(x, y) {
-      d3_geo_pathCentroid.point = nextPoint;
-      x0 = x, y0 = y;
-    };
-    function nextPoint(x, y) {
-      var dx = x - x0, dy = y - y0, z = Math.sqrt(dx * dx + dy * dy);
-      d3_geo_centroidX += z * (x0 + x) / 2;
-      d3_geo_centroidY += z * (y0 + y) / 2;
-      d3_geo_centroidZ += z;
-      x0 = x, y0 = y;
-    }
-  }
-  function d3_geo_pathCentroidLineEnd() {
-    d3_geo_pathCentroid.point = d3_geo_pathCentroidPoint;
-  }
-  function d3_geo_pathCentroidRingStart() {
-    var x00, y00, x0, y0;
-    if (d3_geo_centroidDimension < 2) {
-      d3_geo_centroidDimension = 2;
-      d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-    }
-    d3_geo_pathCentroid.point = function(x, y) {
-      d3_geo_pathCentroid.point = nextPoint;
-      x00 = x0 = x, y00 = y0 = y;
-    };
-    function nextPoint(x, y) {
-      var z = y0 * x - x0 * y;
-      d3_geo_centroidX += z * (x0 + x);
-      d3_geo_centroidY += z * (y0 + y);
-      d3_geo_centroidZ += z * 3;
-      x0 = x, y0 = y;
-    }
-    d3_geo_pathCentroid.lineEnd = function() {
-      nextPoint(x00, y00);
-    };
-  }
-  function d3_geo_pathContext(context) {
-    var pointRadius = 4.5;
-    var stream = {
-      point: point,
-      lineStart: function() {
-        stream.point = pointLineStart;
-      },
-      lineEnd: lineEnd,
-      polygonStart: function() {
-        stream.lineEnd = lineEndPolygon;
-      },
-      polygonEnd: function() {
-        stream.lineEnd = lineEnd;
-        stream.point = point;
-      },
-      pointRadius: function(_) {
-        pointRadius = _;
-        return stream;
-      },
-      result: d3_noop
-    };
-    function point(x, y) {
-      context.moveTo(x, y);
-      context.arc(x, y, pointRadius, 0, 2 * π);
-    }
-    function pointLineStart(x, y) {
-      context.moveTo(x, y);
-      stream.point = pointLine;
-    }
-    function pointLine(x, y) {
-      context.lineTo(x, y);
-    }
-    function lineEnd() {
-      stream.point = point;
-    }
-    function lineEndPolygon() {
-      context.closePath();
-    }
-    return stream;
-  }
-  d3.geo.path = function() {
-    var pointRadius = 4.5, projection, context, projectStream, contextStream;
-    function path(object) {
-      if (object) d3.geo.stream(object, projectStream(contextStream.pointRadius(typeof pointRadius === "function" ? +pointRadius.apply(this, arguments) : pointRadius)));
-      return contextStream.result();
-    }
-    path.area = function(object) {
-      d3_geo_pathAreaSum = 0;
-      d3.geo.stream(object, projectStream(d3_geo_pathArea));
-      return d3_geo_pathAreaSum;
-    };
-    path.centroid = function(object) {
-      d3_geo_centroidDimension = d3_geo_centroidX = d3_geo_centroidY = d3_geo_centroidZ = 0;
-      d3.geo.stream(object, projectStream(d3_geo_pathCentroid));
-      return d3_geo_centroidZ ? [ d3_geo_centroidX / d3_geo_centroidZ, d3_geo_centroidY / d3_geo_centroidZ ] : undefined;
-    };
-    path.bounds = function(object) {
-      d3_geo_pathBoundsX1 = d3_geo_pathBoundsY1 = -(d3_geo_pathBoundsX0 = d3_geo_pathBoundsY0 = Infinity);
-      d3.geo.stream(object, projectStream(d3_geo_pathBounds));
-      return [ [ d3_geo_pathBoundsX0, d3_geo_pathBoundsY0 ], [ d3_geo_pathBoundsX1, d3_geo_pathBoundsY1 ] ];
-    };
-    path.projection = function(_) {
-      if (!arguments.length) return projection;
-      projectStream = (projection = _) ? _.stream || d3_geo_pathProjectStream(_) : d3_identity;
-      return path;
-    };
-    path.context = function(_) {
-      if (!arguments.length) return context;
-      contextStream = (context = _) == null ? new d3_geo_pathBuffer() : new d3_geo_pathContext(_);
-      return path;
-    };
-    path.pointRadius = function(_) {
-      if (!arguments.length) return pointRadius;
-      pointRadius = typeof _ === "function" ? _ : +_;
-      return path;
-    };
-    return path.projection(d3.geo.albersUsa()).context(null);
-  };
-  function d3_geo_pathProjectStream(project) {
-    var resample = d3_geo_resample(function(λ, φ) {
-      return project([ λ * d3_degrees, φ * d3_degrees ]);
-    });
-    return function(stream) {
-      stream = resample(stream);
-      return {
-        point: function(λ, φ) {
-          stream.point(λ * d3_radians, φ * d3_radians);
-        },
-        sphere: function() {
-          stream.sphere();
-        },
-        lineStart: function() {
-          stream.lineStart();
-        },
-        lineEnd: function() {
-          stream.lineEnd();
-        },
-        polygonStart: function() {
-          stream.polygonStart();
-        },
-        polygonEnd: function() {
-          stream.polygonEnd();
-        }
-      };
-    };
-  }
   function d3_geo_azimuthal(scale, angle) {
     function azimuthal(λ, φ) {
       var cosλ = Math.cos(λ), cosφ = Math.cos(φ), k = scale(cosλ * cosφ);
@@ -4299,6 +4456,7 @@ d3 = function() {
   var d3_svg_lineInterpolators = d3.map({
     linear: d3_svg_lineLinear,
     "linear-closed": d3_svg_lineLinearClosed,
+    step: d3_svg_lineStep,
     "step-before": d3_svg_lineStepBefore,
     "step-after": d3_svg_lineStepAfter,
     basis: d3_svg_lineBasis,
@@ -4319,6 +4477,12 @@ d3 = function() {
   }
   function d3_svg_lineLinearClosed(points) {
     return d3_svg_lineLinear(points) + "Z";
+  }
+  function d3_svg_lineStep(points) {
+    var i = 0, n = points.length, p = points[0], path = [ p[0], ",", p[1] ];
+    while (++i < n) path.push("H", (p[0] + (p = points[i])[0]) / 2, "V", p[1]);
+    if (n > 1) path.push("H", p[0]);
+    return path.join("");
   }
   function d3_svg_lineStepBefore(points) {
     var i = 0, n = points.length, p = points[0], path = [ p[0], ",", p[1] ];
@@ -4379,9 +4543,9 @@ d3 = function() {
   }
   function d3_svg_lineBasis(points) {
     if (points.length < 3) return d3_svg_lineLinear(points);
-    var i = 1, n = points.length, pi = points[0], x0 = pi[0], y0 = pi[1], px = [ x0, x0, x0, (pi = points[1])[0] ], py = [ y0, y0, y0, pi[1] ], path = [ x0, ",", y0 ];
-    d3_svg_lineBasisBezier(path, px, py);
-    while (++i < n) {
+    var i = 1, n = points.length, pi = points[0], x0 = pi[0], y0 = pi[1], px = [ x0, x0, x0, (pi = points[1])[0] ], py = [ y0, y0, y0, pi[1] ], path = [ x0, ",", y0, "L", d3_svg_lineDot4(d3_svg_lineBasisBezier3, px), ",", d3_svg_lineDot4(d3_svg_lineBasisBezier3, py) ];
+    points.push(points[n - 1]);
+    while (++i <= n) {
       pi = points[i];
       px.shift();
       px.push(pi[0]);
@@ -4389,14 +4553,8 @@ d3 = function() {
       py.push(pi[1]);
       d3_svg_lineBasisBezier(path, px, py);
     }
-    i = -1;
-    while (++i < 2) {
-      px.shift();
-      px.push(pi[0]);
-      py.shift();
-      py.push(pi[1]);
-      d3_svg_lineBasisBezier(path, px, py);
-    }
+    points.pop();
+    path.push("L", pi);
     return path.join("");
   }
   function d3_svg_lineBasisOpen(points) {
@@ -4583,50 +4741,55 @@ d3 = function() {
     return (f - b) * (c - a) - (d - b) * (e - a) > 0;
   }
   d3.geom.polygon = function(coordinates) {
-    coordinates.area = function() {
-      var i = 0, n = coordinates.length, area = coordinates[n - 1][1] * coordinates[0][0] - coordinates[n - 1][0] * coordinates[0][1];
-      while (++i < n) {
-        area += coordinates[i - 1][1] * coordinates[i][0] - coordinates[i - 1][0] * coordinates[i][1];
-      }
-      return area * .5;
-    };
-    coordinates.centroid = function(k) {
-      var i = -1, n = coordinates.length, x = 0, y = 0, a, b = coordinates[n - 1], c;
-      if (!arguments.length) k = -1 / (6 * coordinates.area());
-      while (++i < n) {
-        a = b;
-        b = coordinates[i];
-        c = a[0] * b[1] - b[0] * a[1];
-        x += (a[0] + b[0]) * c;
-        y += (a[1] + b[1]) * c;
-      }
-      return [ x * k, y * k ];
-    };
-    coordinates.clip = function(subject) {
-      var input, i = -1, n = coordinates.length, j, m, a = coordinates[n - 1], b, c, d;
-      while (++i < n) {
-        input = subject.slice();
-        subject.length = 0;
-        b = coordinates[i];
-        c = input[(m = input.length) - 1];
-        j = -1;
-        while (++j < m) {
-          d = input[j];
-          if (d3_geom_polygonInside(d, a, b)) {
-            if (!d3_geom_polygonInside(c, a, b)) {
-              subject.push(d3_geom_polygonIntersect(c, d, a, b));
-            }
-            subject.push(d);
-          } else if (d3_geom_polygonInside(c, a, b)) {
+    d3_subclass(coordinates, d3_geom_polygonPrototype);
+    return coordinates;
+  };
+  var d3_geom_polygonPrototype = d3.geom.polygon.prototype = [];
+  d3_geom_polygonPrototype.area = function() {
+    var i = -1, n = this.length, a, b = this[n - 1], area = 0;
+    while (++i < n) {
+      a = b;
+      b = this[i];
+      area += a[1] * b[0] - a[0] * b[1];
+    }
+    return area * .5;
+  };
+  d3_geom_polygonPrototype.centroid = function(k) {
+    var i = -1, n = this.length, x = 0, y = 0, a, b = this[n - 1], c;
+    if (!arguments.length) k = -1 / (6 * this.area());
+    while (++i < n) {
+      a = b;
+      b = this[i];
+      c = a[0] * b[1] - b[0] * a[1];
+      x += (a[0] + b[0]) * c;
+      y += (a[1] + b[1]) * c;
+    }
+    return [ x * k, y * k ];
+  };
+  d3_geom_polygonPrototype.clip = function(subject) {
+    var input, closed = d3_geom_polygonClosed(subject), i = -1, n = this.length - d3_geom_polygonClosed(this), j, m, a = this[n - 1], b, c, d;
+    while (++i < n) {
+      input = subject.slice();
+      subject.length = 0;
+      b = this[i];
+      c = input[(m = input.length - closed) - 1];
+      j = -1;
+      while (++j < m) {
+        d = input[j];
+        if (d3_geom_polygonInside(d, a, b)) {
+          if (!d3_geom_polygonInside(c, a, b)) {
             subject.push(d3_geom_polygonIntersect(c, d, a, b));
           }
-          c = d;
+          subject.push(d);
+        } else if (d3_geom_polygonInside(c, a, b)) {
+          subject.push(d3_geom_polygonIntersect(c, d, a, b));
         }
-        a = b;
+        c = d;
       }
-      return subject;
-    };
-    return coordinates;
+      if (closed) subject.push(subject[0]);
+      a = b;
+    }
+    return subject;
   };
   function d3_geom_polygonInside(p, a, b) {
     return (b[0] - a[0]) * (p[1] - a[1]) < (b[1] - a[1]) * (p[0] - a[0]);
@@ -4634,6 +4797,10 @@ d3 = function() {
   function d3_geom_polygonIntersect(c, d, a, b) {
     var x1 = c[0], x3 = a[0], x21 = d[0] - x1, x43 = b[0] - x3, y1 = c[1], y3 = a[1], y21 = d[1] - y1, y43 = b[1] - y3, ua = (x43 * (y1 - y3) - y43 * (x1 - x3)) / (y43 * x21 - x43 * y21);
     return [ x1 + ua * x21, y1 + ua * y21 ];
+  }
+  function d3_geom_polygonClosed(coordinates) {
+    var a = coordinates[0], b = coordinates[coordinates.length - 1];
+    return !(a[0] - b[0] || a[1] - b[1]);
   }
   d3.geom.delaunay = function(vertices) {
     var edges = vertices.map(function() {
@@ -4657,15 +4824,15 @@ d3 = function() {
     return triangles;
   };
   d3.geom.voronoi = function(points) {
-    var size = null, x = d3_svg_lineX, y = d3_svg_lineY, clip;
+    var x = d3_svg_lineX, y = d3_svg_lineY, clipPolygon = null;
     if (arguments.length) return voronoi(points);
     function voronoi(data) {
       var points, polygons = data.map(function() {
         return [];
       }), fx = d3_functor(x), fy = d3_functor(y), d, i, n = data.length, Z = 1e6;
-      if (fx === d3_svg_lineX && fy === d3_svg_lineY) points = data; else for (points = [], 
+      if (fx === d3_svg_lineX && fy === d3_svg_lineY) points = data; else for (points = new Array(n), 
       i = 0; i < n; ++i) {
-        points.push([ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ]);
+        points[i] = [ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ];
       }
       d3_geom_voronoiTessellate(points, function(e) {
         var s1, s2, x1, x2, y1, y2;
@@ -4724,7 +4891,7 @@ d3 = function() {
           }
         }
       });
-      if (clip) for (i = 0; i < n; ++i) clip(polygons[i]);
+      if (clipPolygon) for (i = 0; i < n; ++i) clipPolygon.clip(polygons[i]);
       for (i = 0; i < n; ++i) polygons[i].point = data[i];
       return polygons;
     }
@@ -4734,22 +4901,25 @@ d3 = function() {
     voronoi.y = function(_) {
       return arguments.length ? (y = _, voronoi) : y;
     };
-    voronoi.size = function(_) {
-      if (!arguments.length) return size;
-      if (_ == null) {
-        clip = null;
-      } else {
-        size = [ +_[0], +_[1] ];
-        clip = d3.geom.polygon([ [ 0, 0 ], [ 0, size[1] ], size, [ size[0], 0 ] ]).clip;
+    voronoi.clipExtent = function(_) {
+      if (!arguments.length) return clipPolygon && [ clipPolygon[0], clipPolygon[2] ];
+      if (_ == null) clipPolygon = null; else {
+        var x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0], y2 = +_[1][1];
+        clipPolygon = d3.geom.polygon([ [ x1, y1 ], [ x1, y2 ], [ x2, y2 ], [ x2, y1 ] ]);
       }
       return voronoi;
+    };
+    voronoi.size = function(_) {
+      if (!arguments.length) return clipPolygon && clipPolygon[2];
+      return voronoi.clipExtent(_ && [ [ 0, 0 ], _ ]);
     };
     voronoi.links = function(data) {
       var points, graph = data.map(function() {
         return [];
       }), links = [], fx = d3_functor(x), fy = d3_functor(y), d, i, n = data.length;
-      if (fx === d3_svg_lineX && fy === d3_svg_lineY) points = data; else for (i = 0; i < n; ++i) {
-        points.push([ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ]);
+      if (fx === d3_svg_lineX && fy === d3_svg_lineY) points = data; else for (points = new Array(n), 
+      i = 0; i < n; ++i) {
+        points[i] = [ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ];
       }
       d3_geom_voronoiTessellate(points, function(e) {
         var l = e.region.l.index, r = e.region.r.index;
@@ -4764,11 +4934,9 @@ d3 = function() {
     };
     voronoi.triangles = function(data) {
       if (x === d3_svg_lineX && y === d3_svg_lineY) return d3.geom.delaunay(data);
-      var points, point, fx = d3_functor(x), fy = d3_functor(y), d, i, n;
-      for (i = 0, points = [], n = data.length; i < n; ++i) {
-        point = [ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ];
-        point.data = d;
-        points.push(point);
+      var points = new Array(n), fx = d3_functor(x), fy = d3_functor(y), d, i = -1, n = data.length;
+      while (++i < n) {
+        (points[i] = [ +fx.call(this, d = data[i], i), +fy.call(this, d, i) ]).data = d;
       }
       return d3.geom.delaunay(points).map(function(triangle) {
         return triangle.map(function(point) {
@@ -5143,14 +5311,15 @@ d3 = function() {
     quadtree.y = function(_) {
       return arguments.length ? (y = _, quadtree) : y;
     };
+    quadtree.extent = function(_) {
+      if (!arguments.length) return x1 == null ? null : [ [ x1, y1 ], [ x2, y2 ] ];
+      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0], 
+      y2 = +_[1][1];
+      return quadtree;
+    };
     quadtree.size = function(_) {
-      if (!arguments.length) return x1 == null ? null : [ x2, y2 ];
-      if (_ == null) {
-        x1 = y1 = x2 = y2 = null;
-      } else {
-        x1 = y1 = 0;
-        x2 = +_[0], y2 = +_[1];
-      }
+      if (!arguments.length) return x1 == null ? null : [ x2 - x1, y2 - y1 ];
+      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = y1 = 0, x2 = +_[0], y2 = +_[1];
       return quadtree;
     };
     return quadtree;
@@ -5188,122 +5357,12 @@ d3 = function() {
       return "#" + d3_rgb_hex(Math.round(ar + br * t)) + d3_rgb_hex(Math.round(ag + bg * t)) + d3_rgb_hex(Math.round(ab + bb * t));
     };
   }
-  d3.transform = function(string) {
-    var g = d3_document.createElementNS(d3.ns.prefix.svg, "g");
-    return (d3.transform = function(string) {
-      if (string != null) {
-        g.setAttribute("transform", string);
-        var t = g.transform.baseVal.consolidate();
-      }
-      return new d3_transform(t ? t.matrix : d3_transformIdentity);
-    })(string);
-  };
-  function d3_transform(m) {
-    var r0 = [ m.a, m.b ], r1 = [ m.c, m.d ], kx = d3_transformNormalize(r0), kz = d3_transformDot(r0, r1), ky = d3_transformNormalize(d3_transformCombine(r1, r0, -kz)) || 0;
-    if (r0[0] * r1[1] < r1[0] * r0[1]) {
-      r0[0] *= -1;
-      r0[1] *= -1;
-      kx *= -1;
-      kz *= -1;
-    }
-    this.rotate = (kx ? Math.atan2(r0[1], r0[0]) : Math.atan2(-r1[0], r1[1])) * d3_degrees;
-    this.translate = [ m.e, m.f ];
-    this.scale = [ kx, ky ];
-    this.skew = ky ? Math.atan2(kz, ky) * d3_degrees : 0;
-  }
-  d3_transform.prototype.toString = function() {
-    return "translate(" + this.translate + ")rotate(" + this.rotate + ")skewX(" + this.skew + ")scale(" + this.scale + ")";
-  };
-  function d3_transformDot(a, b) {
-    return a[0] * b[0] + a[1] * b[1];
-  }
-  function d3_transformNormalize(a) {
-    var k = Math.sqrt(d3_transformDot(a, a));
-    if (k) {
-      a[0] /= k;
-      a[1] /= k;
-    }
-    return k;
-  }
-  function d3_transformCombine(a, b, k) {
-    a[0] += k * b[0];
-    a[1] += k * b[1];
-    return a;
-  }
-  var d3_transformIdentity = {
-    a: 1,
-    b: 0,
-    c: 0,
-    d: 1,
-    e: 0,
-    f: 0
-  };
-  d3.interpolateNumber = d3_interpolateNumber;
-  function d3_interpolateNumber(a, b) {
-    b -= a = +a;
-    return function(t) {
-      return a + b * t;
-    };
-  }
-  d3.interpolateTransform = d3_interpolateTransform;
-  function d3_interpolateTransform(a, b) {
-    var s = [], q = [], n, A = d3.transform(a), B = d3.transform(b), ta = A.translate, tb = B.translate, ra = A.rotate, rb = B.rotate, wa = A.skew, wb = B.skew, ka = A.scale, kb = B.scale;
-    if (ta[0] != tb[0] || ta[1] != tb[1]) {
-      s.push("translate(", null, ",", null, ")");
-      q.push({
-        i: 1,
-        x: d3_interpolateNumber(ta[0], tb[0])
-      }, {
-        i: 3,
-        x: d3_interpolateNumber(ta[1], tb[1])
-      });
-    } else if (tb[0] || tb[1]) {
-      s.push("translate(" + tb + ")");
-    } else {
-      s.push("");
-    }
-    if (ra != rb) {
-      if (ra - rb > 180) rb += 360; else if (rb - ra > 180) ra += 360;
-      q.push({
-        i: s.push(s.pop() + "rotate(", null, ")") - 2,
-        x: d3_interpolateNumber(ra, rb)
-      });
-    } else if (rb) {
-      s.push(s.pop() + "rotate(" + rb + ")");
-    }
-    if (wa != wb) {
-      q.push({
-        i: s.push(s.pop() + "skewX(", null, ")") - 2,
-        x: d3_interpolateNumber(wa, wb)
-      });
-    } else if (wb) {
-      s.push(s.pop() + "skewX(" + wb + ")");
-    }
-    if (ka[0] != kb[0] || ka[1] != kb[1]) {
-      n = s.push(s.pop() + "scale(", null, ",", null, ")");
-      q.push({
-        i: n - 4,
-        x: d3_interpolateNumber(ka[0], kb[0])
-      }, {
-        i: n - 2,
-        x: d3_interpolateNumber(ka[1], kb[1])
-      });
-    } else if (kb[0] != 1 || kb[1] != 1) {
-      s.push(s.pop() + "scale(" + kb + ")");
-    }
-    n = q.length;
-    return function(t) {
-      var i = -1, o;
-      while (++i < n) s[(o = q[i]).i] = o.x(t);
-      return s.join("");
-    };
-  }
   d3.interpolateObject = d3_interpolateObject;
   function d3_interpolateObject(a, b) {
     var i = {}, c = {}, k;
     for (k in a) {
       if (k in b) {
-        i[k] = d3_interpolateByName(k)(a[k], b[k]);
+        i[k] = d3_interpolate(a[k], b[k]);
       } else {
         c[k] = a[k];
       }
@@ -5316,6 +5375,13 @@ d3 = function() {
     return function(t) {
       for (k in i) c[k] = i[k](t);
       return c;
+    };
+  }
+  d3.interpolateNumber = d3_interpolateNumber;
+  function d3_interpolateNumber(a, b) {
+    b -= a = +a;
+    return function(t) {
+      return a + b * t;
     };
   }
   d3.interpolateString = d3_interpolateString;
@@ -5390,9 +5456,6 @@ d3 = function() {
     var i = d3.interpolators.length, f;
     while (--i >= 0 && !(f = d3.interpolators[i](a, b))) ;
     return f;
-  }
-  function d3_interpolateByName(name) {
-    return name == "transform" ? d3_interpolateTransform : d3_interpolate;
   }
   d3.interpolators = [ function(a, b) {
     var t = typeof b;
@@ -5544,6 +5607,109 @@ d3 = function() {
     b -= a;
     return function(t) {
       return Math.round(a + b * t);
+    };
+  }
+  d3.transform = function(string) {
+    var g = d3_document.createElementNS(d3.ns.prefix.svg, "g");
+    return (d3.transform = function(string) {
+      if (string != null) {
+        g.setAttribute("transform", string);
+        var t = g.transform.baseVal.consolidate();
+      }
+      return new d3_transform(t ? t.matrix : d3_transformIdentity);
+    })(string);
+  };
+  function d3_transform(m) {
+    var r0 = [ m.a, m.b ], r1 = [ m.c, m.d ], kx = d3_transformNormalize(r0), kz = d3_transformDot(r0, r1), ky = d3_transformNormalize(d3_transformCombine(r1, r0, -kz)) || 0;
+    if (r0[0] * r1[1] < r1[0] * r0[1]) {
+      r0[0] *= -1;
+      r0[1] *= -1;
+      kx *= -1;
+      kz *= -1;
+    }
+    this.rotate = (kx ? Math.atan2(r0[1], r0[0]) : Math.atan2(-r1[0], r1[1])) * d3_degrees;
+    this.translate = [ m.e, m.f ];
+    this.scale = [ kx, ky ];
+    this.skew = ky ? Math.atan2(kz, ky) * d3_degrees : 0;
+  }
+  d3_transform.prototype.toString = function() {
+    return "translate(" + this.translate + ")rotate(" + this.rotate + ")skewX(" + this.skew + ")scale(" + this.scale + ")";
+  };
+  function d3_transformDot(a, b) {
+    return a[0] * b[0] + a[1] * b[1];
+  }
+  function d3_transformNormalize(a) {
+    var k = Math.sqrt(d3_transformDot(a, a));
+    if (k) {
+      a[0] /= k;
+      a[1] /= k;
+    }
+    return k;
+  }
+  function d3_transformCombine(a, b, k) {
+    a[0] += k * b[0];
+    a[1] += k * b[1];
+    return a;
+  }
+  var d3_transformIdentity = {
+    a: 1,
+    b: 0,
+    c: 0,
+    d: 1,
+    e: 0,
+    f: 0
+  };
+  d3.interpolateTransform = d3_interpolateTransform;
+  function d3_interpolateTransform(a, b) {
+    var s = [], q = [], n, A = d3.transform(a), B = d3.transform(b), ta = A.translate, tb = B.translate, ra = A.rotate, rb = B.rotate, wa = A.skew, wb = B.skew, ka = A.scale, kb = B.scale;
+    if (ta[0] != tb[0] || ta[1] != tb[1]) {
+      s.push("translate(", null, ",", null, ")");
+      q.push({
+        i: 1,
+        x: d3_interpolateNumber(ta[0], tb[0])
+      }, {
+        i: 3,
+        x: d3_interpolateNumber(ta[1], tb[1])
+      });
+    } else if (tb[0] || tb[1]) {
+      s.push("translate(" + tb + ")");
+    } else {
+      s.push("");
+    }
+    if (ra != rb) {
+      if (ra - rb > 180) rb += 360; else if (rb - ra > 180) ra += 360;
+      q.push({
+        i: s.push(s.pop() + "rotate(", null, ")") - 2,
+        x: d3_interpolateNumber(ra, rb)
+      });
+    } else if (rb) {
+      s.push(s.pop() + "rotate(" + rb + ")");
+    }
+    if (wa != wb) {
+      q.push({
+        i: s.push(s.pop() + "skewX(", null, ")") - 2,
+        x: d3_interpolateNumber(wa, wb)
+      });
+    } else if (wb) {
+      s.push(s.pop() + "skewX(" + wb + ")");
+    }
+    if (ka[0] != kb[0] || ka[1] != kb[1]) {
+      n = s.push(s.pop() + "scale(", null, ",", null, ")");
+      q.push({
+        i: n - 4,
+        x: d3_interpolateNumber(ka[0], kb[0])
+      }, {
+        i: n - 2,
+        x: d3_interpolateNumber(ka[1], kb[1])
+      });
+    } else if (kb[0] != 1 || kb[1] != 1) {
+      s.push(s.pop() + "scale(" + kb + ")");
+    }
+    n = q.length;
+    return function(t) {
+      var i = -1, o;
+      while (++i < n) s[(o = q[i]).i] = o.x(t);
+      return s.join("");
     };
   }
   function d3_uninterpolateNumber(a, b) {
@@ -6338,7 +6504,7 @@ d3 = function() {
     return [ d3.min(values), d3.max(values) ];
   }
   d3.layout.tree = function() {
-    var hierarchy = d3.layout.hierarchy().sort(null).value(null), separation = d3_layout_treeSeparation, size = [ 1, 1 ];
+    var hierarchy = d3.layout.hierarchy().sort(null).value(null), separation = d3_layout_treeSeparation, size = [ 1, 1 ], nodeSize = false;
     function tree(d, i) {
       var nodes = hierarchy.call(this, d, i), root = nodes[0];
       function firstWalk(node, previousSibling) {
@@ -6419,7 +6585,11 @@ d3 = function() {
       firstWalk(root);
       secondWalk(root, -root._tree.prelim);
       var left = d3_layout_treeSearch(root, d3_layout_treeLeftmost), right = d3_layout_treeSearch(root, d3_layout_treeRightmost), deep = d3_layout_treeSearch(root, d3_layout_treeDeepest), x0 = left.x - separation(left, right) / 2, x1 = right.x + separation(right, left) / 2, y1 = deep.depth || 1;
-      d3_layout_treeVisitAfter(root, function(node) {
+      d3_layout_treeVisitAfter(root, nodeSize ? function(node) {
+        node.x *= size[0];
+        node.y = node.depth * size[1];
+        delete node._tree;
+      } : function(node) {
         node.x = (node.x - x0) / (x1 - x0) * size[0];
         node.y = node.depth / y1 * size[1];
         delete node._tree;
@@ -6432,8 +6602,13 @@ d3 = function() {
       return tree;
     };
     tree.size = function(x) {
-      if (!arguments.length) return size;
-      size = x;
+      if (!arguments.length) return nodeSize ? null : size;
+      nodeSize = (size = x) == null;
+      return tree;
+    };
+    tree.nodeSize = function(x) {
+      if (!arguments.length) return nodeSize ? size : null;
+      nodeSize = (size = x) != null;
       return tree;
     };
     return d3_layout_hierarchyRebind(tree, hierarchy);
@@ -6508,18 +6683,18 @@ d3 = function() {
     return vim._tree.ancestor.parent == node.parent ? vim._tree.ancestor : ancestor;
   }
   d3.layout.pack = function() {
-    var hierarchy = d3.layout.hierarchy().sort(d3_layout_packSort), padding = 0, size = [ 1, 1 ];
+    var hierarchy = d3.layout.hierarchy().sort(d3_layout_packSort), padding = 0, size = [ 1, 1 ], radius;
     function pack(d, i) {
-      var nodes = hierarchy.call(this, d, i), root = nodes[0];
-      root.x = 0;
-      root.y = 0;
+      var nodes = hierarchy.call(this, d, i), root = nodes[0], w = size[0], h = size[1], r = radius == null ? Math.sqrt : typeof radius === "function" ? radius : function() {
+        return radius;
+      };
+      root.x = root.y = 0;
       d3_layout_treeVisitAfter(root, function(d) {
-        d.r = Math.sqrt(d.value);
+        d.r = +r(d.value);
       });
       d3_layout_treeVisitAfter(root, d3_layout_packSiblings);
-      var w = size[0], h = size[1], k = Math.max(2 * root.r / w, 2 * root.r / h);
-      if (padding > 0) {
-        var dr = padding * k / 2;
+      if (padding) {
+        var dr = padding * (radius ? 1 : Math.max(2 * root.r / w, 2 * root.r / h)) / 2;
         d3_layout_treeVisitAfter(root, function(d) {
           d.r += dr;
         });
@@ -6527,14 +6702,18 @@ d3 = function() {
         d3_layout_treeVisitAfter(root, function(d) {
           d.r -= dr;
         });
-        k = Math.max(2 * root.r / w, 2 * root.r / h);
       }
-      d3_layout_packTransform(root, w / 2, h / 2, 1 / k);
+      d3_layout_packTransform(root, w / 2, h / 2, radius ? 1 : 1 / Math.max(2 * root.r / w, 2 * root.r / h));
       return nodes;
     }
-    pack.size = function(x) {
+    pack.size = function(_) {
       if (!arguments.length) return size;
-      size = x;
+      size = _;
+      return pack;
+    };
+    pack.radius = function(_) {
+      if (!arguments.length) return radius;
+      radius = _ == null || typeof _ === "function" ? _ : +_;
       return pack;
     };
     pack.padding = function(_) {
@@ -6560,7 +6739,7 @@ d3 = function() {
   }
   function d3_layout_packIntersects(a, b) {
     var dx = b.x - a.x, dy = b.y - a.y, dr = a.r + b.r;
-    return dr * dr - dx * dx - dy * dy > .001;
+    return .999 * dr * dr > dx * dx + dy * dy;
   }
   function d3_layout_packSiblings(node) {
     if (!(nodes = node.children) || !(n = nodes.length)) return;
@@ -6658,7 +6837,7 @@ d3 = function() {
     }
   }
   d3.layout.cluster = function() {
-    var hierarchy = d3.layout.hierarchy().sort(null).value(null), separation = d3_layout_treeSeparation, size = [ 1, 1 ];
+    var hierarchy = d3.layout.hierarchy().sort(null).value(null), separation = d3_layout_treeSeparation, size = [ 1, 1 ], nodeSize = false;
     function cluster(d, i) {
       var nodes = hierarchy.call(this, d, i), root = nodes[0], previousNode, x = 0;
       d3_layout_treeVisitAfter(root, function(node) {
@@ -6673,7 +6852,10 @@ d3 = function() {
         }
       });
       var left = d3_layout_clusterLeft(root), right = d3_layout_clusterRight(root), x0 = left.x - separation(left, right) / 2, x1 = right.x + separation(right, left) / 2;
-      d3_layout_treeVisitAfter(root, function(node) {
+      d3_layout_treeVisitAfter(root, nodeSize ? function(node) {
+        node.x = (node.x - root.x) * size[0];
+        node.y = (root.y - node.y) * size[1];
+      } : function(node) {
         node.x = (node.x - x0) / (x1 - x0) * size[0];
         node.y = (1 - (root.y ? node.y / root.y : 1)) * size[1];
       });
@@ -6685,8 +6867,13 @@ d3 = function() {
       return cluster;
     };
     cluster.size = function(x) {
-      if (!arguments.length) return size;
-      size = x;
+      if (!arguments.length) return nodeSize ? null : size;
+      nodeSize = (size = x) == null;
+      return cluster;
+    };
+    cluster.nodeSize = function(x) {
+      if (!arguments.length) return nodeSize ? size : null;
+      nodeSize = (size = x) != null;
       return cluster;
     };
     return d3_layout_hierarchyRebind(cluster, hierarchy);
@@ -6930,12 +7117,24 @@ d3 = function() {
       dx = i0, i0 = i1, i1 = dx;
       dx = x0, x0 = x1, x1 = dx;
     }
-    if (nice = nice(x1 - x0)) {
-      domain[i0] = nice.floor(x0);
-      domain[i1] = nice.ceil(x1);
-    }
+    domain[i0] = nice.floor(x0);
+    domain[i1] = nice.ceil(x1);
     return domain;
   }
+  function d3_scale_niceStep(step) {
+    return step ? {
+      floor: function(x) {
+        return Math.floor(x / step) * step;
+      },
+      ceil: function(x) {
+        return Math.ceil(x / step) * step;
+      }
+    } : d3_scale_niceIdentity;
+  }
+  var d3_scale_niceIdentity = {
+    floor: d3_identity,
+    ceil: d3_identity
+  };
   function d3_scale_polylinear(domain, range, uninterpolate, interpolate) {
     var u = [], i = [], j = 0, k = Math.min(domain.length, range.length) - 1;
     if (domain[k] < domain[0]) {
@@ -6997,8 +7196,8 @@ d3 = function() {
     scale.tickFormat = function(m, format) {
       return d3_scale_linearTickFormat(domain, m, format);
     };
-    scale.nice = function() {
-      d3_scale_nice(domain, d3_scale_linearNice);
+    scale.nice = function(m) {
+      d3_scale_linearNice(domain, m);
       return rescale();
     };
     scale.copy = function() {
@@ -7009,16 +7208,12 @@ d3 = function() {
   function d3_scale_linearRebind(scale, linear) {
     return d3.rebind(scale, linear, "range", "rangeRound", "interpolate", "clamp");
   }
-  function d3_scale_linearNice(dx) {
-    dx = Math.pow(10, Math.round(Math.log(dx) / Math.LN10) - 1);
-    return dx && {
-      floor: function(x) {
-        return Math.floor(x / dx) * dx;
-      },
-      ceil: function(x) {
-        return Math.ceil(x / dx) * dx;
-      }
-    };
+  function d3_scale_linearNice(domain, m) {
+    return d3_scale_nice(domain, d3_scale_niceStep(m ? d3_scale_linearTickRange(domain, m)[2] : d3_scale_linearNiceStep(domain)));
+  }
+  function d3_scale_linearNiceStep(domain) {
+    var extent = d3_scaleExtent(domain), span = extent[1] - extent[0];
+    return Math.pow(10, Math.round(Math.log(span) / Math.LN10) - 1);
   }
   function d3_scale_linearTickRange(domain, m) {
     var extent = d3_scaleExtent(domain), span = extent[1] - extent[0], step = Math.pow(10, Math.floor(Math.log(span / m) / Math.LN10)), err = m / span * step;
@@ -7038,9 +7233,15 @@ d3 = function() {
     }) : ",." + precision + "f");
   }
   d3.scale.log = function() {
-    return d3_scale_log(d3.scale.linear().domain([ 0, Math.LN10 ]), 10, d3_scale_logp, d3_scale_powp, [ 1, 10 ]);
+    return d3_scale_log(d3.scale.linear().domain([ 0, 1 ]), 10, true, [ 1, 10 ]);
   };
-  function d3_scale_log(linear, base, log, pow, domain) {
+  function d3_scale_log(linear, base, positive, domain) {
+    function log(x) {
+      return (positive ? Math.log(x < 0 ? 0 : x) : -Math.log(x > 0 ? 0 : -x)) / Math.log(base);
+    }
+    function pow(x) {
+      return positive ? Math.pow(base, x) : -Math.pow(base, -x);
+    }
     function scale(x) {
       return linear(log(x));
     }
@@ -7049,30 +7250,31 @@ d3 = function() {
     };
     scale.domain = function(x) {
       if (!arguments.length) return domain;
-      if (x[0] < 0) log = d3_scale_logn, pow = d3_scale_pown; else log = d3_scale_logp, 
-      pow = d3_scale_powp;
+      positive = x[0] >= 0;
       linear.domain((domain = x.map(Number)).map(log));
       return scale;
     };
     scale.base = function(_) {
       if (!arguments.length) return base;
       base = +_;
+      linear.domain(domain.map(log));
       return scale;
     };
     scale.nice = function() {
-      linear.domain(d3_scale_nice(domain, nice).map(log));
+      var niced = d3_scale_nice(domain.map(log), positive ? Math : d3_scale_logNiceNegative);
+      linear.domain(niced);
+      domain = niced.map(pow);
       return scale;
     };
     scale.ticks = function() {
-      var extent = d3_scaleExtent(linear.domain()), ticks = [];
-      if (extent.every(isFinite)) {
-        var b = Math.log(base), i = Math.floor(extent[0] / b), j = Math.ceil(extent[1] / b), u = pow(extent[0]), v = pow(extent[1]), n = base % 1 ? 2 : base;
-        if (log === d3_scale_logn) {
-          ticks.push(-Math.pow(base, -i));
-          for (;i++ < j; ) for (var k = n - 1; k > 0; k--) ticks.push(-Math.pow(base, -i) * k);
+      var extent = d3_scaleExtent(domain), ticks = [], u = extent[0], v = extent[1], i = Math.floor(log(u)), j = Math.ceil(log(v)), n = base % 1 ? 2 : base;
+      if (isFinite(j - i)) {
+        if (positive) {
+          for (;i < j; i++) for (var k = 1; k < n; k++) ticks.push(pow(i) * k);
+          ticks.push(pow(i));
         } else {
-          for (;i < j; i++) for (var k = 1; k < n; k++) ticks.push(Math.pow(base, i) * k);
-          ticks.push(Math.pow(base, i));
+          ticks.push(pow(i));
+          for (;i++ < j; ) for (var k = n - 1; k > 0; k--) ticks.push(pow(i) * k);
         }
         for (i = 0; ticks[i] < u; i++) {}
         for (j = ticks.length; ticks[j - 1] > v; j--) {}
@@ -7081,51 +7283,27 @@ d3 = function() {
       return ticks;
     };
     scale.tickFormat = function(n, format) {
-      if (arguments.length < 2) format = d3_scale_logFormat;
-      if (!arguments.length) return format;
-      var b = Math.log(base), k = Math.max(.1, n / scale.ticks().length), f = log === d3_scale_logn ? (e = -1e-12, 
-      Math.floor) : (e = 1e-12, Math.ceil), e;
+      if (!arguments.length) return d3_scale_logFormat;
+      if (arguments.length < 2) format = d3_scale_logFormat; else if (typeof format !== "function") format = d3.format(format);
+      var k = Math.max(.1, n / scale.ticks().length), f = positive ? (e = 1e-12, Math.ceil) : (e = -1e-12, 
+      Math.floor), e;
       return function(d) {
-        return d / pow(b * f(log(d) / b + e)) <= k ? format(d) : "";
+        return d / pow(f(log(d) + e)) <= k ? format(d) : "";
       };
     };
     scale.copy = function() {
-      return d3_scale_log(linear.copy(), base, log, pow, domain);
+      return d3_scale_log(linear.copy(), base, positive, domain);
     };
-    function nice() {
-      return log === d3_scale_logp ? {
-        floor: floor,
-        ceil: ceil
-      } : {
-        floor: function(x) {
-          return -ceil(-x);
-        },
-        ceil: function(x) {
-          return -floor(-x);
-        }
-      };
-    }
-    function floor(x) {
-      return Math.pow(base, Math.floor(Math.log(x) / Math.log(base)));
-    }
-    function ceil(x) {
-      return Math.pow(base, Math.ceil(Math.log(x) / Math.log(base)));
-    }
     return d3_scale_linearRebind(scale, linear);
   }
-  var d3_scale_logFormat = d3.format(".0e");
-  function d3_scale_logp(x) {
-    return Math.log(x < 0 ? 0 : x);
-  }
-  function d3_scale_powp(x) {
-    return Math.exp(x);
-  }
-  function d3_scale_logn(x) {
-    return -Math.log(x > 0 ? 0 : -x);
-  }
-  function d3_scale_pown(x) {
-    return -Math.exp(-x);
-  }
+  var d3_scale_logFormat = d3.format(".0e"), d3_scale_logNiceNegative = {
+    floor: function(x) {
+      return -Math.ceil(-x);
+    },
+    ceil: function(x) {
+      return -Math.floor(-x);
+    }
+  };
   d3.scale.pow = function() {
     return d3_scale_pow(d3.scale.linear(), 1, [ 0, 1 ]);
   };
@@ -7148,8 +7326,8 @@ d3 = function() {
     scale.tickFormat = function(m, format) {
       return d3_scale_linearTickFormat(domain, m, format);
     };
-    scale.nice = function() {
-      return scale.domain(d3_scale_nice(domain, d3_scale_linearNice));
+    scale.nice = function(m) {
+      return scale.domain(d3_scale_linearNice(domain, m));
     };
     scale.exponent = function(x) {
       if (!arguments.length) return exponent;
@@ -7265,10 +7443,10 @@ d3 = function() {
   d3.scale.category20c = function() {
     return d3.scale.ordinal().range(d3_category20c);
   };
-  var d3_category10 = [ "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf" ];
-  var d3_category20 = [ "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5" ];
-  var d3_category20b = [ "#393b79", "#5254a3", "#6b6ecf", "#9c9ede", "#637939", "#8ca252", "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39", "#e7ba52", "#e7cb94", "#843c39", "#ad494a", "#d6616b", "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6" ];
-  var d3_category20c = [ "#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#e6550d", "#fd8d3c", "#fdae6b", "#fdd0a2", "#31a354", "#74c476", "#a1d99b", "#c7e9c0", "#756bb1", "#9e9ac8", "#bcbddc", "#dadaeb", "#636363", "#969696", "#bdbdbd", "#d9d9d9" ];
+  var d3_category10 = [ 2062260, 16744206, 2924588, 14034728, 9725885, 9197131, 14907330, 8355711, 12369186, 1556175 ].map(d3_rgbString);
+  var d3_category20 = [ 2062260, 11454440, 16744206, 16759672, 2924588, 10018698, 14034728, 16750742, 9725885, 12955861, 9197131, 12885140, 14907330, 16234194, 8355711, 13092807, 12369186, 14408589, 1556175, 10410725 ].map(d3_rgbString);
+  var d3_category20b = [ 3750777, 5395619, 7040719, 10264286, 6519097, 9216594, 11915115, 13556636, 9202993, 12426809, 15186514, 15190932, 8666169, 11356490, 14049643, 15177372, 8077683, 10834324, 13528509, 14589654 ].map(d3_rgbString);
+  var d3_category20c = [ 3244733, 7057110, 10406625, 13032431, 15095053, 16616764, 16625259, 16634018, 3253076, 7652470, 10607003, 13101504, 7695281, 10394312, 12369372, 14342891, 6513507, 9868950, 12434877, 14277081 ].map(d3_rgbString);
   d3.scale.quantile = function() {
     return d3_scale_quantile([], []);
   };
@@ -7281,8 +7459,7 @@ d3 = function() {
       return scale;
     }
     function scale(x) {
-      if (isNaN(x = +x)) return NaN;
-      return range[d3.bisect(thresholds, x)];
+      if (!isNaN(x = +x)) return range[d3.bisect(thresholds, x)];
     }
     scale.domain = function(x) {
       if (!arguments.length) return domain;
@@ -7298,6 +7475,10 @@ d3 = function() {
     };
     scale.quantiles = function() {
       return thresholds;
+    };
+    scale.invertExtent = function(y) {
+      y = range.indexOf(y);
+      return y < 0 ? [ NaN, NaN ] : [ y > 0 ? thresholds[y - 1] : domain[0], y < thresholds.length ? thresholds[y] : domain[domain.length - 1] ];
     };
     scale.copy = function() {
       return d3_scale_quantile(domain, range);
@@ -7328,6 +7509,11 @@ d3 = function() {
       range = x;
       return rescale();
     };
+    scale.invertExtent = function(y) {
+      y = range.indexOf(y);
+      y = y < 0 ? NaN : y / kx + x0;
+      return [ y, y + 1 / kx ];
+    };
     scale.copy = function() {
       return d3_scale_quantize(x0, x1, range);
     };
@@ -7338,7 +7524,7 @@ d3 = function() {
   };
   function d3_scale_threshold(domain, range) {
     function scale(x) {
-      return range[d3.bisect(domain, x)];
+      if (x <= x) return range[d3.bisect(domain, x)];
     }
     scale.domain = function(_) {
       if (!arguments.length) return domain;
@@ -7349,6 +7535,10 @@ d3 = function() {
       if (!arguments.length) return range;
       range = _;
       return scale;
+    };
+    scale.invertExtent = function(y) {
+      y = range.indexOf(y);
+      return [ domain[y - 1], domain[y] ];
     };
     scale.copy = function() {
       return d3_scale_threshold(domain, range);
@@ -7684,29 +7874,26 @@ d3 = function() {
   d3.svg.symbolTypes = d3_svg_symbols.keys();
   var d3_svg_symbolSqrt3 = Math.sqrt(3), d3_svg_symbolTan30 = Math.tan(30 * d3_radians);
   function d3_transition(groups, id) {
-    d3_arraySubclass(groups, d3_transitionPrototype);
+    d3_subclass(groups, d3_transitionPrototype);
     groups.id = id;
     return groups;
   }
-  var d3_transitionPrototype = [], d3_transitionId = 0, d3_transitionInheritId, d3_transitionInherit = {
-    ease: d3_ease_cubicInOut,
-    delay: 0,
-    duration: 250
-  };
+  var d3_transitionPrototype = [], d3_transitionId = 0, d3_transitionInheritId, d3_transitionInherit;
   d3_transitionPrototype.call = d3_selectionPrototype.call;
   d3_transitionPrototype.empty = d3_selectionPrototype.empty;
   d3_transitionPrototype.node = d3_selectionPrototype.node;
+  d3_transitionPrototype.size = d3_selectionPrototype.size;
   d3.transition = function(selection) {
     return arguments.length ? d3_transitionInheritId ? selection.transition() : selection : d3_selectionRoot.transition();
   };
   d3.transition.prototype = d3_transitionPrototype;
   d3_transitionPrototype.select = function(selector) {
     var id = this.id, subgroups = [], subgroup, subnode, node;
-    if (typeof selector !== "function") selector = d3_selection_selector(selector);
+    selector = d3_selection_selector(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       subgroups.push(subgroup = []);
       for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
-        if ((node = group[i]) && (subnode = selector.call(node, node.__data__, i))) {
+        if ((node = group[i]) && (subnode = selector.call(node, node.__data__, i, j))) {
           if ("__data__" in node) subnode.__data__ = node.__data__;
           d3_transitionNode(subnode, i, id, node.__transition__[id]);
           subgroup.push(subnode);
@@ -7719,15 +7906,15 @@ d3 = function() {
   };
   d3_transitionPrototype.selectAll = function(selector) {
     var id = this.id, subgroups = [], subgroup, subnodes, node, subnode, transition;
-    if (typeof selector !== "function") selector = d3_selection_selectorAll(selector);
+    selector = d3_selection_selectorAll(selector);
     for (var j = -1, m = this.length; ++j < m; ) {
       for (var group = this[j], i = -1, n = group.length; ++i < n; ) {
         if (node = group[i]) {
           transition = node.__transition__[id];
-          subnodes = selector.call(node, node.__data__, i);
+          subnodes = selector.call(node, node.__data__, i, j);
           subgroups.push(subgroup = []);
           for (var k = -1, o = subnodes.length; ++k < o; ) {
-            d3_transitionNode(subnode = subnodes[k], k, id, transition);
+            if (subnode = subnodes[k]) d3_transitionNode(subnode, k, id, transition);
             subgroup.push(subnode);
           }
         }
@@ -7746,7 +7933,7 @@ d3 = function() {
         }
       }
     }
-    return d3_transition(subgroups, this.id, this.time).ease(this.ease());
+    return d3_transition(subgroups, this.id);
   };
   d3_transitionPrototype.tween = function(name, tween) {
     var id = this.id;
@@ -7770,7 +7957,7 @@ d3 = function() {
       for (value in nameNS) this.attr(value, nameNS[value]);
       return this;
     }
-    var interpolate = d3_interpolateByName(nameNS), name = d3.ns.qualify(nameNS);
+    var interpolate = nameNS == "transform" ? d3_interpolateTransform : d3_interpolate, name = d3.ns.qualify(nameNS);
     function attrNull() {
       this.removeAttribute(name);
     }
@@ -7821,14 +8008,13 @@ d3 = function() {
       }
       priority = "";
     }
-    var interpolate = d3_interpolateByName(name);
     function styleNull() {
       this.style.removeProperty(name);
     }
     function styleString(b) {
       return b == null ? styleNull : (b += "", function() {
         var a = d3_window.getComputedStyle(this, null).getPropertyValue(name), i;
-        return a !== b && (i = interpolate(a, b), function(t) {
+        return a !== b && (i = d3_interpolate(a, b), function(t) {
           this.style.setProperty(name, i(t), priority);
         });
       });
@@ -7897,7 +8083,8 @@ d3 = function() {
       d3_transitionInheritId = inheritId;
     } else {
       d3_selection_each(this, function(node) {
-        node.__transition__[id].event.on(type, listener);
+        var transition = node.__transition__[id];
+        (transition.event || (transition.event = d3.dispatch("start", "end"))).on(type, listener);
       });
     }
     return this;
@@ -7926,7 +8113,6 @@ d3 = function() {
       var time = inherit.time;
       transition = lock[id] = {
         tween: new d3_Map(),
-        event: d3.dispatch("start", "end"),
         time: time,
         ease: inherit.ease,
         delay: inherit.delay,
@@ -7934,19 +8120,20 @@ d3 = function() {
       };
       ++lock.count;
       d3.timer(function(elapsed) {
-        var d = node.__data__, ease = transition.ease, event = transition.event, delay = transition.delay, duration = transition.duration, tweened = [];
-        return delay <= elapsed ? start(elapsed) : d3.timer(start, delay, time), 1;
+        var d = node.__data__, ease = transition.ease, delay = transition.delay, duration = transition.duration, tweened = [];
+        if (delay <= elapsed) return start(elapsed);
+        d3_timer_replace(start, delay, time);
         function start(elapsed) {
           if (lock.active > id) return stop();
           lock.active = id;
-          event.start.call(node, d, i);
+          transition.event && transition.event.start.call(node, d, i);
           transition.tween.forEach(function(key, value) {
             if (value = value.call(node, d, i)) {
               tweened.push(value);
             }
           });
-          if (!tick(elapsed)) d3.timer(tick, 0, time);
-          return 1;
+          if (tick(elapsed)) return 1;
+          d3_timer_replace(tick, 0, time);
         }
         function tick(elapsed) {
           if (lock.active !== id) return stop();
@@ -7956,7 +8143,7 @@ d3 = function() {
           }
           if (t >= 1) {
             stop();
-            event.end.call(node, d, i);
+            transition.event && transition.event.end.call(node, d, i);
             return 1;
           }
         }
@@ -7965,7 +8152,6 @@ d3 = function() {
           return 1;
         }
       }, 0, time);
-      return transition;
     }
   }
   d3.svg.axis = function() {
@@ -7975,7 +8161,7 @@ d3 = function() {
         var g = d3.select(this);
         var ticks = tickValues == null ? scale.ticks ? scale.ticks.apply(scale, tickArguments_) : scale.domain() : tickValues, tickFormat = tickFormat_ == null ? scale.tickFormat ? scale.tickFormat.apply(scale, tickArguments_) : String : tickFormat_;
         var subticks = d3_svg_axisSubdivide(scale, ticks, tickSubdivide), subtick = g.selectAll(".tick.minor").data(subticks, String), subtickEnter = subtick.enter().insert("line", ".tick").attr("class", "tick minor").style("opacity", 1e-6), subtickExit = d3.transition(subtick.exit()).style("opacity", 1e-6).remove(), subtickUpdate = d3.transition(subtick).style("opacity", 1);
-        var tick = g.selectAll(".tick.major").data(ticks, String), tickEnter = tick.enter().insert("g", "path").attr("class", "tick major").style("opacity", 1e-6), tickExit = d3.transition(tick.exit()).style("opacity", 1e-6).remove(), tickUpdate = d3.transition(tick).style("opacity", 1), tickTransform;
+        var tick = g.selectAll(".tick.major").data(ticks, String), tickEnter = tick.enter().insert("g", ".domain").attr("class", "tick major").style("opacity", 1e-6), tickExit = d3.transition(tick.exit()).style("opacity", 1e-6).remove(), tickUpdate = d3.transition(tick).style("opacity", 1), tickTransform;
         var range = d3_scaleRange(scale), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"), 
         d3.transition(path));
         var scale1 = scale.copy(), scale0 = this.__chart__ || scale1;
@@ -8040,19 +8226,19 @@ d3 = function() {
             break;
           }
         }
-        if (scale.ticks) {
+        if (scale.rangeBand) {
+          var dx = scale1.rangeBand() / 2, x = function(d) {
+            return scale1(d) + dx;
+          };
+          tickEnter.call(tickTransform, x);
+          tickUpdate.call(tickTransform, x);
+        } else {
           tickEnter.call(tickTransform, scale0);
           tickUpdate.call(tickTransform, scale1);
           tickExit.call(tickTransform, scale1);
           subtickEnter.call(tickTransform, scale0);
           subtickUpdate.call(tickTransform, scale1);
           subtickExit.call(tickTransform, scale1);
-        } else {
-          var dx = scale1.rangeBand() / 2, x = function(d) {
-            return scale1(d) + dx;
-          };
-          tickEnter.call(tickTransform, x);
-          tickUpdate.call(tickTransform, x);
         }
       });
     }
@@ -8135,7 +8321,7 @@ d3 = function() {
     return subticks;
   }
   d3.svg.brush = function() {
-    var event = d3_eventDispatch(brush, "brushstart", "brush", "brushend"), x = null, y = null, resizes = d3_svg_brushResizes[0], extent = [ [ 0, 0 ], [ 0, 0 ] ], extentDomain;
+    var event = d3_eventDispatch(brush, "brushstart", "brush", "brushend"), x = null, y = null, resizes = d3_svg_brushResizes[0], extent = [ [ 0, 0 ], [ 0, 0 ] ], clamp = [ true, true ], extentDomain;
     function brush(g) {
       g.each(function() {
         var g = d3.select(this), bg = g.selectAll(".background").data([ 0 ]), fg = g.selectAll(".extent").data([ 0 ]), tz = g.selectAll(".resize").data(resizes, String), e;
@@ -8180,8 +8366,13 @@ d3 = function() {
       g.selectAll(".extent,.e>rect,.w>rect").attr("height", extent[1][1] - extent[0][1]);
     }
     function brushstart() {
-      var target = this, eventTarget = d3.select(d3.event.target), event_ = event.of(target, arguments), g = d3.select(target), resizing = eventTarget.datum(), resizingX = !/^(n|s)$/.test(resizing) && x, resizingY = !/^(e|w)$/.test(resizing) && y, dragging = eventTarget.classed("extent"), center, origin = mouse(), offset;
-      var w = d3.select(d3_window).on("mousemove.brush", brushmove).on("mouseup.brush", brushend).on("touchmove.brush", brushmove).on("touchend.brush", brushend).on("keydown.brush", keydown).on("keyup.brush", keyup);
+      var target = this, eventTarget = d3.select(d3.event.target), event_ = event.of(target, arguments), g = d3.select(target), resizing = eventTarget.datum(), resizingX = !/^(n|s)$/.test(resizing) && x, resizingY = !/^(e|w)$/.test(resizing) && y, dragging = eventTarget.classed("extent"), dragRestore = d3_event_dragSuppress(), center, origin = mouse(), offset;
+      var w = d3.select(d3_window).on("keydown.brush", keydown).on("keyup.brush", keyup);
+      if (d3.event.changedTouches) {
+        w.on("touchmove.brush", brushmove).on("touchend.brush", brushend);
+      } else {
+        w.on("mousemove.brush", brushmove).on("mouseup.brush", brushend);
+      }
       if (dragging) {
         origin[0] = extent[0][0] - origin[0];
         origin[1] = extent[0][1] - origin[1];
@@ -8197,7 +8388,6 @@ d3 = function() {
         type: "brushstart"
       });
       brushmove();
-      d3_eventCancel();
       function mouse() {
         var touches = d3.event.changedTouches;
         return touches ? d3.touches(target, touches)[0] : d3.mouse(target);
@@ -8210,7 +8400,7 @@ d3 = function() {
             origin[1] -= extent[1][1];
             dragging = 2;
           }
-          d3_eventCancel();
+          d3_eventPreventDefault();
         }
       }
       function keyup() {
@@ -8218,7 +8408,7 @@ d3 = function() {
           origin[0] += extent[1][0];
           origin[1] += extent[1][1];
           dragging = 0;
-          d3_eventCancel();
+          d3_eventPreventDefault();
         }
       }
       function brushmove() {
@@ -8256,7 +8446,7 @@ d3 = function() {
           r0 -= position;
           r1 -= size + position;
         }
-        min = Math.max(r0, Math.min(r1, point[i]));
+        min = clamp[i] ? Math.max(r0, Math.min(r1, point[i])) : point[i];
         if (dragging) {
           max = (min += position) + size;
         } else {
@@ -8280,10 +8470,10 @@ d3 = function() {
         g.style("pointer-events", "all").selectAll(".resize").style("display", brush.empty() ? "none" : null);
         d3.select("body").style("cursor", null);
         w.on("mousemove.brush", null).on("mouseup.brush", null).on("touchmove.brush", null).on("touchend.brush", null).on("keydown.brush", null).on("keyup.brush", null);
+        dragRestore();
         event_({
           type: "brushend"
         });
-        d3_eventCancel();
       }
     }
     brush.x = function(z) {
@@ -8296,6 +8486,11 @@ d3 = function() {
       if (!arguments.length) return y;
       y = z;
       resizes = d3_svg_brushResizes[!x << 1 | !y];
+      return brush;
+    };
+    brush.clamp = function(z) {
+      if (!arguments.length) return x && y ? clamp : x || y ? clamp[+!x] : null;
+      if (x && y) clamp = [ !!z[0], !!z[1] ]; else if (x || y) clamp[+!x] = !!z;
       return brush;
     };
     brush.extent = function(z) {
@@ -8502,7 +8697,7 @@ d3 = function() {
   d3.time.years = d3.time.year.range;
   d3.time.years.utc = d3.time.year.utc.range;
   d3.time.day = d3_time_interval(function(date) {
-    var day = new d3_time(1970, 0);
+    var day = new d3_time(2e3, 0);
     day.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
     return day;
   }, function(date, offset) {
@@ -8568,7 +8763,10 @@ d3 = function() {
       if (i != string.length) return null;
       if ("p" in d) d.H = d.H % 12 + d.p * 12;
       var date = new d3_time();
-      date.setFullYear(d.y, d.m, d.d);
+      if ("j" in d) date.setFullYear(d.y, 0, d.j); else if ("w" in d && ("W" in d || "U" in d)) {
+        date.setFullYear(d.y, 0, 1);
+        date.setFullYear(d.y, 0, "W" in d ? (d.w + 6) % 7 + d.W * 7 - (date.getDay() + 5) % 7 : d.w + d.U * 7 - (date.getDay() + 6) % 7);
+      } else date.setFullYear(d.y, d.m, d.d);
       date.setHours(d.H, d.M, d.S, d.L);
       return date;
     };
@@ -8600,11 +8798,10 @@ d3 = function() {
     return map;
   }
   function d3_time_formatPad(value, fill, width) {
-    value += "";
-    var length = value.length;
-    return length < width ? new Array(width - length + 1).join(fill) + value : value;
+    var sign = value < 0 ? "-" : "", string = (sign ? -value : value) + "", length = string.length;
+    return sign + (length < width ? new Array(width - length + 1).join(fill) + string : string);
   }
-  var d3_time_dayRe = d3_time_formatRe(d3_time_days), d3_time_dayAbbrevRe = d3_time_formatRe(d3_time_dayAbbreviations), d3_time_monthRe = d3_time_formatRe(d3_time_months), d3_time_monthLookup = d3_time_formatLookup(d3_time_months), d3_time_monthAbbrevRe = d3_time_formatRe(d3_time_monthAbbreviations), d3_time_monthAbbrevLookup = d3_time_formatLookup(d3_time_monthAbbreviations);
+  var d3_time_dayRe = d3_time_formatRe(d3_time_days), d3_time_dayLookup = d3_time_formatLookup(d3_time_days), d3_time_dayAbbrevRe = d3_time_formatRe(d3_time_dayAbbreviations), d3_time_dayAbbrevLookup = d3_time_formatLookup(d3_time_dayAbbreviations), d3_time_monthRe = d3_time_formatRe(d3_time_months), d3_time_monthLookup = d3_time_formatLookup(d3_time_months), d3_time_monthAbbrevRe = d3_time_formatRe(d3_time_monthAbbreviations), d3_time_monthAbbrevLookup = d3_time_formatLookup(d3_time_monthAbbreviations), d3_time_percentRe = /^%/;
   var d3_time_formatPads = {
     "-": "",
     _: " ",
@@ -8686,35 +8883,55 @@ d3 = function() {
     e: d3_time_parseDay,
     H: d3_time_parseHour24,
     I: d3_time_parseHour24,
+    j: d3_time_parseDayOfYear,
     L: d3_time_parseMilliseconds,
     m: d3_time_parseMonthNumber,
     M: d3_time_parseMinutes,
     p: d3_time_parseAmPm,
     S: d3_time_parseSeconds,
+    U: d3_time_parseWeekNumberSunday,
+    w: d3_time_parseWeekdayNumber,
+    W: d3_time_parseWeekNumberMonday,
     x: d3_time_parseLocaleDate,
     X: d3_time_parseLocaleTime,
     y: d3_time_parseYear,
-    Y: d3_time_parseFullYear
+    Y: d3_time_parseFullYear,
+    "%": d3_time_parseLiteralPercent
   };
   function d3_time_parseWeekdayAbbrev(date, string, i) {
     d3_time_dayAbbrevRe.lastIndex = 0;
     var n = d3_time_dayAbbrevRe.exec(string.substring(i));
-    return n ? i += n[0].length : -1;
+    return n ? (date.w = d3_time_dayAbbrevLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
   }
   function d3_time_parseWeekday(date, string, i) {
     d3_time_dayRe.lastIndex = 0;
     var n = d3_time_dayRe.exec(string.substring(i));
-    return n ? i += n[0].length : -1;
+    return n ? (date.w = d3_time_dayLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function d3_time_parseWeekdayNumber(date, string, i) {
+    d3_time_numberRe.lastIndex = 0;
+    var n = d3_time_numberRe.exec(string.substring(i, i + 1));
+    return n ? (date.w = +n[0], i + n[0].length) : -1;
+  }
+  function d3_time_parseWeekNumberSunday(date, string, i) {
+    d3_time_numberRe.lastIndex = 0;
+    var n = d3_time_numberRe.exec(string.substring(i));
+    return n ? (date.U = +n[0], i + n[0].length) : -1;
+  }
+  function d3_time_parseWeekNumberMonday(date, string, i) {
+    d3_time_numberRe.lastIndex = 0;
+    var n = d3_time_numberRe.exec(string.substring(i));
+    return n ? (date.W = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseMonthAbbrev(date, string, i) {
     d3_time_monthAbbrevRe.lastIndex = 0;
     var n = d3_time_monthAbbrevRe.exec(string.substring(i));
-    return n ? (date.m = d3_time_monthAbbrevLookup.get(n[0].toLowerCase()), i += n[0].length) : -1;
+    return n ? (date.m = d3_time_monthAbbrevLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
   }
   function d3_time_parseMonth(date, string, i) {
     d3_time_monthRe.lastIndex = 0;
     var n = d3_time_monthRe.exec(string.substring(i));
-    return n ? (date.m = d3_time_monthLookup.get(n[0].toLowerCase()), i += n[0].length) : -1;
+    return n ? (date.m = d3_time_monthLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
   }
   function d3_time_parseLocaleFull(date, string, i) {
     return d3_time_parse(date, d3_time_formats.c.toString(), string, i);
@@ -8728,12 +8945,12 @@ d3 = function() {
   function d3_time_parseFullYear(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 4));
-    return n ? (date.y = +n[0], i += n[0].length) : -1;
+    return n ? (date.y = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseYear(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.y = d3_time_expandYear(+n[0]), i += n[0].length) : -1;
+    return n ? (date.y = d3_time_expandYear(+n[0]), i + n[0].length) : -1;
   }
   function d3_time_expandYear(d) {
     return d + (d > 68 ? 1900 : 2e3);
@@ -8741,32 +8958,37 @@ d3 = function() {
   function d3_time_parseMonthNumber(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.m = n[0] - 1, i += n[0].length) : -1;
+    return n ? (date.m = n[0] - 1, i + n[0].length) : -1;
   }
   function d3_time_parseDay(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.d = +n[0], i += n[0].length) : -1;
+    return n ? (date.d = +n[0], i + n[0].length) : -1;
+  }
+  function d3_time_parseDayOfYear(date, string, i) {
+    d3_time_numberRe.lastIndex = 0;
+    var n = d3_time_numberRe.exec(string.substring(i, i + 3));
+    return n ? (date.j = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseHour24(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.H = +n[0], i += n[0].length) : -1;
+    return n ? (date.H = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseMinutes(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.M = +n[0], i += n[0].length) : -1;
+    return n ? (date.M = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseSeconds(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 2));
-    return n ? (date.S = +n[0], i += n[0].length) : -1;
+    return n ? (date.S = +n[0], i + n[0].length) : -1;
   }
   function d3_time_parseMilliseconds(date, string, i) {
     d3_time_numberRe.lastIndex = 0;
     var n = d3_time_numberRe.exec(string.substring(i, i + 3));
-    return n ? (date.L = +n[0], i += n[0].length) : -1;
+    return n ? (date.L = +n[0], i + n[0].length) : -1;
   }
   var d3_time_numberRe = /^\s*\d+/;
   function d3_time_parseAmPm(date, string, i) {
@@ -8780,6 +9002,11 @@ d3 = function() {
   function d3_time_zone(d) {
     var z = d.getTimezoneOffset(), zs = z > 0 ? "-" : "+", zh = ~~(Math.abs(z) / 60), zm = Math.abs(z) % 60;
     return zs + d3_time_formatPad(zh, "0", 2) + d3_time_formatPad(zm, "0", 2);
+  }
+  function d3_time_parseLiteralPercent(date, string, i) {
+    d3_time_percentRe.lastIndex = 0;
+    var n = d3_time_percentRe.exec(string.substring(i, i + 1));
+    return n ? i + n[0].length : -1;
   }
   d3.time.format.utc = function(template) {
     var local = d3.time.format(template);
@@ -8867,9 +9094,7 @@ d3 = function() {
       return scale;
     };
     scale.nice = function(m) {
-      return scale.domain(d3_scale_nice(scale.domain(), function() {
-        return m;
-      }));
+      return scale.domain(d3_scale_nice(scale.domain(), m));
     };
     scale.ticks = function(m, k) {
       var extent = d3_scaleExtent(scale.domain());
@@ -8877,7 +9102,7 @@ d3 = function() {
         var span = extent[1] - extent[0], target = span / m, i = d3.bisect(d3_time_scaleSteps, target);
         if (i == d3_time_scaleSteps.length) return methods.year(extent, m);
         if (!i) return linear.ticks(m).map(d3_time_scaleDate);
-        if (Math.log(target / d3_time_scaleSteps[i - 1]) < Math.log(d3_time_scaleSteps[i] / target)) --i;
+        if (target / d3_time_scaleSteps[i - 1] < d3_time_scaleSteps[i] / target) --i;
         m = methods[i];
         k = m[1];
         m = m[0].range;
@@ -9293,6 +9518,18 @@ function (array) {
         newArgs.unshift.apply(newArgs, args);
         return fn.apply(this, newArgs);
       };
+    },
+
+    compose: function() {
+      var funcs = arguments;
+      return function() {
+        var args = arguments,
+            i;
+        for (i = funcs.length - 1; i >= 0; i--) {
+          args = [funcs[i].apply(this, args)];
+        }
+        return args[0];
+      };
     }
 
   };
@@ -9358,6 +9595,439 @@ function() {
      */
     standardDomain: function(domain, optSuffix) {
       return domain[0] + ' - ' + domain[1] + getSuffix(optSuffix);
+    }
+
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Data Dimension.
+ */
+define('data/dimension/dimension',[
+  'core/array'
+], function (array) {
+  'use strict';
+
+  var Dimension;
+
+  function sumReduce(arr) {
+    return arr.reduce(function(prevValue, curValue){
+      return curValue + prevValue;
+    });
+  }
+
+  /**
+   * @constructor
+   * Data Dimension.
+   * @param {(Object, Array.<Object>)?} optDataSource
+   */
+  Dimension = function(optDataSource) {
+    this.dataSources_ = array.getArray(optDataSource);
+  };
+
+  /**
+   * Adds a dimension to the dimension selection.
+   */
+  Dimension.prototype.add = function(data) {
+    if(Array.isArray(data)) {
+      array.append(this.dataSources_, data);
+    } else {
+      this.dataSources_.push(data);
+    }
+    return this;
+  };
+
+  /**
+   * Generic map function that accepts and applies a function
+   *   on its sources.
+   */
+  Dimension.prototype.map = function(fn, context) {
+    return new Dimension(this.dataSources_.map(fn, context));
+  };
+
+  /**
+   * Accepts and applies a filter fn on its dimension sources.
+   */
+  Dimension.prototype.filter = function(fn, context) {
+    return this.map(function(dataSource) {
+      return dataSource.filter(fn, context);
+    });
+  };
+
+  /**
+   * Sums all the values and returns the selection.
+   */
+  Dimension.prototype.sum = function() {
+    return this.map(function(dataSource) {
+      return sumReduce(dataSource);
+    });
+  };
+
+  /**
+   * Transposes the dimension matrix i.e.
+   * Converts an array of rows (dimensions) to corresponding array
+   * of columns.
+   * For example,
+   *   [ a p x ]         [ a b c ]
+   *   [ b q y ] becomes [ p q r ]
+   *   [ c r z ]         [ x y z ]
+   */
+  Dimension.prototype.transpose = function() {
+    var maxLength = d3.max(this.dataSources_.map(function(dataSource) {
+      return dataSource.length;
+    })) || 0, table = [], col, i, k;
+    for (i = 0; i < maxLength; i++) {
+      col = [];
+      for (k = 0; k < this.dataSources_.length; k++) {
+        col.push(this.dataSources_[k][i]);
+      }
+      table.push(col);
+    }
+    return new Dimension(table);
+  };
+
+  /**
+   * Averages the values in the dimension selection.
+   */
+  Dimension.prototype.avg = function() {
+    return this.map(function(dataSource) {
+      return sumReduce(dataSource)/dataSource.length;
+    });
+  };
+
+  /**
+   * Computes the max values in the dimension selection.
+   */
+  Dimension.prototype.max = function() {
+    return this.map(function(dataSource) {
+      return d3.max(dataSource);
+    });
+  };
+
+  /**
+   * Computes the min values in the dimension selection.
+   */
+  Dimension.prototype.min = function() {
+    return this.map(function(dataSource) {
+      return d3.min(dataSource);
+    });
+  };
+
+  /**
+   * Computes the max/min values in the dimension selection.
+   */
+  Dimension.prototype.extent = function() {
+    return this.map(function(dataSource) {
+      return d3.extent(dataSource);
+    });
+  };
+
+  /**
+   * Rounds the values in the dimension selection.
+   */
+  Dimension.prototype.round = function() {
+    return this.map(function(dataSource) {
+      if (Array.isArray(dataSource)) {
+        return dataSource.map(function(d) {
+          return Math.round(d);
+        });
+      } else {
+        return Math.round(dataSource);
+      }
+    });
+  };
+
+  /**
+   * Concatinates the values in multiple sources into one.
+   */
+  Dimension.prototype.concat = function() {
+    var arr = [];
+    this.dataSources_.forEach(function(dataSource) {
+      arr = arr.concat(dataSource);
+    });
+    return new Dimension([arr]);
+  };
+
+  /**
+   * Returns the raw value of the selection.
+   */
+  Dimension.prototype.all = function() {
+    return this.dataSources_;
+  };
+
+  /**
+   * Returns a source by index.
+   * Defaults to returning the first source.
+   * @param {number?} i index of the data source
+   */
+  Dimension.prototype.get = function(i) {
+    i = i || 0;
+    return this.dataSources_[i];
+  };
+
+  return {
+
+    /**
+     * Creates a new dimension selection.
+     * Optionally takes in a single or list of dimension arrays
+     * to initialize the selection.
+     */
+    create: function(optDimensions) {
+      return new Dimension(optDimensions);
+    },
+
+    /**
+     * Returns dim selection prototype for extension.
+     */
+    getDimensionPrototype: function() {
+      return Dimension.prototype;
+    }
+
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Accessor generator.
+ */
+define('data/accessors',[
+  'core/object'
+], function (obj) {
+  'use strict';
+
+  var cache = {};
+
+  function getAccessor(dimVal) {
+    var splitPath, accessorFn;
+    dimVal = dimVal.trim();
+    accessorFn = cache[dimVal];
+    if (accessorFn) {
+      return accessorFn;
+    }
+    splitPath = dimVal.split('.');
+    accessorFn = function(d) {
+      return obj.get(d, splitPath);
+    };
+    cache[dimVal] = accessorFn;
+    return accessorFn;
+  }
+
+  return {
+
+    /**
+     * Returns input if function.
+     * If input is string, it returns a cached accessor
+     * else generates a new accessor for the string.
+     */
+    get: function(accessor) {
+      if (typeof accessor === 'function') {
+        return accessor;
+      }
+      if (typeof accessor === 'string') {
+        return getAccessor(accessor);
+      }
+    },
+
+    /**
+     * Clears the accessors cache.
+     */
+    clear: function() {
+      cache = {};
+    }
+
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Data functions.
+ */
+define('data/functions',[
+  'core/object',
+  'data/accessors'
+], function (obj, accessors) {
+  'use strict';
+
+  return {
+    /**
+     * Gets the data using the dimension accessor.
+     */
+    dimension: function(data, dim) {
+      var dimValue;
+      dimValue = obj.get(data, ['dimensions', dim]);
+      if (!dimValue) {
+        return accessors.get(dim);
+      }
+      return accessors.get(dimValue);
+    }
+  };
+
+});
+
+/**
+ * @fileOverview
+ * Data Selection.
+ */
+define('data/selection/selection',[
+  'data/dimension/dimension',
+  'core/object',
+  'core/array',
+  'data/functions'
+], function (dimension, obj, array, dataFns) {
+  'use strict';
+
+  var Selection;
+
+  /**
+   * @constructor
+   * Data Selection.
+   */
+  Selection = function(optDataSource) {
+    this.dataSources_ = array.getArray(optDataSource);
+  };
+
+  /**
+   * Adds a new data sources to an existing selection.
+   * @param {Object|Array.<Object>} data
+   */
+  Selection.prototype.add = function(data) {
+    if(Array.isArray(data)) {
+      array.append(this.dataSources_, data);
+    } else {
+      this.dataSources_.push(data);
+    }
+    return this;
+  };
+
+  /**
+   * Applies filter using dimensions on data sources.
+   * This will eventually be a more versatile function.
+   * Assumes when two inputs are given, that the first is a dimension and
+   * second is a range if it is an array.
+   * TODO: If second arg is simple value, filter if equal to that value.
+   *       If second arg is a function, use that function.
+   */
+  Selection.prototype.filter = function(dim, range) {
+    return this.map(function(dataSource) {
+      var filteredDataSource = {}, accessor;
+      obj.extend(filteredDataSource, dataSource);
+      accessor = dataFns.dimension(dataSource, dim);
+      filteredDataSource.data =  filteredDataSource.data.filter(
+        function(d) {
+          var e = accessor(d);
+          return e >= range[0] && e<= range[1];
+        }
+      );
+      return filteredDataSource;
+    });
+  };
+
+  /**
+   * Filters the datasources by tags.
+   * returns datasources which do not contain tags.
+   * @param  {array|string} tags
+   */
+  Selection.prototype.filterByTags = function (tags) {
+    return new Selection(this.dataSources_.filter(
+      function(dataSource) {
+        return array.getArray(tags).every(function(tag) {
+          return !array.contains(dataSource.tags, tag);
+        });
+      })
+    );
+  };
+
+  /**
+   * Returns the number of data sources in the selection.
+   */
+  Selection.prototype.length = function() {
+    return this.dataSources_.length;
+  };
+
+  /**
+   * Helper method to run map on a selection.
+   */
+  Selection.prototype.map = function(fn) {
+    return new Selection(this.dataSources_.map(fn));
+  };
+
+  /**
+   * Helper function to return dimension selection over
+   * a map of the selection.
+   */
+  Selection.prototype.dimMap = function(fn) {
+    return dimension.create(this.dataSources_.map(fn));
+  };
+
+  /**
+   * Returns all the data sources.
+   */
+  Selection.prototype.all = function() {
+    return this.dataSources_;
+  };
+
+  /**
+   * Returns the raw data source specified by index.
+   * Returns the first data source if no index is specified.
+   * @param {number?} i index of the data source
+   */
+  Selection.prototype.get = function(i) {
+    i = i || 0;
+    return this.dataSources_[i];
+  };
+
+  /**
+   * Returns a dimension selection of the specified dimension.
+   * @param {string} dim The dimension
+   */
+  Selection.prototype.dim = function(dim) {
+    return this.dimMap(function(dataSource) {
+      return dataSource.data.map(dataFns.dimension(dataSource, dim));
+    });
+  };
+
+  /**
+   * Returns a new selection with the specified dimensions
+   * in a flat form.
+   * @param {string|Array.<string>} dims A list of dimensions.
+   */
+  Selection.prototype.flatten = function(dims) {
+    return this.map(function(dataSource) {
+      var newDataSource = {};
+      obj.extend(newDataSource, dataSource);
+      delete newDataSource.dimensions;
+      newDataSource.data = dataSource.data.map(function(d) {
+        var data = {};
+        array.getArray(dims).forEach(function(dim) {
+          data[dim] = dataFns.dimension(dataSource, dim)(d);
+        });
+        return data;
+      });
+      return newDataSource;
+    });
+  };
+
+  return {
+
+    /**
+     * Creates a new selection.
+     * Optionally takes in a single or list of data sources
+     * to initialize the selection.
+     * @param {(Object, Array.<Object>)?}
+     */
+    create: function(optDataSource) {
+      return new Selection(optDataSource);
+    },
+
+    /**
+     * Returns selection prototype for extension.
+     */
+    getSelectionPrototype: function() {
+      return Selection.prototype;
     }
 
   };
@@ -9759,84 +10429,6 @@ define('mixins/toggle',[],function () {
 
 });
 
-/**
- * @fileOverview
- * Creates a default d3.dispatch with common component events.
- * Optionally can provide additional events.
- */
-define('mixins/dispatch',[],function() {
-  'use strict';
-
-  /**
-   * List of event names common to all components.
-   * @const
-   */
-  var COMMON_EVENTS = [
-    'render',
-    'update',
-    'show',
-    'hide',
-    'destroy'
-  ];
-
-  /**
-   * Creates a d3 event dispatcher with common events by default.
-   * Optionally supplied additional events will also be added.
-   *
-   * @public
-   * @param {string} arguments Any other event names to add.
-   * @return {d3.dispatch}
-   * @see https://github.com/mbostock/d3/wiki/Internals#wiki-d3_dispatch
-   */
-  return function() {
-    var eventNames;
-
-    eventNames = COMMON_EVENTS;
-    if (arguments.length) {
-      eventNames = Array.prototype.concat.apply(eventNames, arguments);
-    }
-    return d3.dispatch.apply(null, eventNames);
-  };
-
-});
-
-/**
- * @fileOverview
- * These are methods that all components are expected to have.
- * Use this mixin as a convenience for noops and override as needed.
- */
-define('mixins/lifecycle',[],function () {
-  'use strict';
-
-  return {
-
-    render: function() {
-      // noop
-      return this;
-    },
-
-    root: function() {
-      // noop
-    },
-
-    isRendered: function() {
-      return !!this.root();
-    },
-
-    update: function() {
-      // noop
-      return this;
-    },
-
-    destroy: function() {
-      // noop
-      return this;
-    }
-
-  };
-
-});
-
 define('mixins/zIndex',[],function () {
   'use strict';
 
@@ -9883,103 +10475,6 @@ define('mixins/zIndex',[],function () {
 
 });
 
-define('mixins/mixins',[
-  'mixins/toggle',
-  'mixins/dispatch',
-  'mixins/lifecycle',
-  'mixins/zIndex'
-],
-function(toggle, dispatch, lifecycle, zIndex) {
-  'use strict';
-
-  return {
-    toggle: toggle,
-    lifecycle: lifecycle,
-    dispatch: dispatch,
-    zIndex: zIndex
-  };
-
-});
-
-/**
- * @fileOverview
- * Accessor generator.
- */
-define('data/accessors',[
-  'core/object'
-], function (obj) {
-  'use strict';
-
-  var cache = {};
-
-  function getAccessor(dimVal) {
-    var splitPath, accessorFn;
-    dimVal = dimVal.trim();
-    accessorFn = cache[dimVal];
-    if (accessorFn) {
-      return accessorFn;
-    }
-    splitPath = dimVal.split('.');
-    accessorFn = function(d) {
-      return obj.get(d, splitPath);
-    };
-    cache[dimVal] = accessorFn;
-    return accessorFn;
-  }
-
-  return {
-
-    /**
-     * Returns input if function.
-     * If input is string, it returns a cached accessor
-     * else generates a new accessor for the string.
-     */
-    get: function(accessor) {
-      if (typeof accessor === 'function') {
-        return accessor;
-      }
-      if (typeof accessor === 'string') {
-        return getAccessor(accessor);
-      }
-    },
-
-    /**
-     * Clears the accessors cache.
-     */
-    clear: function() {
-      cache = {};
-    }
-
-  };
-
-});
-
-/**
- * @fileOverview
- * Data functions.
- */
-define('data/functions',[
-  'core/object',
-  'data/accessors'
-], function (obj, accessors) {
-  'use strict';
-
-  return {
-    /**
-     * Gets the data using the dimension accessor.
-     */
-    dimension: function(data, dim) {
-      var dimValue;
-      dimValue = obj.get(data, ['dimensions', dim]);
-      if (!dimValue) {
-        return accessors.get(dim);
-      }
-      return accessors.get(dimValue);
-    }
-  };
-
-});
-
 define('events/pubsub',[
   'core/array'
 ],
@@ -10020,7 +10515,7 @@ function(array) {
         args = array.convertArgs(arguments, 1);
         callbackCache[topic].forEach(function(callback) {
           callback.apply(this, args);
-        });
+        }, this);
         return this;
       },
 
@@ -10105,6 +10600,11 @@ function(array) {
       return globalInstance;
     },
 
+    /**
+     * Gives context to pubsub events.
+     * @param {String?} context
+     * @return {String}
+     */
     scope: function() {
       var scope =  arguments[0] ? arguments[0] + ':' : '';
       return function() {
@@ -10112,6 +10612,178 @@ function(array) {
       };
     }
 
+  };
+
+});
+
+define('mixins/component',[
+  'core/object',
+  'core/config',
+  'core/array',
+  'mixins/toggle',
+  'mixins/zIndex',
+  'events/pubsub'
+], function (obj, config, array, toggle, zIndex, pubsub) {
+
+  'use strict';
+
+  return {
+
+    /**
+    * @description Returns the root selection of the component.
+    * @return {d3.selection}
+    */
+    root: function () {
+      return this._.root;
+    },
+
+    /**
+     * Initalises all common component mixins, properties etc
+     */
+    init: function() {
+      var _ = this._;
+      _.globalPubsub = pubsub.getSingleton();
+      obj.extend(
+        this,
+        config.mixin(
+          _.config,
+          'cid',
+          'target',
+          'rootId',
+          'zIndex'
+        ),
+        toggle,
+        zIndex);
+    },
+
+    /**
+     * A standard implementaion of the data setter/getter of the component.
+     */
+    data: function(data) {
+      var _ = this._;
+      if (data) {
+        _.dataCollection = data;
+        return this;
+      }
+      if (!_.dataCollection) {
+        return null;
+      }
+      return _.dataCollection.get(_.config.dataId);
+    },
+
+    /**
+     * Returns a pubsub event scoped to the rootId of the graph.
+     * @param {String} The event name.
+     * @return {String} The scoped (prefixed) event name.
+     */
+    globalScope: function(eventName) {
+      return pubsub.scope(this._.config.rootId)(eventName);
+    },
+
+    /**
+     * Returns a scope local to the component i.e caller is a
+     * graph: Events are scoped to the graph rootId
+     * component: Events are scope to component cid
+     * @param {String} eventName event name.
+     * @return {String} The scoped (prefixed) event name.
+     */
+    scope: function(eventName) {
+      var scope = this._.config.rootId;
+      if (this._.config.type !== 'graph') {
+        scope = [scope, this._.config.cid].join(':');
+      }
+      return pubsub.scope(scope)(eventName);
+    },
+
+    /**
+     * A lifecyle method for cleaning up after the component.
+     */
+    destroy: function() {
+      var _ = this._;
+      array.getArray(_.config.components).forEach(function(component) {
+        component.destroy();
+      });
+      if(_.root) {
+        _.root.remove();
+      }
+      this.emit('destroy');
+      this._ = null;
+    },
+
+    /**
+     * A lifecycle method for rendering the component.
+     */
+    render: function() {
+      // noop
+      return this;
+    },
+
+    /**
+     * Returns a boolean indicating whether the component is rendered.
+     * @return {Boolean}
+     */
+    isRendered: function() {
+      return !!this.root();
+    },
+
+    /**
+     * A lifecycle method for updating a rendered component.
+     */
+    update: function() {
+      // noop
+      return this;
+    },
+
+    /**
+     * Event handler attacher.
+     * Note: The events are scoped local to the component.
+     * @param {String} eventName The event name
+     * @param {Function} callback
+     */
+    on: function(eventName, callback) {
+      var _ = this._;
+      _.globalPubsub.sub(this.scope(eventName), callback);
+    },
+
+    /**
+     * Event handler detacher.
+     * If the callback isn't specified, it deregisters all subscribed events.
+     * @param {String} eventName The event name
+     * @param {Function?} callback
+     */
+    off: function(eventName, callback) {
+      var _ = this._;
+      _.globalPubsub.unsub(this.scope(eventName), callback);
+    },
+
+    /**
+     * Event emitter.
+     * @param {String} eventName The event name
+     * @param {...} arguments The arguments that are passed to the callback.
+     */
+    emit: function(eventName) {
+      var _ = this._,
+          args = array.convertArgs(arguments);
+      args[0] = this.scope(eventName);
+      _.globalPubsub.pub.apply(this, args);
+    }
+
+  };
+
+});
+
+define('mixins/mixins',[
+  'mixins/toggle',
+  'mixins/component',
+  'mixins/zIndex'
+],
+function(toggle, component, zIndex) {
+  'use strict';
+
+  return {
+    toggle: toggle,
+    component: component,
+    zIndex: zIndex
   };
 
 });
@@ -10124,30 +10796,30 @@ define('components/line',[
   'core/array',
   'core/config',
   'core/object',
+  'core/function',
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
-  'data/functions',
-  'events/pubsub'
+  'data/functions'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
+function(array, config, obj, fn, string, d3util, mixins, dataFns) {
   'use strict';
 
 
   return function() {
 
     //Private variables
-    var config_ = {},
-      defaults_,
-      dataCollection_,
-      root_,
-      globalPubsub = pubsub.getSingleton();
+    var _ = {
+      config: {}
+    };
 
-    defaults_ = {
+    _.defaults = {
       type: 'line',
       target: null,
       cid: null,
       color: null,
+      dashed: false,
+      strokeDashArray: '5, 5',
       strokeWidth: 1.5,
       inLegend: true,
       lineGenerator: d3.svg.line(),
@@ -10168,10 +10840,11 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       selection
         .datum(line.data().data)
         .attr({
-          'stroke-width': config_.strokeWidth,
-          'stroke': config_.color,
-          'opacity': config_.opacity,
-          'd': config_.lineGenerator
+          'stroke-width': _.config.strokeWidth,
+          'stroke-dasharray': _.config.dashed ? _.config.strokeDashArray : null,
+          'stroke': _.config.color,
+          'opacity': _.config.opacity,
+          'd': _.config.lineGenerator
       });
     }
 
@@ -10209,9 +10882,9 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @param  {string} dataId
      */
      function handleDataToggle(args) {
-      var id = config_.dataId;
+      var id = _.config.dataId;
       if (args === id) {
-        if (dataCollection_.hasTags(id, 'inactive')) {
+        if (_.dataCollection.hasTags(id, 'inactive')) {
           line.hide();
         } else {
           line.show();
@@ -10224,44 +10897,23 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.line}
      */
     function line() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return line;
     }
+    line._ = _;
 
     obj.extend(
       line,
       config.mixin(
-        config_,
-        'cid',
+        _.config,
         'xScale',
         'yScale',
         'lineGenerator',
-        'color',
-        'rootId',
-        'zIndex'
+        'color'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    line.dispatch = mixins.dispatch();
-
-    // TODO: this will be the same for all components
-    // put this func somewhere else and apply as needed
-    line.data = function(data) {
-      if (data) {
-        dataCollection_ = data;
-        return line;
-      }
-      if (!dataCollection_) {
-        return;
-      }
-      return dataCollection_.get(config_.dataId);
-    };
+    line.init();
 
     /**
      * Updates the line component with new/updated data/config
@@ -10270,11 +10922,11 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
     line.update = function() {
       var dataConfig, selection;
 
-      if (!root_) {
+      if (!_.root) {
         return line;
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       dataConfig = line.data();
       // Return early if there's no data.
@@ -10282,25 +10934,25 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
         return line;
       }
       // Configure the lineGenerator function
-      config_.lineGenerator
+      _.config.lineGenerator
         .x(function(d, i) {
-          return config_.xScale(getX(d, i));
+          return _.config.xScale(getX(d, i));
         })
         .y(function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
         })
         .defined(function(d, i) {
           var minX;
-          minX = config_.xScale.range()[0];
-          return config_.xScale(getX(d, i))  >= minX;
+          minX = _.config.xScale.range()[0];
+          return _.config.xScale(getX(d, i))  >= minX;
         })
-        .interpolate(config_.interpolate);
-      selection = root_.select('.gl-path')
+        .interpolate(_.config.interpolate);
+      selection = _.root.select('.gl-path')
         .data(dataConfig.data);
       update(selection);
       remove(selection);
       line.applyZIndex();
-      line.dispatch.update.call(this);
+      line.emit('update');
       return line;
     };
 
@@ -10310,9 +10962,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.line}
      */
     line.render = function(selection) {
-      var scope;
-      if (!root_) {
-        root_ = d3util.applyTarget(line, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(line, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'line')
@@ -10325,45 +10976,19 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           return root;
         });
       }
-      scope = line.scope();
-      globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(line.globalScope('data-toggle'), handleDataToggle);
       line.update();
-      line.dispatch.render.call(this);
+      line.emit('render');
       return line;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    line.root = function() {
-      return root_;
-    };
-
-    /** Defines the rootId for line */
-    //TODO create a mixin for scope
-    line.scope = function() {
-      return pubsub.scope(config_.rootId);
     };
 
     /**
      * Destroys the line and removes everything from the DOM.
      * @public
      */
-    line.destroy = function() {
-      var scope;
-
-      if (root_) {
-        root_.remove();
-      }
-      scope = line.scope();
-      globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      line.applyZIndex();
-      line.dispatch.destroy.call(this);
-    };
+    line.destroy = fn.compose(line.destroy, function() {
+      _.globalPubsub.unsub(line.globalScope('data-toggle'), handleDataToggle);
+    });
 
     return line();
 
@@ -10381,30 +11006,22 @@ define('components/legend',[
   'core/string',
   'core/array',
   'd3-ext/util',
-  'mixins/mixins',
-  'events/pubsub'
+  'mixins/mixins'
 ],
-function(obj, config, string, array, d3util, mixins, pubsub) {
+function(obj, config, string, array, d3util, mixins) {
   'use strict';
 
   return function() {
 
     // PRIVATE
 
-    var defaults_,
-      config_,
-      root_,
-      enter_,
-      update_,
-      remove_,
-      dataCollection_,
-      onClickHandler,
-      globalPubsub;
+    var _ = {
+      config: {}
+    },
+      onClickHandler;
 
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'legend',
       position: 'center-left',
       target: null,
@@ -10426,17 +11043,15 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       zIndex: 10
     };
 
-    globalPubsub = pubsub.getSingleton();
-
     /**
      * Handles the click event on legend.
      */
     onClickHandler = function(d) {
       var sel = d3.select(this),
-      inactive = config_.inactiveColor,
-      fontColor = config_.fontColor;
+      inactive = _.config.inactiveColor,
+      fontColor = _.config.fontColor;
 
-      if (dataCollection_.hasTags(d.dataId, 'inactive')) {
+      if (_.dataCollection.hasTags(d.dataId, 'inactive')) {
         sel.select('text').attr('fill', fontColor);
         sel.select('rect').attr('fill', d.color);
       } else {
@@ -10444,14 +11059,14 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         sel.select('rect').attr('fill', inactive);
       }
       // toggles data's tag on the data collection
-      dataCollection_.toggleTags(d.dataId, 'inactive', config_.rootId);
+      _.dataCollection.toggleTags(d.dataId, 'inactive', _.config.rootId);
     };
 
     /**
      * Inserts new keys.
      * @param {d3.selection} selection
      */
-    enter_ = function(selection) {
+    _.enter = function(selection) {
       var enterSelection;
 
       enterSelection = selection
@@ -10487,11 +11102,11 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * Apply updates to the update selection.
      * @param {d3.selection} selection
      */
-    update_ = function(selection) {
+    _.update = function(selection) {
       var inactive, color;
 
       // Handle click event- toggle data inactive
-      if(config_.hideOnClick) {
+      if(_.config.hideOnClick) {
         selection
           .on('click', onClickHandler);
       } else {
@@ -10502,22 +11117,22 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       // The outer <g> element for each key.
       selection
         .attr({
-          'font-family': config_.fontFamily,
-          'font-size': config_.fontSize,
-          'font-weight': config_.fontWeight
+          'font-family': _.config.fontFamily,
+          'font-size': _.config.fontSize,
+          'font-weight': _.config.fontWeight
         });
 
       // Update key indicators.
       selection.selectAll('.gl-legend-key-indicator')
         .attr({
-          'width': config_.indicatorWidth,
-          'height': config_.indicatorHeight,
+          'width': _.config.indicatorWidth,
+          'height': _.config.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor: pointer;' : null;
+            return _.config.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
-            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
-            color = inactive ? config_.inactiveColor : d3.functor(d.color)();
+            inactive = _.dataCollection.hasTags(d.dataId, 'inactive');
+            color = inactive ? _.config.inactiveColor : d3.functor(d.color)();
             return color;
           }
         });
@@ -10526,14 +11141,14 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       selection.selectAll('.gl-legend-key-label')
         .text(function(d) { return d.label; })
         .attr({
-          'x': config_.indicatorWidth + config_.indicatorSpacing,
-          'y': config_.indicatorHeight,
+          'x': _.config.indicatorWidth + _.config.indicatorSpacing,
+          'y': _.config.indicatorHeight,
           'style': function() {
-            return config_.hideOnClick ? 'cursor: pointer;' : null;
+            return _.config.hideOnClick ? 'cursor: pointer;' : null;
           },
           'fill': function(d) {
-            inactive = dataCollection_.hasTags(d.dataId, 'inactive');
-            color = inactive ? config_.inactiveColor : config_.fontColor;
+            inactive = _.dataCollection.hasTags(d.dataId, 'inactive');
+            color = inactive ? _.config.inactiveColor : _.config.fontColor;
             return color;
           }
         });
@@ -10543,7 +11158,7 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * Remove any keys that were removed.
      * @param {d3.selection} selection
      */
-    remove_ = function(selection) {
+    _.remove = function(selection) {
       selection.exit().remove();
     };
 
@@ -10553,35 +11168,27 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      * The main function.
      */
     function legend() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return legend;
     }
+
+    legend._ = _;
 
     // Apply Mixins.
     obj.extend(
       legend,
       config.mixin(
-        config_,
-        'cid',
+        _.config,
         'keys',
         'fontColor',
         'fontFamily',
         'fontSize',
         'fontWeight',
         'indicatorWidth',
-        'indicatorHeight',
-        'rootId',
-        'zIndex'
+        'indicatorHeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    legend.dispatch = mixins.dispatch();
+      mixins.component);
+    legend.init();
 
 
     /**
@@ -10591,13 +11198,13 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      */
     legend.data = function(data) {
       if (data) {
-        dataCollection_ = data;
+        _.dataCollection = data;
         return legend;
       }
-      if (!dataCollection_) {
+      if (!_.dataCollection) {
         return null;
       }
-      return dataCollection_;
+      return _.dataCollection;
     };
 
     /**
@@ -10608,11 +11215,11 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       var selection, dataConfig;
 
       // Return early if no data or render() hasn't been called yet.
-      if (!config_.keys || !root_) {
+      if (!_.config.keys || !_.root) {
         return legend;
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
 
       dataConfig = legend.data();
@@ -10622,17 +11229,17 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
       }
 
       // The selection of legend keys.
-      selection = root_
+      selection = _.root
         .selectAll('.gl-legend-key')
-        .data(config_.keys, function(d) {
+        .data(_.config.keys, function(d) {
           return d.dataId;
         });
-      remove_(selection);
-      enter_(selection);
-      update_(selection);
-      root_.layout({type: config_.layout, gap: config_.gap});
-      root_.position(config_.position);
-      legend.dispatch.update.call(this);
+      _.remove(selection);
+      _.enter(selection);
+      _.update(selection);
+      _.root.layout({type: _.config.layout, gap: _.config.gap});
+      _.root.position(_.config.position);
+      legend.emit('update');
       return legend;
     };
 
@@ -10643,8 +11250,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
      *    or a selector string.
      */
     legend.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(legend, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(legend, selection, function(target) {
           return target.append('g')
             .attr({
               'class': string.classes('component', 'legend')
@@ -10652,31 +11259,8 @@ function(obj, config, string, array, d3util, mixins, pubsub) {
         });
       }
       legend.update();
-      legend.dispatch.render.call(this);
+      legend.emit('render');
       return legend;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    legend.root = function () {
-      return root_;
-    };
-
-    /**
-     * Destroys the legend and removes everything from the DOM.
-     * @public
-     */
-    legend.destroy = function() {
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      legend.applyZIndex();
-      legend.dispatch.destroy.call(this);
     };
 
     return legend();
@@ -10700,14 +11284,11 @@ function(obj, config, string, mixins, d3util) {
 
   return function() {
 
-    var config_,
-      defaults_,
-      root_,
-      d3axis_;
+    var _ = {
+        config: {}
+      };
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'axis',
       axisType: 'x',
       gap: 0,
@@ -10743,43 +11324,43 @@ function(obj, config, string, mixins, d3util) {
     function formatAxis() {
       var zeroTick, zeroTickLabel;
       // remove boldness from default axis path
-      root_.selectAll('path')
+      _.root.selectAll('path')
         .attr({
           'fill': 'none'
         });
 
       // update fonts
-      root_.selectAll('text')
+      _.root.selectAll('text')
         .attr({
           'stroke': 'none',
-          'fill': config_.color
+          'fill': _.config.color
         });
 
       //Apply padding to the first tick on Y axis
-      if (config_.axisType === 'y') {
-        zeroTick = root_.select('g');
+      if (_.config.axisType === 'y') {
+        zeroTick = _.root.select('g');
 
         if (zeroTick.node()) {
           zeroTickLabel = zeroTick.text() +
-            (config_.unit ? ' ' + config_.unit : '');
+            (_.config.unit ? ' ' + _.config.unit : '');
           zeroTick.select('text').text(zeroTickLabel);
           setZeroTickTranslate(zeroTick);
         }
       }
 
       // apply text background for greater readability.
-      root_.selectAll('.gl-axis text').each(function() {
+      _.root.selectAll('.gl-axis text').each(function() {
 
         var textBg = this.cloneNode(true);
         d3.select(textBg).attr({
-          stroke: config_.textBgColor,
-          'stroke-width': config_.textBgSize
+          stroke: _.config.textBgColor,
+          'stroke-width': _.config.textBgSize
         });
         this.parentNode.insertBefore(textBg, this);
       });
 
       // remove axis line
-      root_.selectAll('.domain')
+      _.root.selectAll('.domain')
         .attr({
           'stroke': 'none'
         });
@@ -10789,10 +11370,10 @@ function(obj, config, string, mixins, d3util) {
      * Main function for Axis component.
      */
     function axis() {
-      obj.extend(config_, defaults_);
-      d3axis_ = d3.svg.axis();
+      obj.extend(_.config, _.defaults);
+      _.d3axis = d3.svg.axis();
       axis.rebind(
-        d3axis_,
+        _.d3axis,
         'scale',
         'orient',
         'ticks',
@@ -10803,50 +11384,40 @@ function(obj, config, string, mixins, d3util) {
         'tickFormat');
       return axis;
     }
+    axis._ = _;
 
     // Apply mixins.
     obj.extend(
       axis,
-      config.mixin(
-        config_,
-        'cid',
-        'rootId',
-        'zIndex'),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    axis.dispatch = mixins.dispatch();
+    axis.init();
 
     /**
      * Apply updates to the axis.
      */
     axis.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return axis;
       }
-      root_.selectAll('g').remove();
+      _.root.selectAll('g').remove();
       axis.reapply();
-      root_.call(d3axis_);
-      root_.attr({
-        'font-family': config_.fontFamily,
-        'font-size': config_.fontSize,
+      _.root.call(_.d3axis);
+      _.root.attr({
+        'font-family': _.config.fontFamily,
+        'font-size': _.config.fontSize,
         'class': string.classes('component',
-            'axis', config_.axisType + '-axis '),
-        'stroke': config_.color,
-        'opacity': config_.opacity
+            'axis', _.config.axisType + '-axis '),
+        'stroke': _.config.color,
+        'opacity': _.config.opacity
       });
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
 
       formatAxis();
       axis.applyZIndex();
-      axis.dispatch.update.call(this);
+      axis.emit('update');
       return axis;
     };
 
@@ -10856,8 +11427,8 @@ function(obj, config, string, mixins, d3util) {
      * @return {component.axis}
      */
     axis.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(axis, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(axis, selection, function(target) {
           return target.append('g')
             .attr({
               'fill': 'none',
@@ -10867,7 +11438,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       axis.update();
-      axis.dispatch.render.call(this);
+      axis.emit('render');
       return axis;
     };
 
@@ -10878,33 +11449,10 @@ function(obj, config, string, mixins, d3util) {
      */
     axis.d3axis = function(d3Axis) {
       if (d3Axis) {
-        d3axis_ = d3Axis;
+        _.d3axis = d3Axis;
         return axis;
       }
-      return d3axis_;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    axis.root = function() {
-      return root_;
-    };
-
-    /**
-     * Destroys the axis and removes everything from the DOM.
-     * @public
-     */
-    axis.destroy = function() {
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      d3axis_ = null;
-      axis.dispatch.destroy.call(this);
+      return _.d3axis;
     };
 
     return axis();
@@ -10931,14 +11479,11 @@ function(obj, config, string, array, d3util, mixins) {
 
     // PRIVATE
 
-    var defaults_,
-      config_,
-      dataCollection_,
-      root_;
+    var _ = {
+      config: {}
+    };
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       type: 'label',
       cid: null,
       target: null,
@@ -10964,54 +11509,26 @@ function(obj, config, string, array, d3util, mixins) {
      * @return {components.label}
      */
     function label() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return label;
     }
+
+    label._ = _;
 
     // Apply Mixins
     obj.extend(
       label,
       config.mixin(
-        config_,
-        'cid',
-        'target',
+        _.config,
         'cssClass',
         'color',
         'fontFamily',
         'fontSize',
-        'fontWeight',
-        'rootId',
-        'zIndex'
+        'fontWeight'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    label.dispatch = mixins.dispatch();
-
-    /**
-     * Gets/Sets the data source to be used with the label.
-     * Uses the configurable "text" accessor function to retrieve text.
-     * @param {Object} data Any data source.
-     * @return {Object|components.label}
-     */
-    label.data = function(data) {
-      // Set data if provided.
-      if (data) {
-        dataCollection_ = data;
-        return label;
-      }
-      // Find corresponding data group if dataId is set.
-      if (dataCollection_ && config_.dataId) {
-        return dataCollection_.get(config_.dataId);
-      }
-      // Otherwise return the entire raw data.
-      return dataCollection_;
-    };
+    label.init();
 
     /**
      * @description Gets/sets the static text to display.
@@ -11021,10 +11538,10 @@ function(obj, config, string, array, d3util, mixins) {
      */
     label.text = function(text) {
       if (text) {
-        config_.text = d3.functor(text);
+        _.config.text = d3.functor(text);
         return label;
       }
-      return d3.functor(config_.text).call(this);
+      return d3.functor(_.config.text).call(this);
     };
 
     /**
@@ -11034,8 +11551,8 @@ function(obj, config, string, array, d3util, mixins) {
      * @return {components.label}
      */
     label.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(label, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(label, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'label')
@@ -11049,7 +11566,7 @@ function(obj, config, string, array, d3util, mixins) {
         });
       }
       label.update();
-      label.dispatch.render.call(this);
+      label.emit('render');
       return label;
     };
 
@@ -11062,51 +11579,28 @@ function(obj, config, string, array, d3util, mixins) {
 
       text = label.text();
       // Return early if no data or render() hasn't been called yet.
-      if (!root_ || !text) {
+      if (!_.root || !text) {
         return label;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
-      root_.select('text').attr({
-        'fill': config_.color,
-        'font-family': config_.fontFamily,
-        'font-size': config_.fontSize,
-        'font-weight': config_.fontWeight,
+      _.root.select('text').attr({
+        'fill': _.config.color,
+        'font-family': _.config.fontFamily,
+        'font-size': _.config.fontSize,
+        'font-weight': _.config.fontWeight,
         // NOTE: Need to manually set y position since dominant-baseline
         //   doesn't work in FF or IE.
-        'y': config_.fontSize
+        'y': _.config.fontSize
       })
       .text(text);
-      root_.position(config_.position);
-      label.dispatch.update.call(this);
+      _.root.position(_.config.position);
+      label.emit('update');
       return label;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    label.root = function () {
-      return root_;
-    };
-
-    /**
-     * Destroys the label and removes everything from the DOM.
-     * @public
-     */
-    label.destroy = function() {
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      label.applyZIndex();
-      label.dispatch.destroy.call(this);
     };
 
     return label();
@@ -11132,14 +11626,14 @@ function(obj, config, string, label, mixins, d3util) {
 
   return function() {
 
-    var defaults_,
-      config_,
-      root_,
+    var _ = {
+        config: {}
+      },
       updateChildren_;
 
-    config_ = {};
+    _.config = {};
 
-    defaults_ = {
+    _.defaults = {
       cid: null,
       target: null,
       components: [],
@@ -11160,17 +11654,17 @@ function(obj, config, string, label, mixins, d3util) {
       var parentNode,
           componentsContainer;
 
-      parentNode = d3.select(root_.node().parentNode);
+      parentNode = d3.select(_.root.node().parentNode);
 
-      root_.select('rect').attr({
+      _.root.select('rect').attr({
         width: parentNode.width(),
         height: parentNode.height(),
-        opacity: config_.opacity,
-        fill: config_.backgroundColor
+        opacity: _.config.opacity,
+        fill: _.config.backgroundColor
       });
-      componentsContainer = root_.select('g')
+      componentsContainer = _.root.select('g')
         .attr('class', 'gl-components');
-      config_.components.forEach(function(component) {
+      _.config.components.forEach(function(component) {
         if (component.root()) {
           // If already rendered, just update instead.
           component.update();
@@ -11178,46 +11672,28 @@ function(obj, config, string, label, mixins, d3util) {
           component.render(componentsContainer);
         }
       });
-      componentsContainer.layout(config_.layoutConfig);
+      componentsContainer.layout(_.config.layoutConfig);
     };
 
     function overlay() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return overlay;
     }
+    overlay._ = _;
 
     // Apply Mixins
     obj.extend(
       overlay,
       config.mixin(
-        config_,
-        'cid',
-        'target',
+        _.config,
         'cssClass',
         'opacity',
         'backgroundColor',
-        'layoutConfig',
-        'rootId',
-        'zIndex'
+        'layoutConfig'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    overlay.dispatch = mixins.dispatch();
-
-    /*
-     * Gets the root selection of this component.
-     * @public
-     * @return {d3.selection}
-     */
-    overlay.root = function () {
-      return root_;
-    };
+    overlay.init();
 
     /**
      * Renders the component to the specified selection,
@@ -11227,8 +11703,8 @@ function(obj, config, string, label, mixins, d3util) {
      * @return {components.overlay}
      */
     overlay.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(overlay, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(overlay, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'overlay')
@@ -11239,7 +11715,7 @@ function(obj, config, string, label, mixins, d3util) {
         });
       }
       overlay.update();
-      overlay.dispatch.render.call(this);
+      overlay.emit('render');
       return overlay;
     };
 
@@ -11250,37 +11726,19 @@ function(obj, config, string, label, mixins, d3util) {
      * @return {componnets.update}
      */
     overlay.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return overlay;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       updateChildren_();
       overlay.applyZIndex();
-      overlay.dispatch.update.call(this);
+      overlay.emit('update');
       return overlay;
-    };
-
-    /**
-     * Destroys this component and cleans up after itself.
-     * @public
-     */
-    overlay.destroy = function() {
-      // TODO: Need a more generalized way of removing sub-components.
-      config_.components.forEach(function(label) {
-        label.destroy();
-      });
-      if (root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      overlay.dispatch.destroy.call(this);
     };
 
     return overlay();
@@ -11305,13 +11763,11 @@ function(obj, config, string, mixins, d3util) {
 
   return function() {
 
-    var defaults_,
-      config_,
-      root_;
+    var _ = {
+      config: {}
+    };
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
       cid: null,
       assetId: null,
       target: null,
@@ -11322,40 +11778,23 @@ function(obj, config, string, mixins, d3util) {
     };
 
     function asset() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return asset;
     }
+
+    asset._ = _;
 
     // Apply Mixins
     obj.extend(
       asset,
       config.mixin(
-        config_,
-        'cid',
+        _.config,
         'assetId',
-        'target',
-        'cssClass',
-        'rootId',
-        'zIndex'
+        'cssClass'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    asset.dispatch = mixins.dispatch();
-
-    /*
-     * Gets the root selection of this component.
-     * @public
-     * @return {d3.selection}
-     */
-    asset.root = function() {
-      return root_;
-    };
+    asset.init();
 
     /**
      * Renders the component to the specified selection,
@@ -11365,8 +11804,8 @@ function(obj, config, string, mixins, d3util) {
      * @return {components.overlay}
      */
     asset.render = function(selection) {
-      if (!root_) {
-        root_ = d3util.applyTarget(asset, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(asset, selection, function(target) {
           return target.append('g')
             .attr({
               'class': string.classes('component', 'asset')
@@ -11374,7 +11813,7 @@ function(obj, config, string, mixins, d3util) {
         });
       }
       asset.update();
-      asset.dispatch.render.call(this);
+      asset.emit('render');
       return asset;
     };
 
@@ -11387,41 +11826,27 @@ function(obj, config, string, mixins, d3util) {
     asset.update = function() {
       var useEl;
 
-      if (!root_) {
+      if (!_.root) {
         return asset;
       }
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
-      useEl = root_.select('use');
+      useEl = _.root.select('use');
       if (useEl.empty()) {
-        useEl = root_.append('use');
+        useEl = _.root.append('use');
       }
       useEl.attr({
-        'class': config_.assetId,
-        'xlink:href': '#' + config_.assetId
+        'class': _.config.assetId,
+        'xlink:href': '#' + _.config.assetId
       });
-      root_.position(config_.position);
+      _.root.position(_.config.position);
       asset.applyZIndex();
-      asset.dispatch.update.call(this);
+      asset.emit('update');
       return asset;
-    };
-
-    /**
-     * Destroys this component and cleans up after itself.
-     * @public
-     */
-    asset.destroy = function() {
-      if(root_) {
-        root_.remove();
-      }
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      asset.dispatch.destroy.call(this);
     };
 
     return asset();
@@ -11438,25 +11863,23 @@ define('components/area',[
   'core/array',
   'core/config',
   'core/object',
+  'core/function',
   'core/string',
   'd3-ext/util',
   'mixins/mixins',
-  'data/functions',
-  'events/pubsub'
+  'data/functions'
 ],
-function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
+function(array, config, obj, fn, string, d3util, mixins, dataFns) {
   'use strict';
 
   return function() {
 
     //Private variables
-    var config_ = {},
-      defaults_,
-      dataCollection_,
-      root_,
-      globalPubsub;
+    var _ = {
+      config: {}
+    };
 
-    defaults_ = {
+    _.defaults = {
       type: 'area',
       target: null,
       cid: null,
@@ -11472,8 +11895,6 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
       zIndex: 5
     };
 
-    globalPubsub = pubsub.getSingleton();
-
     /**
      * Updates the area generator function
      */
@@ -11483,34 +11904,34 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           y1;
 
       dataConfig = area.data();
-      if (config_.cid) {
-        root_.attr('gl-cid', config_.cid);
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
       }
       if (dataConfig.dimensions.y0) {
         // Use y0 for baseline if supplied.
         y0 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y0')(d, i));
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y0')(d, i));
         };
         y1 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i) +
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i) +
             dataFns.dimension(dataConfig, 'y0')(d, i));
         };
       } else {
         // Otherwise default to bottom of range.
         y0 = function() {
-          return config_.yScale.range()[0];
+          return _.config.yScale.range()[0];
         };
         y1 = function(d, i) {
-          return config_.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
+          return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
         };
       }
 
       // Configure the areaGenerator function
-      config_.areaGenerator
+      _.config.areaGenerator
         .x(function(d, i) {
           var value;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          return config_.xScale(value);
+          return _.config.xScale(value);
         })
         .y0(y0)
         .y1(y1)
@@ -11518,9 +11939,9 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           var minX, value;
           minX = 0;
           value = dataFns.dimension(dataConfig, 'x')(d, i);
-          if (config_.xScale) {
-            minX = config_.xScale.range()[0];
-            value = config_.xScale(value);
+          if (_.config.xScale) {
+            minX = _.config.xScale.range()[0];
+            value = _.config.xScale(value);
           }
           return value >= minX;
         });
@@ -11534,9 +11955,9 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      */
      //TODO: same as line so extract it out
      function handleDataToggle(args) {
-      var id = config_.dataId;
+      var id = _.config.dataId;
       if (args === id) {
-        if (dataCollection_.hasTags(id, 'inactive')) {
+        if (_.dataCollection.hasTags(id, 'inactive')) {
           area.hide();
         } else {
           area.show();
@@ -11550,52 +11971,33 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.area}
      */
     function area() {
-      obj.extend(config_, defaults_);
+      obj.extend(_.config, _.defaults);
       return area;
     }
+    area._ = _;
 
     // Apply mixins.
     obj.extend(
       area,
       config.mixin(
-        config_,
-        'cid',
-        'target',
+        _.config,
         'xScale',
         'yScale',
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator',
-        'rootId',
-        'zIndex'
+        'areaGenerator'
       ),
-      mixins.lifecycle,
-      mixins.toggle,
-      mixins.zIndex);
+      mixins.component);
 
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    area.dispatch = mixins.dispatch();
-
-    // TODO: this will be the same for all components
-    // put this func somehwere else and apply as needed
-    area.data = function(data) {
-      if (data) {
-        dataCollection_ = data;
-        return area;
-      }
-      return dataCollection_.get(config_.dataId);
-    };
+    area.init();
 
     /**
      * Updates the area component with new/updated data/config
      * @return {components.area}
      */
     area.update = function() {
-      if (!root_) {
+      if (!_.root) {
         return area;
       }
 
@@ -11606,18 +12008,18 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
 
       updateAreaGenerator();
 
-      if (config_.cssClass) {
-        root_.classed(config_.cssClass, true);
+      if (_.config.cssClass) {
+        _.root.classed(_.config.cssClass, true);
       }
-      root_.select('.gl-path')
+      _.root.select('.gl-path')
         .datum(area.data().data)
         .attr({
-          'fill': config_.color,
-          'opacity': config_.opacity,
-          'd': config_.areaGenerator
+          'fill': _.config.color,
+          'opacity': _.config.opacity,
+          'd': _.config.areaGenerator
         });
       area.applyZIndex();
-      area.dispatch.update.call(this);
+      area.emit('update');
       return area;
     };
 
@@ -11627,9 +12029,8 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
      * @return {components.area}
      */
     area.render = function(selection) {
-      var scope;
-      if (!root_) {
-        root_ = d3util.applyTarget(area, selection, function(target) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(area, selection, function(target) {
           var root = target.append('g')
             .attr({
               'class': string.classes('component', 'area')
@@ -11641,44 +12042,244 @@ function(array, config, obj, string, d3util, mixins, dataFns, pubsub) {
           return root;
         });
       }
-      scope = area.scope();
-      globalPubsub.sub(scope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(area.globalScope('data-toggle'), handleDataToggle);
       area.update();
-      area.dispatch.render.call(this);
+      area.emit('render');
       return area;
-    };
-
-    /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    area.root = function() {
-      return root_;
-    };
-
-    /** Scope for the area component */
-    //TODO create a mixin for scope
-    area.scope = function() {
-      return pubsub.scope(config_.rootId);
     };
 
     /**
      * Destroys the area and removes everything from the DOM.
      */
-    area.destroy = function() {
-      var scope;
-      if(root_) {
-        root_.remove();
-      }
-      scope = area.scope();
-      globalPubsub.unsub(scope('data-toggle'), handleDataToggle);
-      root_ = null;
-      config_ = null;
-      defaults_ = null;
-      area.dispatch.destroy.call(this);
-    };
+    area.destroy = fn.compose(area.destroy, function() {
+      _.globalPubsub.unsub(area.globalScope('data-toggle'), handleDataToggle);
+    });
 
     return area();
+
+  };
+});
+
+/**
+ * @fileOverview
+ * Reusuable scatter-plot component.
+ */
+define('components/scatter',[
+  'core/config',
+  'core/object',
+  'core/string',
+  'd3-ext/util',
+  'mixins/mixins',
+  'data/functions',
+  'events/pubsub',
+  'core/function'
+],
+function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
+  'use strict';
+
+  return function() {
+
+    //Private variables
+    var _ = {
+      config: {}
+    };
+
+    _.defaults = {
+      type: 'scatter',
+      target: null,
+      cid: null,
+      color: '#333',
+      strokeWidth: 1.5,
+      radius: 6,
+      inLegend: true,
+      xScale: null,
+      yScale: null,
+      opacity: 0.4,
+      hiddenStates: null,
+      rootId: null,
+      showTransition: false,
+      preTransitionRadius: 5,
+      preTransitionColor: '#333',
+      delay: 100,
+      duration: 1000,
+      ease: 'linear'
+    };
+
+    /**
+     * Removes elements from the exit selection
+     * @param  {d3.selection|Node|string} selection
+     */
+    function remove(selection) {
+      if (selection && selection.exit) {
+        selection.exit().remove();
+      }
+    }
+
+    /**
+     * Handles the sub of data-toggle event.
+     * Checks presence of inactive tag
+     * to show/hide the scatter component
+     * @param  {string} dataId
+     */
+     function handleDataToggle(args) {
+      var id = _.config.dataId;
+      if (args === id) {
+        if (_.dataCollection.hasTags(id, 'inactive')) {
+          scatter.hide();
+        } else {
+          scatter.show();
+        }
+      }
+    }
+
+    function getRadius(d, i) {
+      var radiusDim;
+      radiusDim = dataFns.dimension(scatter.data(), 'r')(d, i);
+      if (radiusDim !== null) {
+        return radiusDim;
+      }
+      return _.config.radius;
+    }
+
+    function getColor(d, i) {
+      var colorDim;
+      colorDim = dataFns.dimension(scatter.data(), 'color')(d, i);
+      if (colorDim !== null) {
+        return colorDim;
+      }
+      return _.config.color;
+    }
+
+    /**
+     * Updates the scatter component
+     * @param  {d3.selection} selection
+     */
+    function update(selection) {
+      var dataConfig;
+      dataConfig = scatter.data();
+      selection
+        .attr({
+          cx: function(d, i) {
+            return _.config.xScale(dataFns.dimension(dataConfig, 'x')(d, i));
+          },
+          cy: function(d, i) {
+            return _.config.yScale(dataFns.dimension(dataConfig, 'y')(d, i));
+          },
+          r: _.config.showTransition ? _.config.preTransitionRadius : getRadius,
+          fill: _.config.showTransition ? _.config.preTransitionColor
+            : getColor,
+          opacity: _.config.opacity,
+          'class': string.classes('scatter-point')
+        });
+      if (_.config.showTransition) {
+        scatter.applyTransition(selection);
+      }
+    }
+
+    /**
+     * Main function for scatter component
+     * @return {components.scatter}
+     */
+    function scatter() {
+      obj.extend(_.config, _.defaults);
+      return scatter;
+    }
+
+    scatter._ = _;
+
+    obj.extend(
+      scatter,
+      configMixin.mixin(
+        _.config,
+        'xScale',
+        'yScale',
+        'color',
+        'opacity',
+        'radius'
+      ),
+      mixins.component);
+
+    scatter.init();
+
+    /**
+     * Updates the scatter component with new/updated data/config
+     * @return {components.scatter}
+     */
+    scatter.update = function() {
+      var dataConfig, selection;
+
+      if (!_.root) {
+        return scatter;
+      }
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
+      }
+      dataConfig = scatter.data();
+      // Return early if there's no data.
+      if (!dataConfig || !dataConfig.data) {
+        return scatter;
+      }
+
+      selection = _.root.selectAll('.gl-scatter-point')
+        .data(dataConfig.data);
+
+      selection
+        .enter()
+        .append('circle');
+
+      update(selection);
+      remove(selection);
+      scatter.emit('update');
+      return scatter;
+    };
+
+    /**
+     * Renders the scatter component
+     * @param  {d3.selection|Node|string} selection
+     * @return {components.scatter}
+     */
+    scatter.render = function(selection) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(scatter, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'scatter')
+            });
+          return root;
+        });
+      }
+      _.globalPubsub.sub(scatter.globalScope('data-toggle'), handleDataToggle);
+      scatter.update();
+      scatter.emit('render');
+      return scatter;
+    };
+
+    /**
+     * Applies transitions to the scatter plot
+     * @param {d3.selection|Node|string} selection
+     */
+    scatter.applyTransition = function(selection) {
+      selection.transition()
+        .delay(_.config.delay)
+        .duration(_.config.duration)
+        .ease(_.config.ease)
+        .attr({
+          r: getRadius,
+          fill: getColor
+        });
+      return scatter;
+    };
+
+    /**
+     * Destroys the scatter and removes everything from the DOM.
+     * @public
+     */
+    scatter.destroy = fn.compose(scatter.destroy, function() {
+      _.globalPubsub.unsub(
+        scatter.globalScope('data-toggle'), handleDataToggle);
+    });
+
+    return scatter();
 
   };
 });
@@ -11690,9 +12291,10 @@ define('components/component',[
   'components/label',
   'components/overlay',
   'components/asset',
-  'components/area'
+  'components/area',
+  'components/scatter'
 ],
-function(line, legend, axis, label, overlay, asset, area) {
+function(line, legend, axis, label, overlay, asset, area, scatter) {
   'use strict';
 
   return {
@@ -11702,7 +12304,8 @@ function(line, legend, axis, label, overlay, asset, area) {
     label: label,
     overlay: overlay,
     asset: asset,
-    area: area
+    area: area,
+    scatter: scatter
   };
 
 });
@@ -12536,360 +13139,6 @@ function (obj, array) {
 
 /**
  * @fileOverview
- * Data Dimension.
- */
-define('data/dimension/dimension',[
-  'core/array'
-], function (array) {
-  'use strict';
-
-  var Dimension;
-
-  function sumReduce(arr) {
-    return arr.reduce(function(prevValue, curValue){
-      return curValue + prevValue;
-    });
-  }
-
-  /**
-   * @constructor
-   * Data Dimension.
-   * @param {(Object, Array.<Object>)?} optDataSource
-   */
-  Dimension = function(optDataSource) {
-    this.dataSources_ = array.getArray(optDataSource);
-  };
-
-  /**
-   * Adds a dimension to the dimension selection.
-   */
-  Dimension.prototype.add = function(data) {
-    if(Array.isArray(data)) {
-      array.append(this.dataSources_, data);
-    } else {
-      this.dataSources_.push(data);
-    }
-    return this;
-  };
-
-  /**
-   * Generic map function that accepts and applies a function
-   *   on its sources.
-   */
-  Dimension.prototype.map = function(fn, context) {
-    return new Dimension(this.dataSources_.map(fn, context));
-  };
-
-  /**
-   * Accepts and applies a filter fn on its dimension sources.
-   */
-  Dimension.prototype.filter = function(fn, context) {
-    return this.map(function(dataSource) {
-      return dataSource.filter(fn, context);
-    });
-  };
-
-  /**
-   * Sums all the values and returns the selection.
-   */
-  Dimension.prototype.sum = function() {
-    return this.map(function(dataSource) {
-      return sumReduce(dataSource);
-    });
-  };
-
-  /**
-   * Transposes the dimension matrix i.e.
-   * Converts an array of rows (dimensions) to corresponding array
-   * of columns.
-   * For example,
-   *   [ a p x ]         [ a b c ]
-   *   [ b q y ] becomes [ p q r ]
-   *   [ c r z ]         [ x y z ]
-   */
-  Dimension.prototype.transpose = function() {
-    var maxLength = d3.max(this.dataSources_.map(function(dataSource) {
-      return dataSource.length;
-    })) || 0, table = [], col, i, k;
-    for (i = 0; i < maxLength; i++) {
-      col = [];
-      for (k = 0; k < this.dataSources_.length; k++) {
-        col.push(this.dataSources_[k][i]);
-      }
-      table.push(col);
-    }
-    return new Dimension(table);
-  };
-
-  /**
-   * Averages the values in the dimension selection.
-   */
-  Dimension.prototype.avg = function() {
-    return this.map(function(dataSource) {
-      return sumReduce(dataSource)/dataSource.length;
-    });
-  };
-
-  /**
-   * Computes the max values in the dimension selection.
-   */
-  Dimension.prototype.max = function() {
-    return this.map(function(dataSource) {
-      return d3.max(dataSource);
-    });
-  };
-
-  /**
-   * Computes the min values in the dimension selection.
-   */
-  Dimension.prototype.min = function() {
-    return this.map(function(dataSource) {
-      return d3.min(dataSource);
-    });
-  };
-
-  /**
-   * Computes the max/min values in the dimension selection.
-   */
-  Dimension.prototype.extent = function() {
-    return this.map(function(dataSource) {
-      return d3.extent(dataSource);
-    });
-  };
-
-  /**
-   * Rounds the values in the dimension selection.
-   */
-  Dimension.prototype.round = function() {
-    return this.map(function(dataSource) {
-      if (Array.isArray(dataSource)) {
-        return dataSource.map(function(d) {
-          return Math.round(d);
-        });
-      } else {
-        return Math.round(dataSource);
-      }
-    });
-  };
-
-  /**
-   * Concatinates the values in multiple sources into one.
-   */
-  Dimension.prototype.concat = function() {
-    var arr = [];
-    this.dataSources_.forEach(function(dataSource) {
-      arr = arr.concat(dataSource);
-    });
-    return new Dimension([arr]);
-  };
-
-  /**
-   * Returns the raw value of the selection.
-   */
-  Dimension.prototype.all = function() {
-    return this.dataSources_;
-  };
-
-  /**
-   * Returns a source by index.
-   * Defaults to returning the first source.
-   * @param {number?} i index of the data source
-   */
-  Dimension.prototype.get = function(i) {
-    i = i || 0;
-    return this.dataSources_[i];
-  };
-
-  return {
-
-    /**
-     * Creates a new dimension selection.
-     * Optionally takes in a single or list of dimension arrays
-     * to initialize the selection.
-     */
-    create: function(optDimensions) {
-      return new Dimension(optDimensions);
-    },
-
-    /**
-     * Returns dim selection prototype for extension.
-     */
-    getDimensionPrototype: function() {
-      return Dimension.prototype;
-    }
-
-  };
-
-});
-
-/**
- * @fileOverview
- * Data Selection.
- */
-define('data/selection/selection',[
-  'data/dimension/dimension',
-  'core/object',
-  'core/array',
-  'data/functions'
-], function (dimension, obj, array, dataFns) {
-  'use strict';
-
-  var Selection;
-
-  /**
-   * @constructor
-   * Data Selection.
-   */
-  Selection = function(optDataSource) {
-    this.dataSources_ = array.getArray(optDataSource);
-  };
-
-  /**
-   * Adds a new data sources to an existing selection.
-   * @param {Object|Array.<Object>} data
-   */
-  Selection.prototype.add = function(data) {
-    if(Array.isArray(data)) {
-      array.append(this.dataSources_, data);
-    } else {
-      this.dataSources_.push(data);
-    }
-    return this;
-  };
-
-  /**
-   * Applies filter using dimensions on data sources.
-   * This will eventually be a more versatile function.
-   * Assumes when two inputs are given, that the first is a dimension and
-   * second is a range if it is an array.
-   * TODO: If second arg is simple value, filter if equal to that value.
-   *       If second arg is a function, use that function.
-   */
-  Selection.prototype.filter = function(dim, range) {
-    return this.map(function(dataSource) {
-      var filteredDataSource = {}, accessor;
-      obj.extend(filteredDataSource, dataSource);
-      accessor = dataFns.dimension(dataSource, dim);
-      filteredDataSource.data =  filteredDataSource.data.filter(
-        function(d) {
-          var e = accessor(d);
-          return e >= range[0] && e<= range[1];
-        }
-      );
-      return filteredDataSource;
-    });
-  };
-
-  /**
-   * Filters the datasources by tags.
-   * returns datasources which do not contain tags.
-   * @param  {array|string} tags
-   */
-  Selection.prototype.filterByTags = function (tags) {
-    return new Selection(this.dataSources_.filter(
-      function(dataSource) {
-        return array.getArray(tags).every(function(tag) {
-          return !array.contains(dataSource.tags, tag);
-        });
-      })
-    );
-  };
-
-  /**
-   * Returns the number of data sources in the selection.
-   */
-  Selection.prototype.length = function() {
-    return this.dataSources_.length;
-  };
-
-  /**
-   * Helper method to run map on a selection.
-   */
-  Selection.prototype.map = function(fn) {
-    return new Selection(this.dataSources_.map(fn));
-  };
-
-  /**
-   * Helper function to return dimension selection over
-   * a map of the selection.
-   */
-  Selection.prototype.dimMap = function(fn) {
-    return dimension.create(this.dataSources_.map(fn));
-  };
-
-  /**
-   * Returns all the data sources.
-   */
-  Selection.prototype.all = function() {
-    return this.dataSources_;
-  };
-
-  /**
-   * Returns the raw data source specified by index.
-   * Returns the first data source if no index is specified.
-   * @param {number?} i index of the data source
-   */
-  Selection.prototype.get = function(i) {
-    i = i || 0;
-    return this.dataSources_[i];
-  };
-
-  /**
-   * Returns a dimension selection of the specified dimension.
-   * @param {string} dim The dimension
-   */
-  Selection.prototype.dim = function(dim) {
-    return this.dimMap(function(dataSource) {
-      return dataSource.data.map(dataFns.dimension(dataSource, dim));
-    });
-  };
-
-  /**
-   * Returns a new selection with the specified dimensions
-   * in a flat form.
-   * @param {string|Array.<string>} dims A list of dimensions.
-   */
-  Selection.prototype.flatten = function(dims) {
-    return this.map(function(dataSource) {
-      var newDataSource = {};
-      obj.extend(newDataSource, dataSource);
-      delete newDataSource.dimensions;
-      newDataSource.data = dataSource.data.map(function(d) {
-        var data = {};
-        array.getArray(dims).forEach(function(dim) {
-          data[dim] = dataFns.dimension(dataSource, dim)(d);
-        });
-        return data;
-      });
-      return newDataSource;
-    });
-  };
-
-  return {
-
-    /**
-     * Creates a new selection.
-     * Optionally takes in a single or list of data sources
-     * to initialize the selection.
-     * @param {(Object, Array.<Object>)?}
-     */
-    create: function(optDataSource) {
-      return new Selection(optDataSource);
-    },
-
-    /**
-     * Returns selection prototype for extension.
-     */
-    getSelectionPrototype: function() {
-      return Selection.prototype;
-    }
-
-  };
-
-});
-
-/**
- * @fileOverview
  * Difference quotient.
  */
 define('data/selection/diff-quotient',[
@@ -13540,6 +13789,7 @@ define('graphs/graph',[
   'core/object',
   'core/config',
   'core/array',
+  'core/function',
   'core/asset-loader',
   'core/component-manager',
   'core/string',
@@ -13551,8 +13801,8 @@ define('graphs/graph',[
   'data/collection',
   'data/domain'
 ],
-function(obj, config, array, assetLoader, componentManager, string, components,
-  layoutManager, d3util, mixins, dataFns, collection, domain) {
+function(obj, config, array, fn, assetLoader, componentManager, string,
+  components, layoutManager, d3util, mixins, dataFns, collection, domain) {
   'use strict';
 
   return function() {
@@ -13560,12 +13810,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
     /**
      * Private variables.
      */
-    var config_,
-      defaults_,
-      root_,
-      defaultXaccessor_,
-      defaultYaccessor_,
-      dataCollection_,
+    var _ = {
+      config: {}
+    },
       STATES,
       NO_COLORED_COMPONENTS,
       coloredComponentsCount,
@@ -13590,9 +13837,8 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      */
     NO_COLORED_COMPONENTS = ['axis', 'legend', 'label'];
 
-    config_ = {};
-
-    defaults_ = {
+    _.defaults = {
+      type: 'graph',
       layout: 'default',
       width: 700,
       height: 230,
@@ -13615,29 +13861,9 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       yAxisUnit: null,
       primaryContainer: 'gl-main',
       domainIntervalUnit: null,
-      id: string.random(),
+      id: null,
       domainSources: null,
       domainConfig: null
-    };
-
-    /**
-     * Default x accessor for data
-     * @private
-     * @param  {Object} d
-     * @return {Object}
-     */
-    defaultXaccessor_ = function(d) {
-      return d.x;
-    };
-
-    /**
-     * Default x accessor for data
-     * @private
-     * @param  {Object} d
-     * @return {Object}
-     */
-    defaultYaccessor_ = function(d) {
-      return d.y;
     };
 
     /**
@@ -13646,7 +13872,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {d3.selection}
      */
     function getPrimaryContainer() {
-      return root_.selectAttr('gl-container-name', config_.primaryContainer);
+      return _.root.selectAttr('gl-container-name', _.config.primaryContainer);
     }
 
     /**
@@ -13667,7 +13893,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       var colors, len;
 
       if (!array.contains(NO_COLORED_COMPONENTS, component.config().type)){
-        colors = d3.functor(config_.colorPalette)();
+        colors = d3.functor(_.config.colorPalette)();
         len = colors.length;
         if (component.hasOwnProperty('color')) {
           component.config().color = component.config().color ||
@@ -13691,18 +13917,18 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @param  {d3.selection} selection
      */
     function renderSvg(selection) {
-      root_ = selection.append('svg')
+      _.root = selection.append('svg')
         .attr({
-          'width': config_.width,
-          'height': config_.height,
+          'width': _.config.width,
+          'height': _.config.height,
           'viewBox': [
             0,
             0,
-            config_.viewBoxWidth,
-            config_.viewBoxHeight].toString(),
-          'preserveAspectRatio': config_.preserveAspectRatio
+            _.config.viewBoxWidth,
+            _.config.viewBoxHeight].toString(),
+          'preserveAspectRatio': _.config.preserveAspectRatio
         });
-      return root_;
+      return _.root;
     }
 
     /**
@@ -13711,14 +13937,14 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @param  {d3.selection} selection
      */
     function renderPanel(selection) {
-      root_ = renderSvg(selection);
-      renderDefs(root_);
+      _.root = renderSvg(selection);
+      renderDefs(_.root);
       layoutManager.setLayout(
-        config_.layout,
-        root_,
-        config_.viewBoxWidth,
-        config_.viewBoxHeight);
-      root_.select('g').attr('gl-id', config_.id);
+        _.config.layout,
+        _.root,
+        _.config.viewBoxWidth,
+        _.config.viewBoxHeight);
+      _.root.select('g').attr('gl-id', _.config.id);
     }
 
     function getDomainConfig(sources) {
@@ -13727,20 +13953,20 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           sources: sources,
           compute: 'interval',
           args: {
-            unit: config_.domainIntervalUnit,
-            period: config_.domainIntervalPeriod
+            unit: _.config.domainIntervalUnit,
+            period: _.config.domainIntervalPeriod
           },
           modifier: {
-            force: config_.forceX
+            force: _.config.forceX
           },
           'default': [0, 0]
         },
         y: {
           sources: sources,
-          compute: config_.yCompute,
+          compute: _.config.yCompute,
           modifier: {
-            force: config_.forceY,
-            maxMultiplier: config_.yDomainModifier
+            force: _.config.forceY,
+            maxMultiplier: _.config.yDomainModifier
           },
           'default': [0, 0]
         }
@@ -13756,20 +13982,20 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           domainSources,
           domainConfig;
 
-      domainSources = config_.domainSources || '*';
+      domainSources = _.config.domainSources || '*';
       domainConfig = getDomainConfig(domainSources);
-      if (config_.domainConfig) {
-        domainConfig = obj.extend(domainConfig, config_.domainConfig);
+      if (_.config.domainConfig) {
+        domainConfig = obj.extend(domainConfig, _.config.domainConfig);
       }
-      domain.addDomainDerivation(domainConfig, dataCollection_);
+      domain.addDomainDerivation(domainConfig, _.dataCollection);
 
-      dataCollection_.updateDerivations();
-      graphDomain = dataCollection_.get('$domain');
-      if (dataCollection_.select(domainSources).length() > 0) {
-        config_.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
+      _.dataCollection.updateDerivations();
+      graphDomain = _.dataCollection.get('$domain');
+      if (_.dataCollection.select(domainSources).length() > 0) {
+        _.config.xScale.rangeRound([0, getPrimaryContainerSize()[0]])
           .domain(graphDomain.x);
 
-        config_.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
+        _.config.yScale.rangeRound([getPrimaryContainerSize()[1], 0])
           .domain(graphDomain.y);
       }
     }
@@ -13778,7 +14004,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * Add legend component to the graph
      */
     function addLegend() {
-      if (!componentManager_.first('gl-legend') && config_.showLegend) {
+      if (!componentManager_.first('gl-legend') && _.config.showLegend) {
         componentManager_.add({
           cid: 'gl-legend',
           type: 'legend',
@@ -13827,18 +14053,18 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         xaxisComponent = componentManager_.first('gl-xaxis');
         if (xaxisComponent) {
           xaxisComponent.config({
-            scale: config_.xScale,
-            ticks: config_.xTicks,
-            unit: config_.xAxisUnit
+            scale: _.config.xScale,
+            ticks: _.config.xTicks,
+            unit: _.config.xAxisUnit
           });
         }
         yaxisComponent = componentManager_.first('gl-yaxis');
         if (yaxisComponent) {
           yaxisComponent.config({
-            scale: config_.yScale,
-            ticks: config_.yTicks,
-            unit: config_.yAxisUnit,
-            target: config_.primaryContainer
+            scale: _.config.yScale,
+            ticks: _.config.yTicks,
+            unit: _.config.yAxisUnit,
+            target: _.config.primaryContainer
           });
         }
         componentManager_.update();
@@ -13857,7 +14083,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       layoutConfig = {
         type: 'vertical', position: 'center', gap: 6
       };
-      labelTexts = array.getArray(config_.emptyMessage);
+      labelTexts = array.getArray(_.config.emptyMessage);
       labels = labelTexts.map(function(text, idx) {
         var label = components.label().text(text);
         if (idx === 0) {
@@ -13880,7 +14106,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           layoutConfig: layoutConfig,
           components: labels
         });
-      componentManager_.render(root_, 'gl-empty-overlay');
+      componentManager_.render(_.root, 'gl-empty-overlay');
     }
 
     /**
@@ -13895,7 +14121,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         assetId: 'gl-asset-spinner'
       });
       label = components.label()
-        .text(config_.loadingMessage)
+        .text(_.config.loadingMessage)
         .config({
           color: '#666',
           fontSize: 13
@@ -13905,7 +14131,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           cid: 'gl-loading-overlay',
           components: [spinner, label]
         });
-      componentManager_.render(root_, 'gl-loading-overlay');
+      componentManager_.render(_.root, 'gl-loading-overlay');
     }
 
     /**
@@ -13920,7 +14146,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         assetId: 'gl-asset-icon-error'
       });
       label = components.label()
-        .text(config_.errorMessage)
+        .text(_.config.errorMessage)
         .config({
           color: '#C40022',
           fontSize: 13
@@ -13930,7 +14156,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           cid: 'gl-error-overlay',
           components: [icon, label]
         });
-      componentManager_.render(root_, 'gl-error-overlay');
+      componentManager_.render(_.root, 'gl-error-overlay');
     }
 
     /**
@@ -13964,14 +14190,14 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       componentManager_.get().forEach(function(c) {
         var hiddenStates = c.config('hiddenStates'),
             dataId = c.config('dataId');
-        if (array.contains(hiddenStates, config_.state) ||
-              (dataId && dataCollection_.hasTags(dataId, 'inactive'))) {
+        if (array.contains(hiddenStates, _.config.state) ||
+              (dataId && _.dataCollection.hasTags(dataId, 'inactive'))) {
           c.hide();
         } else {
           c.show();
         }
       });
-      switch (config_.state) {
+      switch (_.config.state) {
         case STATES.EMPTY:
           showEmptyOverlay();
           break;
@@ -13983,7 +14209,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
           break;
         case STATES.NORMAL:
           // Hide x-axis if theres no data.
-          if (domainIsEmpty(config_.xScale.domain())) {
+          if (domainIsEmpty(_.config.xScale.domain())) {
             componentManager_.first('gl-xaxis').hide();
             componentManager_.first('gl-yaxis').hide();
           }
@@ -13996,8 +14222,11 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {graphs.graph}
      */
     function graph() {
-      obj.extend(config_, defaults_);
-      dataCollection_ = collection.create();
+      obj.extend(_.config, _.defaults);
+      if (!obj.isDefAndNotNull(_.config.id)) {
+        _.config.id = string.random();
+      }
+      _.dataCollection = collection.create();
       // TODO: move these specific components to graphBuilder.
       componentManager_ = componentManager.create([
         {
@@ -14018,25 +14247,23 @@ function(obj, config, array, assetLoader, componentManager, string, components,
         }
       ]);
       componentManager_
-        .registerSharedObject('xScale', config_.xScale, true)
-        .registerSharedObject('yScale', config_.yScale, true)
-        .registerSharedObject('data', dataCollection_, true);
+        .registerSharedObject('xScale', _.config.xScale, true)
+        .registerSharedObject('yScale', _.config.yScale, true)
+        .registerSharedObject('data', _.dataCollection, true);
       coloredComponentsCount = 0;
       return graph;
     }
 
+    graph._ = _;
+
     obj.extend(
       graph,
-      config.mixin(config_, 'id', 'width', 'height'),
-      mixins.toggle);
+      config.mixin(_.config, 'id', 'width', 'height'),
+      mixins.component);
+
+    graph.init();
 
     graph.STATES = STATES;
-
-    /**
-     * Event dispatcher.
-     * @public
-     */
-    graph.dispatch = mixins.dispatch('state');
 
     /**
      * Configures the graph state and triggers overlays updates.
@@ -14044,16 +14271,16 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * @return {graph.STATES}
      */
     graph.state = function(newState) {
-      var oldState = config_.state;
+      var oldState = _.config.state;
 
       if (!newState) {
         return oldState;
       }
-      config_.state = newState;
+      _.config.state = newState;
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
-      graph.dispatch.state.call(this);
+      graph.emit('state');
       return graph;
     };
 
@@ -14066,15 +14293,15 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       if (data) {
         // Single string indicates id of data to return.
         if (typeof data === 'string') {
-          return dataCollection_.get(data);
+          return _.dataCollection.get(data);
         }
         array.getArray(data).forEach(function(d) {
-          dataCollection_.extend(d);
+          _.dataCollection.extend(d);
         });
         return graph;
       }
 
-      return dataCollection_;
+      return _.dataCollection;
     };
 
     /**
@@ -14101,7 +14328,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       components = componentManager_.add(componentConfig);
       components.forEach(function(c) {
         if (!c.config('target')) {
-          c.config('target', config_.primaryContainer);
+          c.config('target', _.config.primaryContainer);
         }
         setDefaultColor(c);
       });
@@ -14120,7 +14347,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
-      graph.dispatch.update.call(this);
+      graph.emit('update');
       return graph;
     };
 
@@ -14136,7 +14363,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       renderPanel(selection);
       //Add legend before applying shared objects.
       addLegend();
-      componentManager_.registerSharedObject('rootId', config_.id, true);
+      componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
       graph.update();
       componentManager_.render(graph.root());
@@ -14145,7 +14372,7 @@ function(obj, config, array, assetLoader, componentManager, string, components,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
-      graph.dispatch.render.call(this);
+      graph.emit('render');
       return graph;
     };
 
@@ -14161,26 +14388,10 @@ function(obj, config, array, assetLoader, componentManager, string, components,
      * Removes everything from the DOM, cleans up all references.
      * @public
      */
-    graph.destroy = function() {
-      config_.state = STATES.DESTROYED;
+    graph.destroy = fn.compose(graph.destroy, function() {
       componentManager_.destroy();
-      if (root_) {
-        root_.remove();
-        root_ = null;
-      }
-      config_ = null;
-      defaults_ = null;
       componentManager_ = null;
-      graph.dispatch.destroy.call(this);
-    };
-
-     /**
-     * Returns the root_
-     * @return {d3.selection}
-     */
-    graph.root = function() {
-      return root_;
-    };
+    });
 
     return graph();
   };
@@ -14224,7 +14435,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     /**
      * The supported types of pre-configured graphs.
      */
-    GRAPH_TYPES = ['line', 'area', 'stacked-area'];
+    GRAPH_TYPES = ['line', 'area', 'stacked-area', 'scatter'];
 
     /**
      * Dataset configurations automatically applied to graphs.
@@ -14348,6 +14559,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           // else add the specified ones.
           if(isInSources(dataSource, sources)) {
             g.component({
+              rootId: g.config('id'),
               type: componentType,
               dataId: id,
               cid: id,
@@ -14606,11 +14818,11 @@ function(obj, array, string, format, d3util, graph, pubsub) {
           domainSources: domainSources
         });
 
-      g.dispatch.on('update', function() {
+      g.on('update', function() {
         updateStatsLabel.call(this);
         renderAddedComponents(g);
       });
-      g.dispatch.on('render', function() {
+      g.on('render', function() {
         // subscribe to toggle event and update stats
         scopeFn = pubsub.scope(g.config('id'));
         globalPubsub.sub(scopeFn('data-toggle'), updateStatsLabel.bind(g));
@@ -14623,6 +14835,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
 
       switch (type) {
         case 'line':
+        case 'scatter':
         case 'area':
           overrideRemoveDataFn(g);
           overrideAddDataFn(type, g, sources, false);
@@ -15298,6 +15511,8 @@ define('core/core',[
   'core/array',
   'core/function',
   'core/format',
+  'data/selection/selection',
+  'data/dimension/dimension',
   'graphs/graph',
   'layout/layouts',
   'graphs/graph-builder',
@@ -15308,8 +15523,8 @@ define('core/core',[
 
   'd3-ext/d3-ext'
 ],
-function(obj, string, array, fn, format, graph, layouts,
-    graphBuilder, component, collection, assets, pubsub) {
+function(obj, string, array, fn, format, selection, dimension, graph,
+    layouts, graphBuilder, component, collection, assets, pubsub) {
   'use strict';
 
   var core = {
@@ -15323,6 +15538,10 @@ function(obj, string, array, fn, format, graph, layouts,
     graph: graph,
     layouts: layouts,
     components: component,
+    data: {
+      selection: selection,
+      dimension: dimension
+    },
     dataCollection: collection,
     assetLoader: assets,
     pubsub: pubsub,
