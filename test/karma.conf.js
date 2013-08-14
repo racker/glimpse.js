@@ -26,9 +26,9 @@ module.exports = function(config) {
     plugins: [
       'karma-jasmine',
       'karma-requirejs',
-      'karma-sauce-launcher',
       'karma-chrome-launcher',
-      'karma-firefox-launcher'
+      'karma-firefox-launcher',
+      'karma-safari-launcher'
     ]
   });
 };
