@@ -44,6 +44,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
+      highlightTransDuration: 500,
+      highlightTransDelay: 1000,
       showHighlight: false
     };
 
