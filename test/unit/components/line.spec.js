@@ -68,7 +68,11 @@ function(d3, object, line, dc) {
         color: 'steelBlue',
         inLegend: true,
         lineGenerator: d3.svg.line(),
-        interpolate: 'linear'
+        interpolate: 'linear',
+        highlightRadius: 4,
+        highlightFill: '#fff',
+        highlightStrokeWidth: 2,
+        showHighlight: false
       };
 
       beforeEach(function(){
@@ -90,6 +94,22 @@ function(d3, object, line, dc) {
 
       it('has default interpolate', function() {
         expect(config.interpolate).toBe(defaults.interpolate);
+      });
+
+      it('has default highlightRadius', function() {
+        expect(config.highlightRadius).toBe(defaults.highlightRadius);
+      });
+
+      it('has default highlightFill', function() {
+        expect(config.highlightFill).toBe(defaults.highlightFill);
+      });
+
+      it('has default highlightStrokeWidth', function() {
+        expect(config.highlightStrokeWidth).toBe(defaults.highlightStrokeWidth);
+      });
+
+      it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
       });
 
     });
@@ -259,6 +279,9 @@ function(d3, object, line, dc) {
         setScales();
         testLine.render('#svg-fixture');
         testLine.on('update', handlerSpy);
+        testLine.config('showHighlight', true);
+        spyOn(testLine, 'highlight');
+        spyOn(testLine, 'pubsubHighlightEvents');
         testLine.update();
         path = selection.select('path').node();
       });
@@ -297,6 +320,15 @@ function(d3, object, line, dc) {
         }
       );
 
+      it('calls the highlight method when showHighlight is true', function() {
+        expect(testLine.highlight).toHaveBeenCalled();
+      });
+
+      it('calls the highlight method when pubsubHightlightEvents is true',
+        function() {
+          expect(testLine.pubsubHighlightEvents).toHaveBeenCalled();
+      });
+
     });
 
     describe('render()', function() {
@@ -306,6 +338,7 @@ function(d3, object, line, dc) {
         selection = jasmine.svgFixture();
         setData();
         spyOn(testLine, 'update');
+        spyOn(testLine, 'highlight');
         testLine.on('render', handlerSpy);
         testLine.render('#svg-fixture');
       });
@@ -333,6 +366,11 @@ function(d3, object, line, dc) {
 
       it('calls the update function', function() {
         expect(testLine.update).toHaveBeenCalled();
+      });
+
+      it('does not call highlight if showHighlight is set to false',
+        function() {
+          expect(testLine.highlight).not.toHaveBeenCalled();
       });
 
     });
@@ -388,7 +426,7 @@ function(d3, object, line, dc) {
         }
       });
 
-      it('returns graceully with no data', function() {
+      it('returns gracefully with no data', function() {
         expect(exceptionCaught).toBe(false);
       });
 
