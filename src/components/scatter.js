@@ -19,7 +19,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -40,7 +41,11 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       preTransitionColor: '#333',
       delay: 100,
       duration: 1000,
-      ease: 'linear'
+      ease: 'linear',
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      showHighlight: false
     };
 
     /**
@@ -135,7 +140,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
         'opacity',
         'radius'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     scatter.init();
 
@@ -157,6 +163,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       if (!dataConfig || !dataConfig.data) {
         return scatter;
       }
+      scatter.initHighlight();
 
       selection = _.root.selectAll('.gl-scatter-point')
         .data(dataConfig.data);
@@ -215,6 +222,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
     scatter.destroy = fn.compose(scatter.destroy, function() {
       _.globalPubsub.unsub(
         scatter.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(scatter.scope('mouseout'), scatter.handleMouseOut);
+      _.globalPubsub.sub(scatter.scope('mousemove'), scatter.handleMouseMove);
     });
 
     return scatter();

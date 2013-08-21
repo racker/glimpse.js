@@ -20,7 +20,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -39,7 +40,11 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       opacity: 1,
       hiddenStates: null,
       rootId: null,
-      zIndex: 5
+      zIndex: 5,
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      showHighlight: false
     };
 
     /**
@@ -121,7 +126,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'lineGenerator',
         'color'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     line.init();
 
@@ -138,6 +144,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       if (_.config.cid) {
         _.root.attr('gl-cid', _.config.cid);
       }
+      line.initHighlight();
       dataConfig = line.data();
       // Return early if there's no data.
       if (!dataConfig || !dataConfig.data) {
@@ -198,6 +205,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      */
     line.destroy = fn.compose(line.destroy, function() {
       _.globalPubsub.unsub(line.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.unsub(line.scope('mouseout'), line.handleMouseOut);
+      _.globalPubsub.unsub(line.scope('mousemove'), line.handleMouseMove);
     });
 
     return line();

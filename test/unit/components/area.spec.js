@@ -74,7 +74,11 @@ function(area, dc) {
         color: null,
         inLegend: true,
         areaGenerator: d3.svg.area(),
-        opacity: 1
+        opacity: 1,
+        highlightRadius: 4,
+        highlightFill: '#fff',
+        highlightStrokeWidth: 2,
+        showHighlight: false
       };
 
       beforeEach(function(){
@@ -108,6 +112,22 @@ function(area, dc) {
 
       it('has default opacity', function() {
         expect(config.opacity).toBe(defaults.opacity);
+      });
+
+      it('has default highlightRadius', function() {
+        expect(config.highlightRadius).toBe(defaults.highlightRadius);
+      });
+
+      it('has default highlightFill', function() {
+        expect(config.highlightFill).toBe(defaults.highlightFill);
+      });
+
+      it('has default highlightStrokeWidth', function() {
+        expect(config.highlightStrokeWidth).toBe(defaults.highlightStrokeWidth);
+      });
+
+      it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
       });
 
     });
@@ -230,6 +250,7 @@ function(area, dc) {
       beforeEach(function() {
         setData();
         spyOn(testArea, 'update').andCallThrough();
+        spyOn(testArea, 'highlight');
         testArea.on('render', handlerSpy);
         testArea.config('color', 'green');
         testArea.render(selection);
@@ -273,6 +294,11 @@ function(area, dc) {
 
       it('calls the update function', function() {
         expect(testArea.update).toHaveBeenCalled();
+      });
+
+      it('does not call highlight if showHighlight is set to false',
+        function() {
+          expect(testArea.highlight).not.toHaveBeenCalled();
       });
 
     });
@@ -323,6 +349,9 @@ function(area, dc) {
         testData[0].dimensions.y0 = null;
         setData();
         testArea.on('update', handlerSpy);
+        testArea.config('showHighlight', true);
+        spyOn(testArea, 'highlight');
+        spyOn(testArea, 'pubsubHighlightEvents');
         testArea.update();
         path = selection.select('path').node();
       });
@@ -350,6 +379,15 @@ function(area, dc) {
 
       it('updates the opacity attribute', function() {
         expect(path).toHaveAttr('opacity', '0.5');
+      });
+
+      it('calls the highlight method when showHighlight is true', function() {
+        expect(testArea.highlight).toHaveBeenCalled();
+      });
+
+      it('calls the highlight method when pubsubHightlightEvents is true',
+        function() {
+          expect(testArea.pubsubHighlightEvents).toHaveBeenCalled();
       });
 
     });

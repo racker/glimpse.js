@@ -19,7 +19,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -35,7 +36,11 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       opacity: 1,
       hiddenStates: null,
       rootId: null,
-      zIndex: 5
+      zIndex: 5,
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      showHighlight: false
     };
 
     /**
@@ -131,7 +136,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'cssClass',
         'areaGenerator'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     area.init();
 
@@ -150,6 +156,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       }
 
       updateAreaGenerator();
+      area.initHighlight();
 
       if (_.config.cssClass) {
         _.root.classed(_.config.cssClass, true);
@@ -171,6 +178,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @param  {d3.selection|Node|string} selection
      * @return {components.area}
      */
+    //TODO: area.render is being called twice
     area.render = function(selection) {
       if (!_.root) {
         _.root = d3util.applyTarget(area, selection, function(target) {
@@ -196,6 +204,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      */
     area.destroy = fn.compose(area.destroy, function() {
       _.globalPubsub.unsub(area.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.unsub(area.scope('mouseout'), area.handleMouseOut);
+      _.globalPubsub.unsub(area.scope('mousemove'), area.handleMouseMove);
     });
 
     return area();
