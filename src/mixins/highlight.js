@@ -47,7 +47,7 @@ define(['data/functions'], function (dataFns) {
     }
   }
 
-  function handleMouseOutOnLine(selection, config) {
+  function showHighlightTransition(selection, config) {
     selection.transition()
       .duration(config.highlightTransDuration)
       .delay(config.highlightTransDelay)
@@ -168,8 +168,8 @@ define(['data/functions'], function (dataFns) {
       selection = component.root()
         .select('.' + getClassName(config));
 
-      if (component.config().type === 'line') {
-        handleMouseOutOnLine(selection, config);
+      if (config.showHighlightTransition) {
+        showHighlightTransition(selection, config);
       } else{
         selection.attr('visibility', 'hidden');
       }

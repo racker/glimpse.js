@@ -37,6 +37,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       hiddenStates: null,
       rootId: null,
       zIndex: 5,
+      showHighlightTransition: false,
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,

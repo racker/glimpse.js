@@ -154,11 +154,11 @@ function(obj, mixins, pubsubModule, dc) {
         expect(circle.node()).toHaveAttr('visibility', 'hidden');
       });
 
-      it('sets radius to 0 if type of component is line',
+      it('applies transition on the highlight if set',
         function() {
           var circle;
           runs(function() {
-            config.type = 'line';
+            config.showHighlightTransition = true;
             config.highlightTransDuration = 100;
             config.highlightTransDelay = 100;
             component.handleMouseOut(component);
