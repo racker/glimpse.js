@@ -154,6 +154,23 @@ function(obj, mixins, pubsubModule, dc) {
         expect(circle.node()).toHaveAttr('visibility', 'hidden');
       });
 
+      it('applies transition on the highlight if set',
+        function() {
+          var circle;
+          runs(function() {
+            config.showHighlightTransition = true;
+            config.highlightTransDuration = 100;
+            config.highlightTransDelay = 100;
+            component.handleMouseOut(component);
+          });
+          waits(250);
+          runs(function() {
+            circle = root.select('circle');
+            expect(circle.node()).toHaveAttr('r', 0);
+          });
+
+      });
+
     });
 
     describe('pubsubHighlightEvents', function() {
