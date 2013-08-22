@@ -69,6 +69,7 @@ function(d3, object, line, dc) {
         inLegend: true,
         lineGenerator: d3.svg.line(),
         interpolate: 'linear',
+        showHighlightTransition: true,
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
@@ -110,6 +111,11 @@ function(d3, object, line, dc) {
 
       it('has default showHighlight', function() {
         expect(config.showHighlight).toBe(defaults.showHighlight);
+      });
+
+      it('has default showHighlightTransition', function() {
+        expect(config.showHighlightTransition)
+          .toBe(defaults.showHighlightTransition);
       });
 
     });

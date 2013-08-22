@@ -42,6 +42,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       delay: 100,
       duration: 1000,
       ease: 'linear',
+      showHighlightTransition: false,
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,

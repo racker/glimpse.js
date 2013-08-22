@@ -1,22 +1,11 @@
 define(['data/functions'], function (dataFns) {
   'use strict';
 
-  /**
-   * Calculates the closest data-point component's data
-   * and highlights it.
-   * @param  {Object} dataSource
-   * @param  {Number} xPos
-   */
-  function highlightNearestPoint(component, dataCollection, xPos) {
-    var data, startX, stepX, clampedXPos, dataPoint, xDim, yDim,
-      dataSource, config, root, radius, selection;
 
-    dataSource = component.data();
-    config = component.config();
-    root = component.root();
+  function calculateNearestDataPoint(config, dataSource, xPos) {
+    var data, startX, stepX, clampedXPos, xDim;
 
     xDim = dataFns.dimension(dataSource, 'x');
-    yDim = dataFns.dimension(dataSource, 'y');
 
     data = dataSource.data;
     startX = xDim(data[0]);
@@ -24,19 +13,45 @@ define(['data/functions'], function (dataFns) {
     //Assume data set is periodic
     stepX = xDim(data[1]) - xDim(data[0]);
     clampedXPos = Math.round((config.xScale.invert(xPos) - startX) / stepX);
-    dataPoint = data[clampedXPos];
 
+    return data[clampedXPos];
+  }
+
+  /**
+   * Calculates the closest data-point component's data
+   * and highlights it.
+   * @param  {Object} dataSource
+   * @param  {Number} xPos
+   */
+  function highlightNearestPoint(component, dataCollection, xPos) {
+    var config, dataPoint, selection, root, radius, xDim, yDim, dataSource;
+
+    config = component.config();
+    root = component.root();
+    dataSource = component.data();
+    xDim = dataFns.dimension(dataSource, 'x');
+    yDim = dataFns.dimension(dataSource, 'y');
+    dataPoint = calculateNearestDataPoint(config, dataSource, xPos);
     selection = root.select('.' + getClassName(config));
+
+    selection.attr({
+      'r': config.highlightRadius,
+      'visibility': getVisibility(component, dataCollection),
+      'transform': 'translate(' + config.xScale(xDim(dataPoint)) +
+        ',' + config.yScale(yDim(dataPoint)) + ')'
+    });
 
     if (config.type === 'scatter') {
       radius = dataFns.dimension(dataSource, 'r')(dataPoint);
       selection.attr('r', radius ? radius : config.radius);
     }
-    selection.attr({
-      'visibility': getVisibility(component, dataCollection),
-      'transform': 'translate(' + config.xScale(xDim(dataPoint)) +
-        ',' + config.yScale(yDim(dataPoint)) + ')'
-    });
+  }
+
+  function showHighlightTransition(selection, config) {
+    selection.transition()
+      .duration(config.highlightTransDuration)
+      .delay(config.highlightTransDelay)
+      .attr('r', 0);
   }
 
   function getVisibility(component, dataCollection) {
@@ -147,8 +162,17 @@ define(['data/functions'], function (dataFns) {
      * @return {components.component}
      */
     handleMouseOut: function(component) {
-      component.root().select('.' + getClassName(component.config()))
-        .attr('visibility', 'hidden');
+      var selection, config;
+
+      config = component.config();
+      selection = component.root()
+        .select('.' + getClassName(config));
+
+      if (config.showHighlightTransition) {
+        showHighlightTransition(selection, config);
+      } else{
+        selection.attr('visibility', 'hidden');
+      }
       return this;
     },
 
