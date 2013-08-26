@@ -1,26 +1,40 @@
 define(['data/functions'], function (dataFns) {
   'use strict';
 
-
+  /**
+   * Calculates the nearest data point based on the x co-ordinate
+   * of current event.
+   * Calculates the x dimension equivalent by inverting the scale and
+   * uses https://github.com/mbostock/d3/wiki/Arrays#wiki-d3_bisector
+   * to determine the approximate index of the closest point.
+   * @param  {Object} config
+   * @param  {Object} dataSource
+   * @param  {Number} xPos
+   * @return {Object} datapoint closest to the x co-ordinate
+   */
   function calculateNearestDataPoint(config, dataSource, xPos) {
-    var data, startX, stepX, clampedXPos, xDim;
+    var data, startX, xDim, bisectData,
+      d0, d1, clampedDataIndex, clampedData;
 
     xDim = dataFns.dimension(dataSource, 'x');
-
     data = dataSource.data;
-    startX = xDim(data[0]);
 
-    //Assume data set is periodic
-    stepX = xDim(data[1]) - xDim(data[0]);
-    clampedXPos = Math.round((config.xScale.invert(xPos) - startX) / stepX);
+    startX = config.xScale.invert(xPos);
+    bisectData = d3.bisector(function(d) { return xDim(d); }).left;
+    clampedDataIndex = bisectData(data, startX, 1);
 
-    return data[clampedXPos];
+    d0 = data[clampedDataIndex - 1],
+    d1 = data[clampedDataIndex],
+    clampedData = startX -  xDim(d0) >  xDim(d1) - startX ? d1 : d0;
+
+    return clampedData;
   }
 
   /**
    * Calculates the closest data-point component's data
    * and highlights it.
-   * @param  {Object} dataSource
+   * @param  {components.component} component
+   * @param  {data.collection} dataCollection
    * @param  {Number} xPos
    */
   function highlightNearestPoint(component, dataCollection, xPos) {

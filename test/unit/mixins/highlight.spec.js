@@ -24,6 +24,20 @@ function(obj, mixins, pubsubModule, dc) {
       dimensions: {
         r: function(d) { return d.x*5; }
       }
+    },
+    {
+      id: 'fooDataNonPeriodic',
+      title: 'Foo bar non non-periodic',
+      data: [
+        { 'x': 0, 'y': 100 },
+        { 'x': 5, 'y': 50 },
+        { 'x': 8, 'y': 25 },
+        { 'x': 25, 'y': 75 }
+      ],
+      color: '#ff7f0e',
+      dimensions: {
+        r: function(d) { return d.x*5; }
+      }
     }];
 
     dataCollection = dc.create();
@@ -82,7 +96,7 @@ function(obj, mixins, pubsubModule, dc) {
       expect(component.handleMouseOut).toBeDefined();
     });
 
-     describe('highlight', function() {
+    describe('initHighlight', function() {
 
       beforeEach(function(){
         spyOn(component, 'highlight');
@@ -249,6 +263,21 @@ function(obj, mixins, pubsubModule, dc) {
 
       it('sets the visibility of the circle to visible', function() {
         expect(circle.node()).toHaveAttr('visibility', 'visible');
+      });
+
+      it('translates the circle to the nearest data point', function() {
+        expect(circle.node()).toHaveAttr('transform', 'translate(1,50)');
+      });
+
+      it('calculates nearest data point for non-periodic data',
+        function() {
+          component.data = function() { return dataConfig[1]; };
+          component.highlightOnHover(
+            component,
+            dataCollection,
+            6
+          );
+          expect(circle.node()).toHaveAttr('transform', 'translate(5,50)');
       });
 
       it('translates the circle to the nearest data point', function() {
