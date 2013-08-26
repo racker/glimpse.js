@@ -1,6 +1,17 @@
 define(['data/functions'], function (dataFns) {
   'use strict';
 
+  /**
+   * Calculates the nearest data point based on the x co-ordinate
+   * of current event.
+   * Calculates the x dimension equivalent by inverting the scale and
+   * uses https://github.com/mbostock/d3/wiki/Arrays#wiki-d3_bisector
+   * to determine the approximate index of the closest point.
+   * @param  {Object} config
+   * @param  {Object} dataSource
+   * @param  {Number} xPos
+   * @return {Object} datapoint closest to the x co-ordinate
+   */
   function calculateNearestDataPoint(config, dataSource, xPos) {
     var data, startX, xDim, bisectData,
       d0, d1, clampedDataIndex, clampedData;
