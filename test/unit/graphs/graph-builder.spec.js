@@ -301,6 +301,13 @@ function(graphBuilder, graph, d3interaction) {
           expect(stats.avg).toBe(50);
         });
 
+        it('adds a hidden tooltip component', function() {
+          var tooltipComponent;
+          testGraph.data().add(testData);
+          tooltipComponent = filterComponents(testGraph, 'tooltip');
+          expect(tooltipComponent.length).toBe(1);
+        });
+
       });
 
       describe('create("line")', function() {
@@ -317,6 +324,13 @@ function(graphBuilder, graph, d3interaction) {
           testGraph.data().add(testData1);
           lineComponents = filterComponents(testGraph, 'line');
           expect(lineComponents.length).toBe(2);
+        });
+
+        it('adds a hidden tooltip component', function() {
+          var tooltipComponent;
+          testGraph.data().add(testData);
+          tooltipComponent = filterComponents(testGraph, 'tooltip');
+          expect(tooltipComponent.length).toBe(1);
         });
 
       });
@@ -351,6 +365,13 @@ function(graphBuilder, graph, d3interaction) {
           testGraph.render(renderTarget);
           legendContainer = renderTarget.select('.gl-legend').node();
           expect(legendContainer.childNodes.length).toBe(1);
+        });
+
+        it('adds a hidden tooltip component', function() {
+          var tooltipComponent;
+          testGraph.data().add(testData);
+          tooltipComponent = filterComponents(testGraph, 'tooltip');
+          expect(tooltipComponent.length).toBe(1);
         });
 
       });

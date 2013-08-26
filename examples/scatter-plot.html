@@ -37,7 +37,8 @@
           ];
 
         var tooltipFn = function(d) {
-          return 'x: ' + d.x + '\n' + 'y: ' + d.y;
+          return ['x: ', d3.time.format("%b %d, %y")(new Date(d.x)), '\n',
+                  'y: ', d.y, 'ms'].join('');
         };
 
         // Configure which data to show.
@@ -46,6 +47,7 @@
             id: 'set1',
             title: 'Set 1',
             data: sampleData1,
+            // NOTE: optional dimension for radius
             dimensions: {
               tooltip: tooltipFn
             }
