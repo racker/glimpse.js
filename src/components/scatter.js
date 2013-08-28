@@ -220,7 +220,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
      * Destroys the scatter and removes everything from the DOM.
      * @public
      */
-    scatter.destroy = fn.compose(scatter.destroy, function() {
+    scatter.destroy = fn.compose.call(scatter, scatter.destroy, function() {
       _.globalPubsub.unsub(
         scatter.globalScope('data-toggle'), handleDataToggle);
       _.globalPubsub.sub(scatter.scope('mouseout'), scatter.handleMouseOut);
