@@ -44,12 +44,23 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
 
     function setGraph() {
       testGraph
-        .config({colorPalette: ['green'], yAxisUnit: 'ms'})
+        .config({
+          colorPalette: ['maroon' , 'yellow', 'purple'],
+          yAxisUnit: 'ms'
+        })
         .data([
           {
             id: 'fakeData',
-            color: 'black',
             title: 'DFW',
+            data: fakeData[0].data,
+            dimensions: {
+              x: function(d) { return d.x; },
+              y: function(d) { return d.y; }
+            }
+          },
+          {
+            id: 'fakeData2',
+            title: 'ORD',
             data: fakeData[0].data,
             dimensions: {
               x: function(d) { return d.x; },
@@ -59,6 +70,7 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         ])
         .component([
           { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
+          { cid: 'testComponent2', type: 'line', dataId: 'fakeData2' },
           { cid: 'testComponentWithColor', type: 'line',
             dataId: 'fakeData', color: 'red' }
         ]);
@@ -574,19 +586,26 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
     });
 
     describe('component colors', function() {
-      var selection, testComponentWithColor;
+      var selection, testComponentWithColor, testComponent2;
 
       beforeEach(function() {
         setGraph();
         setSpies();
         selection = jasmine.htmlFixture();
         testGraph.render(selection.node());
+        testComponent2 = testGraph.component('testComponent2');
         testComponentWithColor = testGraph.component('testComponentWithColor');
       });
 
-      it('sets default color on component using colorPalette',
+      it('loops through first color in the colorPalette',
         function() {
-          expect(testComponent.config().color).toBe('green');
+          expect(testComponent.config().color).toBe('maroon');
+        }
+      );
+
+      it('loops through next color in the the colorPalette ',
+        function() {
+          expect(testComponent2.config().color).toBe('yellow');
         }
       );
 
