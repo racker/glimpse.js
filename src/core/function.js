@@ -16,12 +16,13 @@ function (array) {
     },
 
     compose: function() {
-      var funcs = arguments;
+      var funcs = arguments,
+          context = this;
       return function() {
         var args = arguments,
             i;
         for (i = funcs.length - 1; i >= 0; i--) {
-          args = [funcs[i].apply(this, args)];
+          args = [funcs[i].apply(context, args)];
         }
         return args[0];
       };

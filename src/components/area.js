@@ -203,7 +203,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
     /**
      * Destroys the area and removes everything from the DOM.
      */
-    area.destroy = fn.compose(area.destroy, function() {
+    area.destroy = fn.compose.call(area, area.destroy, function() {
       _.globalPubsub.unsub(area.globalScope('data-toggle'), handleDataToggle);
       _.globalPubsub.unsub(area.scope('mouseout'), area.handleMouseOut);
       _.globalPubsub.unsub(area.scope('mousemove'), area.handleMouseMove);

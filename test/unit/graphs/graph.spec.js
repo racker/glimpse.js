@@ -793,10 +793,15 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         setGraph();
         selection = jasmine.htmlFixture();
         testGraph.render(selection.node());
-        testGraph.destroy();
       });
 
       it('sets root to null', function() {
+        testGraph.destroy();
+        expect(testGraph._).toBe(null);
+      });
+
+      it('it is resilient to change in context', function() {
+        testGraph.destroy.call(null);
         expect(testGraph._).toBe(null);
       });
 

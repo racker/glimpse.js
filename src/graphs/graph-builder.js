@@ -321,11 +321,14 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     * Render newly added components.
     */
     function renderAddedComponents(g) {
-      g.component().filter(function(c) {
-        return !c.isRendered();
-      }).forEach(function(c) {
-        c.render(g.root());
-      });
+      var componentManager = g.component();
+      if (componentManager) {
+        componentManager.filter(function(c) {
+          return !c.isRendered();
+        }).forEach(function(c) {
+          c.render(g.root());
+        });
+      }
     }
 
     /**

@@ -606,7 +606,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      * Removes everything from the DOM, cleans up all references.
      * @public
      */
-    graph.destroy = fn.compose(graph.destroy, function() {
+    graph.destroy = fn.compose.call(graph, graph.destroy, function() {
       componentManager_.destroy();
       componentManager_ = null;
     });
