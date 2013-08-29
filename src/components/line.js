@@ -206,7 +206,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * Destroys the line and removes everything from the DOM.
      * @public
      */
-    line.destroy = fn.compose(line.destroy, function() {
+    line.destroy = fn.compose.call(line, line.destroy, function() {
       _.globalPubsub.unsub(line.globalScope('data-toggle'), handleDataToggle);
       _.globalPubsub.unsub(line.scope('mouseout'), line.handleMouseOut);
       _.globalPubsub.unsub(line.scope('mousemove'), line.handleMouseMove);
