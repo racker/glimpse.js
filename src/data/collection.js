@@ -81,6 +81,8 @@ define([
    * Accepts the cached deps object.
    * Results in the derivation of any non-cached dependencies
    * of the data source.
+   *
+   * This creates a dependency graph and checks for circular dependencies.
    */
   function deriveDataById(id, data, deps, dataCollection, visited) {
     var d = data[id], sources;

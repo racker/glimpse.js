@@ -21,6 +21,8 @@ define([
    * @param {(Object, Array.<Object>)?} optDataSource
    */
   Dimension = function(optDataSource) {
+    // TODO: rename this.
+    // these are not actually dataSource, this is multiple arrays of raw data
     this.dataSources_ = array.getArray(optDataSource);
   };
 

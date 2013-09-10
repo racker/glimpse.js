@@ -1,3 +1,11 @@
+/**
+ * @fileOverview
+ *
+ * Gets the target target container, inspects zindex of all children,
+ * removes all children, sort them by zindex. Then reinsert all children in
+ * zindex order.
+ */
+
 define(function () {
   'use strict';
 
