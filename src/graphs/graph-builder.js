@@ -199,6 +199,8 @@ function(obj, array, string, format, d3util, graph, pubsub) {
      *
      * TODO: remove this in favor of data collection events
      *
+     * TODO: BURN THIS CODE TO THE GROUND!
+     *
      * @private
      * @param {String} componentType
      * @param {graphs.graph} g
@@ -250,12 +252,16 @@ function(obj, array, string, format, d3util, graph, pubsub) {
 
     /**
      * TODO: Add capability to derivation to create sources.
+     *
+     * Recompute positions of stacked items and remove any whitespace that
+     * may occur due to dataset removal.
      */
     function addStackedData(g, sources) {
       var dataSources = [{
         id: 'stacks',
         // Compute list of ids denoting * - inactive
         // in terms of the original and not the derived sources.
+        // TODO: Remove this in favor of set operation to subtract
         sources: function(resolve) {
           var star = resolve(sources.join(',')),
               inactive = resolve('inactive').map(function(id) {
