@@ -40,6 +40,9 @@ define([
    * second is a range if it is an array.
    * TODO: If second arg is simple value, filter if equal to that value.
    *       If second arg is a function, use that function.
+   *
+   * for example, used to filter selections to only include those in a specific
+   * time range.
    */
   Selection.prototype.filter = function(dim, range) {
     return this.map(function(dataSource) {
