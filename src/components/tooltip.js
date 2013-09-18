@@ -35,8 +35,100 @@ function(array, config, obj, fn, string, d3util, mixins) {
       zIndex: 50,
       strokeColor:  '#4c9acc',
       fillColor: '#f0f4f7',
-      padding: 10
+      padding: 10,
+      hiddenStates: ['empty', 'loading', 'error']
     };
+
+    /**
+     * Displays tooltip
+     * @param  {Object} data
+     * @param  {Element} target
+     * @param  {String} message Content to be displayed in
+     *   tooltip
+     */
+    function displayTooltip(data, target, message) {
+      var targetSel = d3.select(target),
+          x = data.x,
+          y = data.y,
+          selWidth = targetSel.width(),
+          selHeight = targetSel.height(),
+          tooltipWidth = _.root.width(),
+          tooltipHeight = _.root.height(),
+          chartWidth = d3.select(target.parentNode).width(),
+          chartHeight = d3.select(target.parentNode).height(),
+          transform = d3.transform();
+
+      _.config.message = message;
+      tooltip.update();
+
+      //TODO: Fix calculations for line/area components (bottom)
+      //TODO: Resolve the flicker issue with line/area toolttips
+      //TODO: Show tooltips for scatter plot with diff radius.
+      //TODO: Math.round for x and y
+      //TODO: Pending tests
+      //Make calculations readable
+      //Config setting for tooltip
+
+      //Tooltip on Right.
+      if (x + selWidth + tooltipWidth < chartWidth &&
+        y - tooltipHeight / 3 > 0 &&
+        y + tooltipHeight / 3 < chartHeight) {
+          transform.translate =
+            [(x + selWidth * 2), (y + (selHeight / 2) - (tooltipHeight / 2))];
+      }
+      // Left
+      else if (x - tooltipWidth > 0 &&
+        y - tooltipHeight / 3 > 0 &&
+        y + tooltipHeight / 3 < chartHeight) {
+        transform.translate =
+          [(x - tooltipWidth + selHeight),
+            (y + (selHeight / 2) - (tooltipHeight / 2))];
+      }
+      // Bottom
+      else if (y + selHeight + tooltipHeight < chartHeight &&
+        x + selWidth + tooltipWidth < chartWidth &&
+        x - tooltipWidth > 0) {
+        transform.translate =
+           [(x + (selWidth / 3) - tooltipWidth / 3), y + selHeight + 5];
+      }
+      // Top
+      else if (y - tooltipHeight > 0 &&
+        x + selWidth + tooltipWidth < chartWidth &&
+        x - tooltipWidth / 2 > 0) {
+        transform.translate =
+           [(x + (selWidth / 3) - tooltipWidth / 3), (y - tooltipHeight / 1.2)];
+      }
+      //Top Right
+      else if (x + selWidth + tooltipWidth < chartWidth &&
+        y - tooltipHeight > 0) {
+          transform.translate = [(x + selWidth) , (y - tooltipHeight / 1.3)];
+      }
+      //Top Left
+      else if (x - tooltipWidth > 0 && y - tooltipHeight > 0) {
+        transform.translate =
+          [(x - tooltipWidth / 1.2) , (y - tooltipHeight / 1.4)];
+      }
+      //Bottom Right
+      else if (y + selHeight + tooltipHeight < chartHeight &&
+        x + selWidth + tooltipWidth < chartWidth) {
+        transform.translate = [(x + selWidth) , (y + selHeight)];
+      }
+      //Bottom Left
+      else if (x - tooltipWidth > 0 &&
+        y + selHeight + tooltipHeight < chartHeight) {
+        transform.translate = [(x - tooltipWidth / 1.2) , (y + selHeight)];
+      }
+
+      _.root.attr('transform', transform.toString());
+      tooltip.show();
+    }
+
+    /**
+     * Hides the tooltip
+     */
+    function hideTooltip() {
+      tooltip.hide();
+    }
 
     /**
      * Main function for tooltip component
@@ -133,73 +225,20 @@ function(array, config, obj, fn, string, d3util, mixins) {
           return root;
         });
       }
+      _.globalPubsub.sub(tooltip.globalScope('tooltip-show'), displayTooltip);
+      _.globalPubsub.sub(tooltip.globalScope('tooltip-hide'), hideTooltip);
 
       tooltip.emit('render');
       return tooltip;
     };
 
-    _.globalPubsub.sub('tooltip-show', function(e, target, message) {
-      var targetSel = d3.select(target),
-          x = e.x,
-          y = e.y,
-          selWidth = targetSel.width(),
-          selHeight = targetSel.height(),
-          tooltipWidth = _.root.width(),
-          tooltipHeight = _.root.height(),
-          chartWidth = d3.select(target.parentNode).width(),
-          chartHeight = d3.select(target.parentNode).height(),
-          transform = d3.transform();
-
-      _.config.message = message;
-      tooltip.update();
-
-      if (x + selWidth + tooltipWidth < chartWidth && //Tooltip on Right.
-         y - tooltipHeight/3 > 0 &&
-         y + tooltipHeight/3 < chartHeight) {
-           transform.translate =
-             [(x + selWidth*2), (y + (selHeight / 2) - (tooltipHeight / 2))];
-       }
-       else if (x - tooltipWidth > 0 &&   // Left
-         y - tooltipHeight/3 > 0 &&
-         y + tooltipHeight/3 < chartHeight) {
-         transform.translate =
-           [(x - tooltipWidth + selHeight),
-             (y + (selHeight/ 2) - (tooltipHeight / 2))];
-       }
-       else if (y + selHeight + tooltipHeight < chartHeight && // Bottom
-         x + selWidth + tooltipWidth < chartWidth &&
-         x - tooltipWidth > 0) {
-         transform.translate =
-           [(x + (selWidth / 3) - tooltipWidth / 3), y + selHeight + 5];
-       }
-       else if (y - tooltipHeight > 0 && // Top
-         x + selWidth + tooltipWidth < chartWidth &&
-         x - tooltipWidth/2 > 0){
-         transform.translate =
-           [(x + (selWidth / 3) - tooltipWidth / 3), (y - tooltipHeight/1.2)];
-       }
-       else if (x + selWidth + tooltipWidth < chartWidth && //Top Right
-         y - tooltipHeight > 0){
-           transform.translate = [(x + selWidth) , (y - tooltipHeight/1.3)];
-       }
-       else if (x - tooltipWidth > 0 && y - tooltipHeight > 0){ //Top Left
-         transform.translate =
-           [(x - tooltipWidth / 1.2) , (y - tooltipHeight/1.4)];
-       }
-       else if (y + selHeight + tooltipHeight < chartHeight && //Bottom Right
-         x + selWidth + tooltipWidth < chartWidth){
-         transform.translate = [(x + selWidth) , (y + selHeight)];
-       }
-       else if (x - tooltipWidth > 0 && //Bottom Left
-         y + selHeight + tooltipHeight < chartHeight){
-         transform.translate = [(x - tooltipWidth / 1.2) , (y + selHeight)];
-       }
-      _.root.attr('transform', transform.toString());
-      tooltip.show();
-    });
-
-    _.globalPubsub.sub('tooltip-hide', function() {
-      tooltip.hide();
+    /**
+     * Destroys the tooltip and removes everything from the DOM.
+     * @public
+     */
+    tooltip.destroy = fn.compose.call(tooltip, tooltip.destroy, function() {
+      _.globalPubsub.unsub(tooltip.globalScope('tooltip-show'), displayTooltip);
+      _.globalPubsub.unsub(tooltip.globalScope('tooltip-hide'), hideTooltip);
     });
 
     return tooltip();

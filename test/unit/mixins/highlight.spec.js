@@ -55,6 +55,7 @@ function(obj, mixins, pubsubModule, dc) {
       config = {
         cid: 'foo',
         dataId: 'fooData',
+        rootId: 'fooBar',
         xScale: d3.time.scale(),
         yScale: d3.scale.linear(),
         highlightRadius: 4,
@@ -72,7 +73,9 @@ function(obj, mixins, pubsubModule, dc) {
           root: root,
           dataCollection: dataCollection
         },
-        data: function() { return dataConfig[0]; }
+        data: function() { return dataConfig[0]; },
+        globalScope: function(name) { return 'foo:' + name;}
+
       };
 
       return component;
@@ -161,7 +164,8 @@ function(obj, mixins, pubsubModule, dc) {
       beforeEach(function(){
         component.highlight();
         circle = root.select('circle').attr('visibility', 'visible');
-        component.handleMouseOut(component);
+        spyOn(pubsub, 'pub');
+        component.handleMouseOut(component, pubsub);
       });
 
       it('sets the visibility to hidden', function() {
@@ -175,7 +179,7 @@ function(obj, mixins, pubsubModule, dc) {
             config.showHighlightTransition = true;
             config.highlightTransDuration = 100;
             config.highlightTransDelay = 100;
-            component.handleMouseOut(component);
+            component.handleMouseOut(component, pubsub);
           });
           waits(250);
           runs(function() {
@@ -183,6 +187,10 @@ function(obj, mixins, pubsubModule, dc) {
             expect(circle.node()).toHaveAttr('r', 0);
           });
 
+      });
+
+      it('publishes the tooltip-show event', function() {
+        expect(pubsub.pub).toHaveBeenCalled();
       });
 
     });
@@ -218,10 +226,12 @@ function(obj, mixins, pubsubModule, dc) {
       beforeEach(function(){
         component.highlight();
         spyOn(d3, 'mouse').andReturn([1, 20]);
+        spyOn(pubsub, 'pub');
         component.handleMouseMove(
           root.select('.gl-component'),
           component,
-          dataCollection
+          dataCollection,
+          pubsub
         );
         circle = root.select('circle');
       });
@@ -240,10 +250,15 @@ function(obj, mixins, pubsubModule, dc) {
           component.handleMouseMove(
             root.select('.gl-component'),
             component,
-            dataCollection
+            dataCollection,
+            pubsub
           );
           circle = root.select('circle');
           expect(circle.node()).toHaveAttr('r', 5);
+      });
+
+      it('publishes the tooltip-show event', function() {
+        expect(pubsub.pub).toHaveBeenCalled();
       });
 
     });

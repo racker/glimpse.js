@@ -37,6 +37,10 @@
               { x: oneHr*2, y: 140 },
               { x: oneHr*3, y: 46 }
             ];
+        var tooltipFn = function(d) {
+          return ['x: ', d3.time.format("%b %d, %y")(new Date(d.x)), '\n',
+                  'y: ', d.y, 'ms'].join('');
+        };
 
         // Configure which data to show.
         var dataConfigScatter = [
@@ -46,18 +50,25 @@
             data: sampleData1,
             // NOTE: optional dimension for radius
             dimensions: {
-              r: 'y'
+              r: 'y',
+              tooltip: tooltipFn
             }
           },
           {
             id: 'set2',
             title: 'Set 2',
-            data: sampleData2
+            data: sampleData2,
+            dimensions: {
+              tooltip: tooltipFn
+            }
           },
           {
             id: 'set3',
             title: 'Set 3',
-            data: sampleData3
+            data: sampleData3,
+            dimensions: {
+              tooltip: tooltipFn
+            }
           }
         ];
 
@@ -77,32 +88,65 @@
           { "ts": 1321859652631, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40},
           { "ts": 1322276021052, "sys": 30, "user": 20, "stolen": 1, "wait": 9, "idle": 40}
         ];
-
+        var tooltipFn2 = function(d) {
+          return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                  'y: ', d.stolen].join('');
+        };
         var dataConfig = [
           { id: 'cpu-idle',
             title: 'Idle',
             data: sampleData,
-            dimensions: { x: 'ts', y: 'idle', r: function(d) { return d.idle; } }
+            dimensions: {
+              x: 'ts', y: 'idle', r: function(d) { return d.idle; },
+              tooltip: function(d) {
+                return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                        'y: ', d.idle].join('');
+              }
+            }
           },
           { id: 'cpu-sys',
             title: 'System',
             data: sampleData,
-            dimensions: { x: 'ts', y: 'sys', r: function(d) { return d.sys; } }
+            dimensions: {
+              x: 'ts', y: 'sys', r: function(d) { return d.sys; },
+              tooltip: function(d) {
+                return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                        'y: ', d.sys].join('');
+              }
+            }
           },
           { id: 'cpu-user',
             title: 'User',
             data: sampleData,
-            dimensions: { x: 'ts', y: 'user', r: function(d) { return d.user; } }
+            dimensions: {
+              x: 'ts', y: 'user', r: function(d) { return d.user; },
+              tooltip: function(d) {
+                return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                        'y: ', d.user].join('');
+              }
+            }
           },
           { id: 'cpu-wait',
             title: 'Wait',
             data: sampleData,
-            dimensions: { x: 'ts', y: 'wait', r: function(d) { return d.wait; } }
+            dimensions: {
+              x: 'ts', y: 'wait', r: function(d) { return d.wait; },
+              tooltip: function(d) {
+                return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                        'y: ', d.wait].join('');
+              }
+            }
           },
           { id: 'cpu-stolen',
             title: 'Stolen',
             data: sampleData,
-            dimensions: { x: 'ts', y: 'stolen', r: function(d) { return d.stolen * 8; } }
+            dimensions: {
+              x: 'ts', y: 'stolen', r: function(d) { return d.stolen * 8; },
+              tooltip: function(d) {
+                return ['x: ', d3.time.format("%b %d, %y")(new Date(d.ts)), '\n',
+                        'y: ', d.stolen].join('');
+              }
+            }
           }
         ];
 
@@ -139,6 +183,10 @@
             color: '#081d58'
 
           })
+          .component({
+            type: 'tooltip',
+            cid: 'gl-tooltip-line'
+          })
           .data(dataConfig)
           .render('#line-container');
 
@@ -173,6 +221,10 @@
             showHighlight: true,
             color: '#3f007d'
           })
+          .component({
+            type: 'tooltip',
+            cid: 'gl-tooltip-area'
+          })
           .data(dataConfig)
           .render('#area-container');
 
@@ -194,6 +246,10 @@
             dataId: 'set3',
             showHighlight: true,
             color: 'red'
+          })
+          .component({
+            type: 'tooltip',
+            cid: 'gl-tooltip-scatter'
           })
           .data(dataConfigScatter)
           .render('#scatter-container');

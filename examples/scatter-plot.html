@@ -36,11 +36,6 @@
             { x: oneHr*3, y: 46 }
           ];
 
-        var tooltipFn = function(d) {
-          return ['x: ', d3.time.format("%b %d, %y")(new Date(d.x)), '\n',
-                  'y: ', d.y, 'ms'].join('');
-        };
-
         // Configure which data to show.
         var dataConfig = [
           {
@@ -49,24 +44,19 @@
             data: sampleData1,
             // NOTE: optional dimension for radius
             dimensions: {
-              tooltip: tooltipFn
-            }
-          },
+              r: 'y'
+             }
+
           {
             id: 'set2',
             title: 'Set 2',
-            data: sampleData2,
-            dimensions: {
-              tooltip: tooltipFn
-            }
+            data: sampleData2
+
           },
           {
             id: 'set3',
             title: 'Set 3',
-            data: sampleData3,
-            dimensions: {
-              tooltip: tooltipFn
-            }
+            data: sampleData3
           }
         ];
 
