@@ -173,6 +173,33 @@ function (array) {
       });
 
     });
+
+    describe('.containsAny()', function() {
+      var a1, a2;
+
+      beforeEach(function() {
+        a1 = [];
+        a2 = [];
+      });
+
+      it('returns true if a1 intersects a2', function() {
+        a1.push('x');
+        a1.push('y');
+        a2.push('x');
+        a2.push('z');
+        expect(array.containsAny(a1, a2)).toBe(true);
+      });
+
+      it('returns false if a1 doesnt intersect a2', function() {
+        a1.push('a');
+        a1.push('b');
+        a2.push('x');
+        a2.push('y');
+        expect(array.containsAny(a1, a2)).toBe(false);
+      });
+
+    });
+
   });
 
 });

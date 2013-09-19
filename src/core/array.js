@@ -120,8 +120,8 @@ function () {
      * @return {Boolean}
      */
     containsAny: function(arr1, arr2) {
-      return !arr2.every(function(item) {
-        return !array.contains(arr1, item);
+      return arr2.some(function(item) {
+        return array.contains(arr1, item);
       });
     }
 

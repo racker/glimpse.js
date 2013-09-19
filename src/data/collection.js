@@ -383,13 +383,14 @@ define([
     /**
      * Checks if a data source matches a sources selector.
      *
-     * @param {Object} datasource
-     * @param {Array} sources
+     * @param {Object} datasource A datasource config object.
+     * @param {Array} sources An array of data ids or tags to check.
      * @return {Boolean}
      */
     isInSources: function(datasource, sources) {
       var tags = array.getArray(datasource.tags);
-      return array.containsAny(sources, tags.concat(datasource.id));
+      tags.push(datasource.id);
+      return array.containsAny(sources, tags);
     }
 
   };

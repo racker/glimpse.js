@@ -26,6 +26,43 @@ define([
 
     });
 
+    describe('.isInSources()', function() {
+      var dataSource;
+
+      beforeEach(function() {
+        dataSource = {
+          id: 'foo',
+          tags: ['tagOne', 'tagTwo', 'tagThree']
+        };
+      });
+
+      it('doesnt match an empty list', function() {
+        expect(dc.isInSources(dataSource, [])).toBe(false);
+      });
+
+      it('matches the id', function() {
+        expect(dc.isInSources(dataSource, ['foo'])).toBe(true);
+      });
+
+      it('matches a tag', function() {
+        expect(dc.isInSources(dataSource, ['tagTwo'])).toBe(true);
+      });
+
+      it('matches multiple tags', function() {
+        expect(dc.isInSources(dataSource, ['tagTwo', 'tagOne'])).toBe(true);
+      });
+
+      it('matches with positive id and tags', function() {
+        expect(dc.isInSources(dataSource, ['foo', 'tagOne'])).toBe(true);
+      });
+
+      it('doesnt match non-tags and non-ids', function() {
+        expect(dc.isInSources(dataSource, ['some', 'thing', 'else']))
+          .toBe(false);
+      });
+
+    });
+
     describe('.add()/.get()', function() {
 
       it('returns empty array if data is not added', function() {
