@@ -147,12 +147,14 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.update = function() {
+      var dataConfig;
       if (!_.root) {
         return area;
       }
 
-      // Do not generate area when there's no data.
-      if (area.data().data.length === 0) {
+      dataConfig = area.data();
+      // Return early if there's no data.
+      if (!dataConfig || !dataConfig.data) {
         return area;
       }
 
