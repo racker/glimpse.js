@@ -20,7 +20,7 @@ module.exports = function(config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['sl_chrome_linux'],
+    browsers: ['Chrome'],
     singleRun: false,
     reportSlowerThan: 500,
     plugins: [
