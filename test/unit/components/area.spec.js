@@ -301,6 +301,17 @@ function(area, dc) {
           expect(testArea.highlight).not.toHaveBeenCalled();
       });
 
+      it('dies gracefully if no data is set', function() {
+        var exceptionThrown = false;
+        testArea = area();
+        try {
+          testArea.render(selection);
+        } catch (e) {
+          exceptionThrown = true;
+        }
+        expect(exceptionThrown).toBe(false);
+      });
+
     });
 
     describe('root()', function() {
