@@ -95,7 +95,9 @@ module.exports = function(grunt) {
      */
     exec: {
       testWatch: {
-        command: 'karma start test/karma.conf.js',
+        command: 'karma start test/karma.conf.js ' +
+                 '--browsers="Chrome" ' +
+                 '--singleRun=false',
         stdout: true
       },
       test: {

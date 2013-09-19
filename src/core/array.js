@@ -110,6 +110,19 @@ function () {
         return arr.indexOf(item) !== -1;
       }
       return false;
+    },
+
+    /**
+     * Checks if any element in arr2 is in arr1.
+     *
+     * @param {Array} arr1
+     * @Param {Array} arr2
+     * @return {Boolean}
+     */
+    containsAny: function(arr1, arr2) {
+      return arr2.some(function(item) {
+        return array.contains(arr1, item);
+      });
     }
 
   };
