@@ -312,6 +312,23 @@ function(area, dc) {
         expect(exceptionThrown).toBe(false);
       });
 
+      it('dies gracefully if data is set but empty', function() {
+        var exceptionThrown = false;
+        dataCollection = dc.create();
+        dataCollection.add({
+          id: 'foo',
+          data: []
+        });
+        testArea = area();
+        testArea.data(dataCollection);
+        try {
+          testArea.render(selection);
+        } catch (e) {
+          exceptionThrown = true;
+        }
+        expect(exceptionThrown).toBe(false);
+      });
+
     });
 
     describe('root()', function() {

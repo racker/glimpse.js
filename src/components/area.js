@@ -154,7 +154,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
 
       dataConfig = area.data();
       // Return early if there's no data.
-      if (!dataConfig || !dataConfig.data) {
+      if (!dataConfig || !dataConfig.data || !dataConfig.data.length) {
         return area;
       }
 
