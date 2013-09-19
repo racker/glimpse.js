@@ -378,7 +378,21 @@ define([
      */
     create: function() {
       return collection();
+    },
+
+    /**
+     * Checks if a data source matches a sources selector.
+     *
+     * @param {Object} datasource A datasource config object.
+     * @param {Array} sources An array of data ids or tags to check.
+     * @return {Boolean}
+     */
+    isInSources: function(datasource, sources) {
+      var tags = array.getArray(datasource.tags);
+      tags.push(datasource.id);
+      return array.containsAny(sources, tags);
     }
+
   };
 
 });

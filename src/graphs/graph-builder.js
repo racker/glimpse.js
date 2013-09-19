@@ -12,9 +12,10 @@ define([
   'core/format',
   'd3-ext/util',
   'graphs/graph',
-  'events/pubsub'
+  'events/pubsub',
+  'data/collection'
 ],
-function(obj, array, string, format, d3util, graph, pubsub) {
+function(obj, array, string, format, d3util, graph, pubsub, DataCollection) {
   'use strict';
 
     var defaults,
@@ -126,17 +127,6 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
-     * Returns
-     * true if any element in arr2 is in arr1
-     * false otherwise.
-     */
-    function containsAny(arr1, arr2) {
-      return !arr2.every(function(item) {
-        return !array.contains(arr1, item);
-      });
-    }
-
-    /**
      * Adds a new component of the specified type for every supplied data id
      * that is not an internal data source.
      *
@@ -157,7 +147,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
             !componentExists(dataSource.id, g)) {
           // If no sources are specified, add all data ids
           // else add the specified ones.
-          if(isInSources(dataSource, sources)) {
+          if (DataCollection.isInSources(dataSource, sources)) {
             g.component({
               rootId: g.config('id'),
               type: componentType,
@@ -188,11 +178,6 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       });
     }
 
-    function isInSources(ds, sources) {
-      var tags = array.getArray(ds.tags);
-      return containsAny(sources, tags.concat(ds.id));
-    }
-
     /**
      * Overrides the add() function on the graph's data collection. Anytime
      * add() is called a new component of the specified type will be added too.
@@ -215,7 +200,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         if (isStacked) {
           array.getArray(data).forEach(function(ds) {
             // Don't add stack derivation for $domain.
-            if (ds.id[0] !== '$' && isInSources(ds, sources)) {
+            if (ds.id[0] !== '$' && DataCollection.isInSources(ds, sources)) {
               supr.apply(dataCollection, [{
                 id: ds.id + '-stack',
                 sources: 'stacks',
