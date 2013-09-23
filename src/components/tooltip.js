@@ -36,89 +36,70 @@ function(array, config, obj, fn, string, d3util, mixins) {
       strokeColor:  '#4c9acc',
       fillColor: '#f0f4f7',
       padding: 10,
+      positionPadding: 10,
       hiddenStates: ['empty', 'loading', 'error']
     };
 
     /**
-     * Displays tooltip
-     * @param  {Object} data
+     * Displays tooltip.
+     * The tooltip is placed to bottom-right of the mouse position by default
+     * Calculations are made to determine if the bottom-left corner
+     * of the tooltip is inside the main container,
+     * if not X and Y translates for tranform are calculated
+     * so that the tooltip rect is inverted.
+     * @param  {Object} dataPoint Closest point to the mouse. (output range)
      * @param  {Element} target
      * @param  {String} message Content to be displayed in
      *   tooltip
      */
-    function displayTooltip(data, target, message) {
-      var targetSel = d3.select(target),
-          x = data.x,
-          y = data.y,
-          selWidth = targetSel.width(),
-          selHeight = targetSel.height(),
-          tooltipWidth = _.root.width(),
-          tooltipHeight = _.root.height(),
-          chartWidth = d3.select(target.parentNode).width(),
-          chartHeight = d3.select(target.parentNode).height(),
-          transform = d3.transform();
+    function displayTooltip(dataPoint, target, message) {
+      var x = dataPoint.x,
+        y = dataPoint.y,
+        tooltipWidth,
+        tooltipHeight,
+        chart,
+        chartWidth,
+        chartHeight,
+        positionPadding = _.config.positionPadding,
+        translateX = x + positionPadding,
+        translateY = y + positionPadding,
+        transform = d3.transform();
+
+      //Get the container
+      //Makes an assumption that the main container is
+      //parent's parent node.
+      //TODO:Change the logic if/when we support nested components
+      if (target.parentNode.parentNode) {
+        chart = d3.select(target.parentNode.parentNode);
+      } else {
+        chart = d3.select(target.parentNode);
+      }
+
+      chartWidth = Math.round(chart.width()),
+      chartHeight = Math.round(chart.height()),
 
       _.config.message = message;
       tooltip.update();
 
-      //TODO: Fix calculations for line/area components (bottom)
-      //TODO: Resolve the flicker issue with line/area toolttips
-      //TODO: Show tooltips for scatter plot with diff radius.
-      //TODO: Math.round for x and y
-      //TODO: Pending tests
-      //Make calculations readable
-      //Config setting for tooltip
+      tooltipWidth =  Math.round(_.root.width());
+      tooltipHeight =  Math.round(_.root.height());
 
-      //Tooltip on Right.
-      if (x + selWidth + tooltipWidth < chartWidth &&
-        y - tooltipHeight / 3 > 0 &&
-        y + tooltipHeight / 3 < chartHeight) {
-          transform.translate =
-            [(x + selWidth * 2), (y + (selHeight / 2) - (tooltipHeight / 2))];
-      }
-      // Left
-      else if (x - tooltipWidth > 0 &&
-        y - tooltipHeight / 3 > 0 &&
-        y + tooltipHeight / 3 < chartHeight) {
-        transform.translate =
-          [(x - tooltipWidth + selHeight),
-            (y + (selHeight / 2) - (tooltipHeight / 2))];
-      }
-      // Bottom
-      else if (y + selHeight + tooltipHeight < chartHeight &&
-        x + selWidth + tooltipWidth < chartWidth &&
-        x - tooltipWidth > 0) {
-        transform.translate =
-           [(x + (selWidth / 3) - tooltipWidth / 3), y + selHeight + 5];
-      }
-      // Top
-      else if (y - tooltipHeight > 0 &&
-        x + selWidth + tooltipWidth < chartWidth &&
-        x - tooltipWidth / 2 > 0) {
-        transform.translate =
-           [(x + (selWidth / 3) - tooltipWidth / 3), (y - tooltipHeight / 1.2)];
-      }
-      //Top Right
-      else if (x + selWidth + tooltipWidth < chartWidth &&
-        y - tooltipHeight > 0) {
-          transform.translate = [(x + selWidth) , (y - tooltipHeight / 1.3)];
-      }
-      //Top Left
-      else if (x - tooltipWidth > 0 && y - tooltipHeight > 0) {
-        transform.translate =
-          [(x - tooltipWidth / 1.2) , (y - tooltipHeight / 1.4)];
-      }
-      //Bottom Right
-      else if (y + selHeight + tooltipHeight < chartHeight &&
-        x + selWidth + tooltipWidth < chartWidth) {
-        transform.translate = [(x + selWidth) , (y + selHeight)];
-      }
-      //Bottom Left
-      else if (x - tooltipWidth > 0 &&
-        y + selHeight + tooltipHeight < chartHeight) {
-        transform.translate = [(x - tooltipWidth / 1.2) , (y + selHeight)];
+      //TODO: Make this a generic method that can be applied to any
+      //container
+
+      //Check if bottom-right corner is outside the chart
+      //vertically
+      if (chartHeight <= (y + positionPadding + tooltipHeight)) {
+        translateY = y - positionPadding - tooltipHeight;
       }
 
+      //Check if bottom-right corner is outside the chart
+      //horizontally
+      if (chartWidth <= (x + positionPadding + tooltipWidth)) {
+        translateX = x - positionPadding - tooltipWidth;
+      }
+
+      transform.translate = [translateX, translateY];
       _.root.attr('transform', transform.toString());
       tooltip.show();
     }
@@ -161,9 +142,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
           root = _.root,
           content,
           size,
-          message = _.config.message || '',
-          transform = d3.transform();
-          transform.translate = [_.config.x, _.config.y];
+          message = _.config.message || '';
 
       if (!_.root) {
         return tooltip;
@@ -215,12 +194,11 @@ function(array, config, obj, fn, string, d3util, mixins) {
               'class': 'gl-tooltip-bg',
               rx:3,
               ry:3,
-            })
-            .attr({
               fill: _.config.fillColor,
               stroke: _.config.strokeColor,
               'stroke-width': '2px',
-              opacity: _.config.opacity
+              opacity: _.config.opacity,
+              'pointer-events': 'none'
             });
           return root;
         });

@@ -69,7 +69,7 @@ function(d3, object, line, dc) {
         inLegend: true,
         lineGenerator: d3.svg.line(),
         interpolate: 'linear',
-        showHighlightTransition: true,
+        showHighlightTransition: false,
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
