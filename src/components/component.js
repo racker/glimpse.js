@@ -6,9 +6,10 @@ define([
   'components/overlay',
   'components/asset',
   'components/area',
-  'components/scatter'
+  'components/scatter',
+  'components/tooltip'
 ],
-function(line, legend, axis, label, overlay, asset, area, scatter) {
+function(line, legend, axis, label, overlay, asset, area, scatter, tooltip) {
   'use strict';
 
   return {
@@ -19,7 +20,8 @@ function(line, legend, axis, label, overlay, asset, area, scatter) {
     overlay: overlay,
     asset: asset,
     area: area,
-    scatter: scatter
+    scatter: scatter,
+    tooltip: tooltip
   };
 
 });
