@@ -409,7 +409,8 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         var hiddenStates = c.config('hiddenStates'),
             dataId = c.config('dataId');
         if (array.contains(hiddenStates, _.config.state) ||
-              (dataId && _.dataCollection.hasTags(dataId, 'inactive'))) {
+              (dataId && _.dataCollection.hasTags(dataId, 'inactive')) ||
+              c.config('visible') === false) {
           c.hide();
         } else {
           c.show();

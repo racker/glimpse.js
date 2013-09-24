@@ -36,16 +36,17 @@ define(['data/functions'], function (dataFns) {
    * @param  {components.component} component
    * @param  {data.collection} dataCollection
    * @param  {Number} xPos
+   * @param {Object} datapoint closest to the x co-ordinate
    */
-  function highlightNearestPoint(component, dataCollection, xPos) {
-    var config, dataPoint, selection, root, radius, xDim, yDim, dataSource;
+  function highlightNearestPoint(component, dataCollection, xPos,
+    dataPoint) {
+    var config, selection, root, radius, xDim, yDim, dataSource;
 
     config = component.config();
     root = component.root();
     dataSource = component.data();
     xDim = dataFns.dimension(dataSource, 'x');
     yDim = dataFns.dimension(dataSource, 'y');
-    dataPoint = calculateNearestDataPoint(config, dataSource, xPos);
     selection = root.select('.' + getClassName(config));
 
     selection.attr({
@@ -140,11 +141,13 @@ define(['data/functions'], function (dataFns) {
             mousemove,
             event.target,
             component,
-            dataCollection
+            dataCollection,
+            pubSub,
+            event
           );
           }, true);
         root.on('mouseout', function() {
-            pubSub.pub(mouseout, component);
+            pubSub.pub(mouseout, component, pubSub);
           }, true);
         pubSub.sub(mouseout, component.handleMouseOut);
         pubSub.sub(mousemove, component.handleMouseMove);
@@ -160,12 +163,37 @@ define(['data/functions'], function (dataFns) {
      * @param  {data.collection} dataCollection
      * @return {components.component}
      */
-    handleMouseMove: function(target, component, dataCollection) {
-      var xPos;
+    handleMouseMove: function(target, component, dataCollection, pubSub) {
+      var xPos, dataPoint, config, dataSource, data;
+      config = component.config();
+      dataSource = component.data();
       xPos = d3.mouse(target)[0];
+      dataPoint = calculateNearestDataPoint(
+        component.config(),
+        component.data(),
+        xPos
+      );
+
       if (xPos > 0) {
-        highlightNearestPoint(component, dataCollection, d3.mouse(target)[0]);
+        highlightNearestPoint(
+          component,
+          dataCollection,
+          d3.mouse(target)[0],
+          dataPoint
+        );
       }
+
+      data = {
+        'x': config.xScale(dataFns.dimension(dataSource, 'x')(dataPoint)),
+        'y': config.yScale(dataFns.dimension(dataSource, 'y')(dataPoint))
+      };
+
+      //Event to show the tooltip
+      pubSub.pub(
+        component.globalScope('tooltip-show'),
+        data,
+        target,
+        dataFns.dimension(component.data(), 'tooltip')(dataPoint));
       return this;
     },
 
@@ -175,7 +203,7 @@ define(['data/functions'], function (dataFns) {
      * @param  {components.component} component
      * @return {components.component}
      */
-    handleMouseOut: function(component) {
+    handleMouseOut: function(component, pubSub) {
       var selection, config;
 
       config = component.config();
@@ -187,6 +215,7 @@ define(['data/functions'], function (dataFns) {
       } else{
         selection.attr('visibility', 'hidden');
       }
+      pubSub.pub(component.globalScope('tooltip-hide'));
       return this;
     },
 
@@ -197,7 +226,14 @@ define(['data/functions'], function (dataFns) {
      * @param  {Number} xPos
      */
     highlightOnHover: function(component, dataCollection, xPos) {
-      highlightNearestPoint(component, dataCollection, xPos);
+      var dataPoint;
+
+      dataPoint = calculateNearestDataPoint(
+        component.config(),
+        component.data(),
+        xPos
+      );
+      highlightNearestPoint(component, dataCollection, xPos, dataPoint);
       return this;
     }
   };

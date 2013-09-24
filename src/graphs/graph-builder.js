@@ -90,6 +90,12 @@ function(obj, array, string, format, d3util, graph, pubsub, DataCollection) {
         position: 'center-right',
         target: 'gl-footer',
         hiddenStates: ['empty',  'loading', 'error']
+      },
+      {
+        cid: 'gl-tooltip',
+        type: 'tooltip',
+        target: 'gl-main',
+        hiddenStates: ['empty', 'loading', 'error']
       }
     ];
 
