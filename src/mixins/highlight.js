@@ -139,11 +139,10 @@ define(['data/functions'], function (dataFns) {
         root.on('mousemove', function() {
           pubSub.pub(
             mousemove,
-            event.target,
+            d3.event.target,
             component,
             dataCollection,
-            pubSub,
-            event
+            pubSub
           );
           }, true);
         root.on('mouseout', function() {

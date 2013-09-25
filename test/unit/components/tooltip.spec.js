@@ -157,6 +157,10 @@ function(tooltip, dc, pubsub) {
         testtooltip.render(selection);
       });
 
+      afterEach(function() {
+        testtooltip.destroy();
+      });
+
       it('dispatches a "render" event', function() {
         expect(handlerSpy).toHaveBeenCalledOnce();
       });
@@ -179,6 +183,10 @@ function(tooltip, dc, pubsub) {
     });
 
     describe('root()', function() {
+
+      afterEach(function() {
+        testtooltip.destroy();
+      });
 
       it('gets the root element', function() {
         setData();
@@ -228,6 +236,10 @@ function(tooltip, dc, pubsub) {
         content = root.select('.gl-tooltip-content');
         rect = root.select('.gl-tooltip-bg');
         textMessages = content.node().childNodes;
+      });
+
+      afterEach(function() {
+        testtooltip.destroy();
       });
 
       it('calls show method on tooltip', function() {
@@ -285,7 +297,85 @@ function(tooltip, dc, pubsub) {
     });
 
     describe('tooltip-show event', function() {
-      //TODO:Write tests for tooltip calculations.
+      var pubsubModule, dataPoint, target, message, g, tooltipHeight,
+        tooltipWidth, positionPadding;
+
+      beforeEach(function() {
+        selection.append('g')
+          .attr({
+            'id': 'tooltipParent',
+            'gl-width': 130,
+            'gl-height': 80
+          });
+        g = selection.select('#tooltipParent').append('g');
+        g.append('circle');
+        dataPoint = { x: 10, y: 10 };
+        target = selection.select('circle');
+        message = 'x:foo\ny:bar';
+        spyOn(testtooltip, 'show').andCallThrough();
+        spyOn(testtooltip, 'update').andCallThrough();
+        pubsubModule = pubsub.getSingleton();
+        setData();
+        testtooltip.render(g.node());
+        pubsubModule.pub('foo:tooltip-show', dataPoint, target.node(), message);
+        tooltipHeight = Math.round(testtooltip.root().height());
+        tooltipWidth =  Math.round(testtooltip.root().width());
+        positionPadding = testtooltip.config('positionPadding');
+      });
+
+      afterEach(function() {
+        testtooltip.destroy();
+      });
+
+      it('calls show on tooltip', function() {
+        expect(testtooltip.show).toHaveBeenCalled();
+      });
+
+      it('calls update on tooltip', function() {
+        expect(testtooltip.update).toHaveBeenCalled();
+      });
+
+      //tooltipHeight: 34 toolWidth: 36
+      it('translates the tooltip to bottom right', function() {
+        var transform;
+        transform = d3.transform(testtooltip.root().attr('transform'));
+        expect(transform.translate[0]).toBe(dataPoint.x + positionPadding);
+        expect(transform.translate[1]).toBe(dataPoint.y + positionPadding);
+      });
+
+      //vertically
+      it('inverts the tooltip if height is greater than the container height',
+        function() {
+          var transform;
+          dataPoint = { x: 10, y: 55 };
+          pubsubModule.pub(
+            'foo:tooltip-show',
+            dataPoint,
+            target.node(),
+            message
+          );
+          transform = d3.transform(testtooltip.root().attr('transform'));
+          expect(transform.translate[0]).toBe(dataPoint.x + positionPadding);
+          expect(transform.translate[1])
+            .toBe(dataPoint.y - positionPadding - tooltipHeight);
+      });
+
+      //horizontally
+      it('inverts the tooltip if width is greater than the container width',
+        function() {
+          var transform;
+          dataPoint = { x: 95, y: 10 };
+          pubsubModule.pub(
+            'foo:tooltip-show',
+            dataPoint,
+            target.node(),
+            message
+          );
+          transform = d3.transform(testtooltip.root().attr('transform'));
+          expect(transform.translate[0])
+            .toBe(dataPoint.x - positionPadding - tooltipWidth);
+          expect(transform.translate[1]).toBe(dataPoint.y + positionPadding);
+      });
 
     });
 
@@ -297,6 +387,10 @@ function(tooltip, dc, pubsub) {
         pubsubModule = pubsub.getSingleton();
         setData();
         testtooltip.render(selection);
+      });
+
+      afterEach(function() {
+        testtooltip.destroy();
       });
 
       it('calls hide on tooltip', function() {
