@@ -1,7 +1,7 @@
 (function (global) {
 
 /**
- * almond 0.2.5 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
+ * almond 0.2.6 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/almond for details
  */
@@ -384,6 +384,11 @@ var requirejs, require, define;
         }
         return req;
     };
+
+    /**
+     * Expose module registry for debugging and tooling
+     */
+    requirejs._defined = defined;
 
     define = function (name, deps, callback) {
 
@@ -9335,6 +9340,19 @@ function () {
         return arr.indexOf(item) !== -1;
       }
       return false;
+    },
+
+    /**
+     * Checks if any element in arr2 is in arr1.
+     *
+     * @param {Array} arr1
+     * @Param {Array} arr2
+     * @return {Boolean}
+     */
+    containsAny: function(arr1, arr2) {
+      return arr2.some(function(item) {
+        return array.contains(arr1, item);
+      });
     }
 
   };
@@ -9521,12 +9539,13 @@ function (array) {
     },
 
     compose: function() {
-      var funcs = arguments;
+      var funcs = arguments,
+          context = this;
       return function() {
         var args = arguments,
             i;
         for (i = funcs.length - 1; i >= 0; i--) {
-          args = [funcs[i].apply(this, args)];
+          args = [funcs[i].apply(context, args)];
         }
         return args[0];
       };
@@ -9624,6 +9643,8 @@ define('data/dimension/dimension',[
    * @param {(Object, Array.<Object>)?} optDataSource
    */
   Dimension = function(optDataSource) {
+    // TODO: rename this.
+    // these are not actually dataSource, this is multiple arrays of raw data
     this.dataSources_ = array.getArray(optDataSource);
   };
 
@@ -9910,6 +9931,9 @@ define('data/selection/selection',[
    * second is a range if it is an array.
    * TODO: If second arg is simple value, filter if equal to that value.
    *       If second arg is a function, use that function.
+   *
+   * for example, used to filter selections to only include those in a specific
+   * time range.
    */
   Selection.prototype.filter = function(dim, range) {
     return this.map(function(dataSource) {
@@ -10429,6 +10453,14 @@ define('mixins/toggle',[],function () {
 
 });
 
+/**
+ * @fileOverview
+ *
+ * Gets the target target container, inspects zindex of all children,
+ * removes all children, sort them by zindex. Then reinsert all children in
+ * zindex order.
+ */
+
 define('mixins/zIndex',[],function () {
   'use strict';
 
@@ -10772,18 +10804,261 @@ define('mixins/component',[
 
 });
 
+define('mixins/highlight',['data/functions'], function (dataFns) {
+  'use strict';
+
+  /**
+   * Calculates the nearest data point based on the x co-ordinate
+   * of current event.
+   * Calculates the x dimension equivalent by inverting the scale and
+   * uses https://github.com/mbostock/d3/wiki/Arrays#wiki-d3_bisector
+   * to determine the approximate index of the closest point.
+   * @param  {Object} config
+   * @param  {Object} dataSource
+   * @param  {Number} xPos
+   * @return {Object} datapoint closest to the x co-ordinate
+   */
+  function calculateNearestDataPoint(config, dataSource, xPos) {
+    var data, startX, xDim, bisectData,
+      d0, d1, clampedDataIndex, clampedData;
+
+    xDim = dataFns.dimension(dataSource, 'x');
+    data = dataSource.data;
+
+    startX = config.xScale.invert(xPos);
+    bisectData = d3.bisector(function(d) { return xDim(d); }).left;
+    clampedDataIndex = bisectData(data, startX, 1);
+
+    d0 = data[clampedDataIndex - 1],
+    d1 = data[clampedDataIndex],
+    clampedData = startX -  xDim(d0) >  xDim(d1) - startX ? d1 : d0;
+
+    return clampedData;
+  }
+
+  /**
+   * Calculates the closest data-point component's data
+   * and highlights it.
+   * @param  {components.component} component
+   * @param  {data.collection} dataCollection
+   * @param  {Number} xPos
+   * @param {Object} datapoint closest to the x co-ordinate
+   */
+  function highlightNearestPoint(component, dataCollection, xPos,
+    dataPoint) {
+    var config, selection, root, radius, xDim, yDim, dataSource;
+
+    config = component.config();
+    root = component.root();
+    dataSource = component.data();
+    xDim = dataFns.dimension(dataSource, 'x');
+    yDim = dataFns.dimension(dataSource, 'y');
+    selection = root.select('.' + getClassName(config));
+
+    selection.attr({
+      'r': config.highlightRadius,
+      'visibility': getVisibility(component, dataCollection),
+      'transform': 'translate(' + config.xScale(xDim(dataPoint)) +
+        ',' + config.yScale(yDim(dataPoint)) + ')'
+    });
+
+    if (config.type === 'scatter') {
+      radius = dataFns.dimension(dataSource, 'r')(dataPoint);
+      selection.attr('r', radius ? radius : config.radius);
+    }
+  }
+
+  function showHighlightTransition(selection, config) {
+    selection.transition()
+      .duration(config.highlightTransDuration)
+      .delay(config.highlightTransDelay)
+      .attr('r', 0);
+  }
+
+  function getVisibility(component, dataCollection) {
+    if (dataCollection.hasTags(component.config().id, 'inactive')) {
+      return 'hidden';
+    }
+    return 'visible';
+  }
+
+  function getClassName(config) {
+    return 'gl-highlight-' + config.cid;
+  }
+
+  return {
+    /**
+    * Sets the highlight and pub/sub events
+    */
+    initHighlight: function() {
+      var _ = this._;
+      if (_.config.showHighlight && !_.isHighlighted) {
+        this.highlight();
+        this.pubsubHighlightEvents(_.globalPubsub, _.dataCollection);
+        _.isHighlighted = true;
+      }
+      return this;
+    },
+
+    /**
+     * Adds a circle for the component
+     * which will be highlighted on hover.
+     * @return {components.component}
+     */
+    highlight: function() {
+      var root, config;
+      root = this.root();
+      config = this.config();
+
+      if (root) {
+        //Ensures that highlight is added only once
+        if (!root.select('.' + getClassName(config)).node()) {
+          root.append('circle')
+          .attr({
+            'fill': config.highlightFill,
+            'stroke': config.color,
+            'stroke-width': config.highlightStrokeWidth,
+            'r': config.highlightRadius,
+            'class': getClassName(config),
+            'visibility': 'hidden',
+            'pointer-events': 'none'
+          });
+        }
+      }
+      return this;
+    },
+
+    /**
+     * Pub/Sub highlight events
+     * @param  {events.pubsub} pubSub
+     * @param  {data.collection} dataCollection
+     * @return {components.component}
+     */
+    pubsubHighlightEvents: function(pubSub, dataCollection) {
+      var root, mouseout, mousemove, component;
+
+      root = this.root();
+      mousemove = this.scope('mousemove');
+      mouseout = this.scope('mouseout');
+      component = this;
+      if (root) {
+        root.on('mousemove', function() {
+          pubSub.pub(
+            mousemove,
+            d3.event.target,
+            component,
+            dataCollection,
+            pubSub
+          );
+          }, true);
+        root.on('mouseout', function() {
+            pubSub.pub(mouseout, component, pubSub);
+          }, true);
+        pubSub.sub(mouseout, component.handleMouseOut);
+        pubSub.sub(mousemove, component.handleMouseMove);
+      }
+      return this;
+    },
+
+    /**
+     * Handler for mousemove event on the root of the
+     * component
+     * @param  {Element} target
+     * @param  {components.component} component
+     * @param  {data.collection} dataCollection
+     * @return {components.component}
+     */
+    handleMouseMove: function(target, component, dataCollection, pubSub) {
+      var xPos, dataPoint, config, dataSource, data;
+      config = component.config();
+      dataSource = component.data();
+      xPos = d3.mouse(target)[0];
+      dataPoint = calculateNearestDataPoint(
+        component.config(),
+        component.data(),
+        xPos
+      );
+
+      if (xPos > 0) {
+        highlightNearestPoint(
+          component,
+          dataCollection,
+          d3.mouse(target)[0],
+          dataPoint
+        );
+      }
+
+      data = {
+        'x': config.xScale(dataFns.dimension(dataSource, 'x')(dataPoint)),
+        'y': config.yScale(dataFns.dimension(dataSource, 'y')(dataPoint))
+      };
+
+      //Event to show the tooltip
+      pubSub.pub(
+        component.globalScope('tooltip-show'),
+        data,
+        target,
+        dataFns.dimension(component.data(), 'tooltip')(dataPoint));
+      return this;
+    },
+
+    /**
+     * Handler for mouseout event on root of
+     * the component
+     * @param  {components.component} component
+     * @return {components.component}
+     */
+    handleMouseOut: function(component, pubSub) {
+      var selection, config;
+
+      config = component.config();
+      selection = component.root()
+        .select('.' + getClassName(config));
+
+      if (config.showHighlightTransition) {
+        showHighlightTransition(selection, config);
+      } else{
+        selection.attr('visibility', 'hidden');
+      }
+      pubSub.pub(component.globalScope('tooltip-hide'));
+      return this;
+    },
+
+    /**
+     * Highlights the closest data point on hover.
+     * @param  {components.component} component
+     * @param  {Object} dataCollection
+     * @param  {Number} xPos
+     */
+    highlightOnHover: function(component, dataCollection, xPos) {
+      var dataPoint;
+
+      dataPoint = calculateNearestDataPoint(
+        component.config(),
+        component.data(),
+        xPos
+      );
+      highlightNearestPoint(component, dataCollection, xPos, dataPoint);
+      return this;
+    }
+  };
+
+});
+
 define('mixins/mixins',[
   'mixins/toggle',
   'mixins/component',
-  'mixins/zIndex'
+  'mixins/zIndex',
+  'mixins/highlight'
 ],
-function(toggle, component, zIndex) {
+function(toggle, component, zIndex, highlight) {
   'use strict';
 
   return {
     toggle: toggle,
     component: component,
-    zIndex: zIndex
+    zIndex: zIndex,
+    highlight: highlight
   };
 
 });
@@ -10810,7 +11085,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -10829,7 +11105,14 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       opacity: 1,
       hiddenStates: null,
       rootId: null,
-      zIndex: 5
+      zIndex: 5,
+      showHighlightTransition: false,
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      highlightTransDuration: 500,
+      highlightTransDelay: 1000,
+      showHighlight: false
     };
 
     /**
@@ -10911,7 +11194,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'lineGenerator',
         'color'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     line.init();
 
@@ -10928,6 +11212,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       if (_.config.cid) {
         _.root.attr('gl-cid', _.config.cid);
       }
+      line.initHighlight();
       dataConfig = line.data();
       // Return early if there's no data.
       if (!dataConfig || !dataConfig.data) {
@@ -10986,8 +11271,10 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * Destroys the line and removes everything from the DOM.
      * @public
      */
-    line.destroy = fn.compose(line.destroy, function() {
+    line.destroy = fn.compose.call(line, line.destroy, function() {
       _.globalPubsub.unsub(line.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.unsub(line.scope('mouseout'), line.handleMouseOut);
+      _.globalPubsub.unsub(line.scope('mousemove'), line.handleMouseMove);
     });
 
     return line();
@@ -11876,7 +12163,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -11892,7 +12180,12 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       opacity: 1,
       hiddenStates: null,
       rootId: null,
-      zIndex: 5
+      zIndex: 5,
+      showHighlightTransition: false,
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      showHighlight: false
     };
 
     /**
@@ -11988,7 +12281,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'cssClass',
         'areaGenerator'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     area.init();
 
@@ -11997,16 +12291,19 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @return {components.area}
      */
     area.update = function() {
+      var dataConfig;
       if (!_.root) {
         return area;
       }
 
-      // Do not generate area when there's no data.
-      if (area.data().data.length === 0) {
+      dataConfig = area.data();
+      // Return early if there's no data.
+      if (!dataConfig || !dataConfig.data || !dataConfig.data.length) {
         return area;
       }
 
       updateAreaGenerator();
+      area.initHighlight();
 
       if (_.config.cssClass) {
         _.root.classed(_.config.cssClass, true);
@@ -12028,6 +12325,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
      * @param  {d3.selection|Node|string} selection
      * @return {components.area}
      */
+    //TODO: area.render is being called twice
     area.render = function(selection) {
       if (!_.root) {
         _.root = d3util.applyTarget(area, selection, function(target) {
@@ -12051,8 +12349,10 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
     /**
      * Destroys the area and removes everything from the DOM.
      */
-    area.destroy = fn.compose(area.destroy, function() {
+    area.destroy = fn.compose.call(area, area.destroy, function() {
       _.globalPubsub.unsub(area.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.unsub(area.scope('mouseout'), area.handleMouseOut);
+      _.globalPubsub.unsub(area.scope('mousemove'), area.handleMouseMove);
     });
 
     return area();
@@ -12081,7 +12381,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
 
     //Private variables
     var _ = {
-      config: {}
+      config: {},
+      isHighlighted: false
     };
 
     _.defaults = {
@@ -12102,7 +12403,12 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       preTransitionColor: '#333',
       delay: 100,
       duration: 1000,
-      ease: 'linear'
+      ease: 'linear',
+      showHighlightTransition: false,
+      highlightRadius: 4,
+      highlightFill: '#fff',
+      highlightStrokeWidth: 2,
+      showHighlight: false
     };
 
     /**
@@ -12197,7 +12503,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
         'opacity',
         'radius'
       ),
-      mixins.component);
+      mixins.component,
+      mixins.highlight);
 
     scatter.init();
 
@@ -12219,6 +12526,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       if (!dataConfig || !dataConfig.data) {
         return scatter;
       }
+      scatter.initHighlight();
 
       selection = _.root.selectAll('.gl-scatter-point')
         .data(dataConfig.data);
@@ -12274,12 +12582,240 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
      * Destroys the scatter and removes everything from the DOM.
      * @public
      */
-    scatter.destroy = fn.compose(scatter.destroy, function() {
+    scatter.destroy = fn.compose.call(scatter, scatter.destroy, function() {
       _.globalPubsub.unsub(
         scatter.globalScope('data-toggle'), handleDataToggle);
+      _.globalPubsub.sub(scatter.scope('mouseout'), scatter.handleMouseOut);
+      _.globalPubsub.sub(scatter.scope('mousemove'), scatter.handleMouseMove);
     });
 
     return scatter();
+
+  };
+});
+
+/**
+ * @fileOverview
+ * Reusuable tooltip component.
+ */
+define('components/tooltip',[
+  'core/array',
+  'core/config',
+  'core/object',
+  'core/function',
+  'core/string',
+  'd3-ext/util',
+  'mixins/mixins'
+],
+function(array, config, obj, fn, string, d3util, mixins) {
+  'use strict';
+
+
+  return function() {
+
+    var _ = {
+      config: {}
+    };
+
+    _.defaults = {
+      type: 'tooltip',
+      message: '',
+      visible: false,
+      target: null,
+      cid: null,
+      color: null,
+      opacity: 0.95,
+      x: 100,
+      y: 100,
+      rootId: null,
+      zIndex: 50,
+      strokeColor:  '#4c9acc',
+      fillColor: '#f0f4f7',
+      padding: 10,
+      positionPadding: 10,
+      hiddenStates: ['empty', 'loading', 'error']
+    };
+
+    /**
+     * Displays tooltip.
+     * The tooltip is placed to bottom-right of the mouse position by default
+     * Calculations are made to determine if the bottom-left corner
+     * of the tooltip is inside the main container,
+     * if not X and Y translates for tranform are calculated
+     * so that the tooltip rect is inverted.
+     * @param  {Object} dataPoint Closest point to the mouse. (output range)
+     * @param  {Element} target
+     * @param  {String} message Content to be displayed in
+     *   tooltip
+     */
+    function displayTooltip(dataPoint, target, message) {
+      var x = dataPoint.x,
+        y = dataPoint.y,
+        tooltipWidth,
+        tooltipHeight,
+        chart,
+        chartWidth,
+        chartHeight,
+        positionPadding = _.config.positionPadding,
+        translateX = x + positionPadding,
+        translateY = y + positionPadding,
+        transform = d3.transform();
+
+      //Get the container
+      //Makes an assumption that the main container is
+      //parent's parent node.
+      //TODO:Change the logic if/when we support nested components
+      if (target.parentNode.parentNode) {
+        chart = d3.select(target.parentNode.parentNode);
+      } else {
+        chart = d3.select(target.parentNode);
+      }
+
+      chartWidth = Math.round(chart.width()),
+      chartHeight = Math.round(chart.height()),
+
+      _.config.message = message;
+      tooltip.update();
+
+      tooltipWidth =  Math.round(_.root.width());
+      tooltipHeight =  Math.round(_.root.height());
+
+      //TODO: Make this a generic method that can be applied to any
+      //container
+
+      //Check if bottom-right corner is outside the chart
+      //vertically
+      if (chartHeight <= (y + positionPadding + tooltipHeight)) {
+        translateY = y - positionPadding - tooltipHeight;
+      }
+
+      //Check if bottom-right corner is outside the chart
+      //horizontally
+      if (chartWidth <= (x + positionPadding + tooltipWidth)) {
+        translateX = x - positionPadding - tooltipWidth;
+      }
+
+      transform.translate = [translateX, translateY];
+      _.root.attr('transform', transform.toString());
+      tooltip.show();
+    }
+
+    /**
+     * Hides the tooltip
+     */
+    function hideTooltip() {
+      tooltip.hide();
+    }
+
+    /**
+     * Main function for tooltip component
+     * @return {components.tooltip}
+     */
+    function tooltip() {
+      obj.extend(_.config, _.defaults);
+      return tooltip;
+    }
+    tooltip._ = _;
+
+    obj.extend(
+      tooltip,
+      config.mixin(
+        _.config,
+        'color',
+        'opacity'
+      ),
+      mixins.component);
+
+    tooltip.init();
+
+    /**
+     * Updates the tooltip component with new/updated data/config
+     * @return {components.tooltip}
+     */
+    tooltip.update = function() {
+      tooltip.show();
+      var i, childNodes,
+          root = _.root,
+          content,
+          size,
+          message = _.config.message || '';
+
+      if (!_.root) {
+        return tooltip;
+      }
+      if (_.config.cid) {
+        _.root.attr('gl-cid', _.config.cid);
+      }
+      root.select('.gl-tooltip-content').remove();
+      content = root.append('g').attr('class', 'gl-tooltip-content');
+      message.split('\n').forEach(function(line) {
+        content.append('text')
+          .style({
+            'font-family': 'sans-serif',
+            'font-size': '10px'
+          })
+          .text(line);
+      });
+      content.layout({ type: 'vertical' });
+      // TODO: Modify layout command to take position and remove logic below.
+      childNodes = content.node().childNodes;
+      for (i = 0; i < childNodes.length; i++) {
+        d3.select(childNodes[i]).attr('x', 0);
+      }
+      size = content.size();
+      root.select('.gl-tooltip-bg').attr({
+        width: size[0] +  _.config.padding,
+        height: size[1] +  _.config.padding
+      });
+      content.center(0, 2);
+      tooltip.applyZIndex();
+      tooltip.emit('update');
+      return tooltip;
+    };
+
+    /**
+     * Renders the tooltip component
+     * @param  {d3.selection|Node|string} selection
+     * @return {components.tooltip}
+     */
+    tooltip.render = function(selection) {
+      if (!_.root) {
+        _.root = d3util.applyTarget(tooltip, selection, function(target) {
+          var root = target.append('g')
+            .attr({
+              'class': string.classes('component', 'tooltip')
+            });
+          root.append('rect')
+            .attr({
+              'class': 'gl-tooltip-bg',
+              rx:3,
+              ry:3,
+              fill: _.config.fillColor,
+              stroke: _.config.strokeColor,
+              'stroke-width': '2px',
+              opacity: _.config.opacity,
+              'pointer-events': 'none'
+            });
+          return root;
+        });
+      }
+      _.globalPubsub.sub(tooltip.globalScope('tooltip-show'), displayTooltip);
+      _.globalPubsub.sub(tooltip.globalScope('tooltip-hide'), hideTooltip);
+
+      tooltip.emit('render');
+      return tooltip;
+    };
+
+    /**
+     * Destroys the tooltip and removes everything from the DOM.
+     * @public
+     */
+    tooltip.destroy = fn.compose.call(tooltip, tooltip.destroy, function() {
+      _.globalPubsub.unsub(tooltip.globalScope('tooltip-show'), displayTooltip);
+      _.globalPubsub.unsub(tooltip.globalScope('tooltip-hide'), hideTooltip);
+    });
+
+    return tooltip();
 
   };
 });
@@ -12292,9 +12828,10 @@ define('components/component',[
   'components/overlay',
   'components/asset',
   'components/area',
-  'components/scatter'
+  'components/scatter',
+  'components/tooltip'
 ],
-function(line, legend, axis, label, overlay, asset, area, scatter) {
+function(line, legend, axis, label, overlay, asset, area, scatter, tooltip) {
   'use strict';
 
   return {
@@ -12305,7 +12842,8 @@ function(line, legend, axis, label, overlay, asset, area, scatter) {
     overlay: overlay,
     asset: asset,
     area: area,
-    scatter: scatter
+    scatter: scatter,
+    tooltip: tooltip
   };
 
 });
@@ -13329,6 +13867,8 @@ define('data/collection',[
    * Accepts the cached deps object.
    * Results in the derivation of any non-cached dependencies
    * of the data source.
+   *
+   * This creates a dependency graph and checks for circular dependencies.
    */
   function deriveDataById(id, data, deps, dataCollection, visited) {
     var d = data[id], sources;
@@ -13624,7 +14164,21 @@ define('data/collection',[
      */
     create: function() {
       return collection();
+    },
+
+    /**
+     * Checks if a data source matches a sources selector.
+     *
+     * @param {Object} datasource A datasource config object.
+     * @param {Array} sources An array of data ids or tags to check.
+     * @return {Boolean}
+     */
+    isInSources: function(datasource, sources) {
+      var tags = array.getArray(datasource.tags);
+      tags.push(datasource.id);
+      return array.containsAny(sources, tags);
     }
+
   };
 
 });
@@ -13897,7 +14451,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         len = colors.length;
         if (component.hasOwnProperty('color')) {
           component.config().color = component.config().color ||
-            colors[(coloredComponentsCount += 1) % len];
+            colors[(coloredComponentsCount++) % len];
         }
       }
     }
@@ -14191,7 +14745,8 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         var hiddenStates = c.config('hiddenStates'),
             dataId = c.config('dataId');
         if (array.contains(hiddenStates, _.config.state) ||
-              (dataId && _.dataCollection.hasTags(dataId, 'inactive'))) {
+              (dataId && _.dataCollection.hasTags(dataId, 'inactive')) ||
+              c.config('visible') === false) {
           c.hide();
         } else {
           c.show();
@@ -14388,7 +14943,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      * Removes everything from the DOM, cleans up all references.
      * @public
      */
-    graph.destroy = fn.compose(graph.destroy, function() {
+    graph.destroy = fn.compose.call(graph, graph.destroy, function() {
       componentManager_.destroy();
       componentManager_ = null;
     });
@@ -14412,9 +14967,10 @@ define('graphs/graph-builder',[
   'core/format',
   'd3-ext/util',
   'graphs/graph',
-  'events/pubsub'
+  'events/pubsub',
+  'data/collection'
 ],
-function(obj, array, string, format, d3util, graph, pubsub) {
+function(obj, array, string, format, d3util, graph, pubsub, DataCollection) {
   'use strict';
 
     var defaults,
@@ -14489,6 +15045,12 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         position: 'center-right',
         target: 'gl-footer',
         hiddenStates: ['empty',  'loading', 'error']
+      },
+      {
+        cid: 'gl-tooltip',
+        type: 'tooltip',
+        target: 'gl-main',
+        hiddenStates: ['empty', 'loading', 'error']
       }
     ];
 
@@ -14526,17 +15088,6 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     }
 
     /**
-     * Returns
-     * true if any element in arr2 is in arr1
-     * false otherwise.
-     */
-    function containsAny(arr1, arr2) {
-      return !arr2.every(function(item) {
-        return !array.contains(arr1, item);
-      });
-    }
-
-    /**
      * Adds a new component of the specified type for every supplied data id
      * that is not an internal data source.
      *
@@ -14557,7 +15108,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
             !componentExists(dataSource.id, g)) {
           // If no sources are specified, add all data ids
           // else add the specified ones.
-          if(isInSources(dataSource, sources)) {
+          if (DataCollection.isInSources(dataSource, sources)) {
             g.component({
               rootId: g.config('id'),
               type: componentType,
@@ -14588,16 +15139,13 @@ function(obj, array, string, format, d3util, graph, pubsub) {
       });
     }
 
-    function isInSources(ds, sources) {
-      var tags = array.getArray(ds.tags);
-      return containsAny(sources, tags.concat(ds.id));
-    }
-
     /**
      * Overrides the add() function on the graph's data collection. Anytime
      * add() is called a new component of the specified type will be added too.
      *
      * TODO: remove this in favor of data collection events
+     *
+     * TODO: BURN THIS CODE TO THE GROUND!
      *
      * @private
      * @param {String} componentType
@@ -14613,7 +15161,7 @@ function(obj, array, string, format, d3util, graph, pubsub) {
         if (isStacked) {
           array.getArray(data).forEach(function(ds) {
             // Don't add stack derivation for $domain.
-            if (ds.id[0] !== '$' && isInSources(ds, sources)) {
+            if (ds.id[0] !== '$' && DataCollection.isInSources(ds, sources)) {
               supr.apply(dataCollection, [{
                 id: ds.id + '-stack',
                 sources: 'stacks',
@@ -14650,12 +15198,16 @@ function(obj, array, string, format, d3util, graph, pubsub) {
 
     /**
      * TODO: Add capability to derivation to create sources.
+     *
+     * Recompute positions of stacked items and remove any whitespace that
+     * may occur due to dataset removal.
      */
     function addStackedData(g, sources) {
       var dataSources = [{
         id: 'stacks',
         // Compute list of ids denoting * - inactive
         // in terms of the original and not the derived sources.
+        // TODO: Remove this in favor of set operation to subtract
         sources: function(resolve) {
           var star = resolve(sources.join(',')),
               inactive = resolve('inactive').map(function(id) {
@@ -14721,11 +15273,14 @@ function(obj, array, string, format, d3util, graph, pubsub) {
     * Render newly added components.
     */
     function renderAddedComponents(g) {
-      g.component().filter(function(c) {
-        return !c.isRendered();
-      }).forEach(function(c) {
-        c.render(g.root());
-      });
+      var componentManager = g.component();
+      if (componentManager) {
+        componentManager.filter(function(c) {
+          return !c.isRendered();
+        }).forEach(function(c) {
+          c.render(g.root());
+        });
+      }
     }
 
     /**
@@ -15528,7 +16083,7 @@ function(obj, string, array, fn, format, selection, dimension, graph,
   'use strict';
 
   var core = {
-    version: '0.0.12',
+    version: '0.0.11',
     obj: obj,
     string: string,
     array: array,
