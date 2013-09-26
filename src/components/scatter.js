@@ -46,7 +46,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
-      showHighlight: false
+      showTooltip: false
     };
 
     /**
@@ -139,7 +139,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
         'yScale',
         'color',
         'opacity',
-        'radius'
+        'radius',
+        'showTooltip'
       ),
       mixins.component,
       mixins.highlight);

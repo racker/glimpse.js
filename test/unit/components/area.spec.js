@@ -78,7 +78,7 @@ function(area, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showHighlight: false
+        showTooltip: false
       };
 
       beforeEach(function(){
@@ -126,8 +126,8 @@ function(area, dc) {
         expect(config.highlightStrokeWidth).toBe(defaults.highlightStrokeWidth);
       });
 
-      it('has default showHighlight', function() {
-        expect(config.showHighlight).toBe(defaults.showHighlight);
+      it('has default showTooltip', function() {
+        expect(config.showTooltip).toBe(defaults.showTooltip);
       });
 
     });
@@ -296,7 +296,7 @@ function(area, dc) {
         expect(testArea.update).toHaveBeenCalled();
       });
 
-      it('does not call highlight if showHighlight is set to false',
+      it('does not call highlight if showTooltip is set to false',
         function() {
           expect(testArea.highlight).not.toHaveBeenCalled();
       });
@@ -377,7 +377,7 @@ function(area, dc) {
         testData[0].dimensions.y0 = null;
         setData();
         testArea.on('update', handlerSpy);
-        testArea.config('showHighlight', true);
+        testArea.config('showTooltip', true);
         spyOn(testArea, 'highlight');
         spyOn(testArea, 'pubsubHighlightEvents');
         testArea.update();
@@ -409,7 +409,7 @@ function(area, dc) {
         expect(path).toHaveAttr('opacity', '0.5');
       });
 
-      it('calls the highlight method when showHighlight is true', function() {
+      it('calls the highlight method when showTooltip is true', function() {
         expect(testArea.highlight).toHaveBeenCalled();
       });
 

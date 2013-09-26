@@ -179,6 +179,10 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         expect(config.id).toBeDefinedAndNotNull();
       });
 
+      it('has default showTooltip set', function() {
+        expect(config.showTooltip).toBe(false);
+      });
+
     });
 
     describe('data()', function() {
@@ -534,6 +538,11 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       it('updates rootId on components', function() {
         expect(componentManager.applySharedObject)
           .toHaveBeenCalledWith('rootId', componentManager.cids());
+      });
+
+      it('updates showTooltip on components', function() {
+        expect(componentManager.applySharedObject)
+          .toHaveBeenCalledWith('showTooltip', componentManager.cids());
       });
 
       it('calls render on x-axis component', function() {
