@@ -86,7 +86,7 @@ define(['data/functions'], function (dataFns) {
     */
     initHighlight: function() {
       var _ = this._;
-      if (_.config.showHighlight && !_.isHighlighted) {
+      if (_.config.showTooltip && !_.isHighlighted) {
         this.highlight();
         this.pubsubHighlightEvents(_.globalPubsub, _.dataCollection);
         _.isHighlighted = true;

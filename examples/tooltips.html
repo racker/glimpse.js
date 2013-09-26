@@ -150,36 +150,32 @@
           }
         ];
 
-        var lineGraph = glimpse.graph();
+        var lineGraph = glimpse.graph().config('showTooltip', true);
+        console.log(lineGraph.config());
           lineGraph.component({
             type: 'line',
             dataId: 'cpu-idle',
-            showHighlight: true,
             color: '#7fcdbb'
           })
           .component({
             type: 'line',
             dataId: 'cpu-sys',
-            showHighlight: true,
             color: '#41b6c4'
           })
           .component({
             type: 'line',
             dataId: 'cpu-user',
-            showHighlight: true,
             color: '#225ea8'
           })
           .component({
             type: 'line',
             dataId: 'cpu-wait',
-            showHighlight: true,
             color: '#253494'
 
           })
           .component({
             type: 'line',
             dataId: 'cpu-stolen',
-            showHighlight: true,
             color: '#081d58'
 
           })
@@ -190,35 +186,30 @@
           .data(dataConfig)
           .render('#line-container');
 
-        var areaGraph = glimpse.graph();
+        var areaGraph = glimpse.graph().config('showTooltip', true);
           areaGraph.component({
             type: 'area',
             dataId: 'cpu-idle',
-            showHighlight: true,
             color: '#bcbddc'
           })
           .component({
             type: 'area',
             dataId: 'cpu-sys',
-            showHighlight: true,
             color: '#9e9ac8'
           })
           .component({
             type: 'area',
             dataId: 'cpu-user',
-            showHighlight: true,
             color: '#6a51a3'
           })
           .component({
             type: 'area',
             dataId: 'cpu-wait',
-            showHighlight: true,
             color: '#54278f'
           })
           .component({
             type: 'area',
             dataId: 'cpu-stolen',
-            showHighlight: true,
             color: '#3f007d'
           })
           .component({
@@ -228,23 +219,20 @@
           .data(dataConfig)
           .render('#area-container');
 
-         var scatterGraph = glimpse.graph();
+         var scatterGraph = glimpse.graph().config('showTooltip', true);
           scatterGraph.component({
             type: 'scatter',
             dataId: 'set1',
-            showHighlight: true,
             color: 'orange'
           })
           .component({
             type: 'scatter',
             dataId: 'set2',
-            showHighlight: true,
             color: 'green'
           })
           .component({
             type: 'scatter',
             dataId: 'set3',
-            showHighlight: true,
             color: 'red'
           })
           .component({
@@ -253,7 +241,6 @@
           })
           .data(dataConfigScatter)
           .render('#scatter-container');
-
         // for debugging
         window.graph = lineGraph;
         window.gl = glimpse;

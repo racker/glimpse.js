@@ -41,7 +41,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
-      showHighlight: false
+      showTooltip: false
     };
 
     /**
@@ -135,7 +135,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator'
+        'areaGenerator',
+        'showTooltip'
       ),
       mixins.component,
       mixins.highlight);

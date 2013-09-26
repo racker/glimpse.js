@@ -81,7 +81,8 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       domainIntervalUnit: null,
       id: null,
       domainSources: null,
-      domainConfig: null
+      domainConfig: null,
+      showTooltip: false
     };
 
     /**
@@ -561,6 +562,10 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.update = function() {
       componentManager_.applySharedObject('data');
+      componentManager_.applySharedObject(
+        'showTooltip',
+        componentManager_.cids()
+      );
       updateScales();
       updateComponents();
       if (graph.isRendered()) {
@@ -584,6 +589,11 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       addLegend();
       componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
+      componentManager_.registerSharedObject(
+        'showTooltip',
+        _.config.showTooltip,
+        true
+      );
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.
