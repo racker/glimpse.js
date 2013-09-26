@@ -10892,7 +10892,7 @@ define('mixins/highlight',['data/functions'], function (dataFns) {
     */
     initHighlight: function() {
       var _ = this._;
-      if (_.config.showHighlight && !_.isHighlighted) {
+      if (_.config.showTooltip && !_.isHighlighted) {
         this.highlight();
         this.pubsubHighlightEvents(_.globalPubsub, _.dataCollection);
         _.isHighlighted = true;
@@ -11112,7 +11112,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightStrokeWidth: 2,
       highlightTransDuration: 500,
       highlightTransDelay: 1000,
-      showHighlight: false
+      showTooltip: false
     };
 
     /**
@@ -11192,7 +11192,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'xScale',
         'yScale',
         'lineGenerator',
-        'color'
+        'color',
+        'showTooltip'
       ),
       mixins.component,
       mixins.highlight);
@@ -12185,7 +12186,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
-      showHighlight: false
+      showTooltip: false
     };
 
     /**
@@ -12279,7 +12280,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'color',
         'opacity',
         'cssClass',
-        'areaGenerator'
+        'areaGenerator',
+        'showTooltip'
       ),
       mixins.component,
       mixins.highlight);
@@ -12408,7 +12410,7 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
-      showHighlight: false
+      showTooltip: false
     };
 
     /**
@@ -12501,7 +12503,8 @@ function(configMixin, obj, string, d3util, mixins, dataFns, pubsub, fn) {
         'yScale',
         'color',
         'opacity',
-        'radius'
+        'radius',
+        'showTooltip'
       ),
       mixins.component,
       mixins.highlight);
@@ -14417,7 +14420,8 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       domainIntervalUnit: null,
       id: null,
       domainSources: null,
-      domainConfig: null
+      domainConfig: null,
+      showTooltip: false
     };
 
     /**
@@ -14897,6 +14901,10 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.update = function() {
       componentManager_.applySharedObject('data');
+      componentManager_.applySharedObject(
+        'showTooltip',
+        componentManager_.cids()
+      );
       updateScales();
       updateComponents();
       if (graph.isRendered()) {
@@ -14920,6 +14928,11 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       addLegend();
       componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
+      componentManager_.registerSharedObject(
+        'showTooltip',
+        _.config.showTooltip,
+        true
+      );
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.
