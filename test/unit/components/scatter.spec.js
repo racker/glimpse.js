@@ -97,7 +97,7 @@ function(scatter, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showHighlight: false
+        showTooltip: false
       };
 
       beforeEach(function(){
@@ -171,8 +171,8 @@ function(scatter, dc) {
         expect(config.highlightStrokeWidth).toBe(defaults.highlightStrokeWidth);
       });
 
-      it('has default showHighlight', function() {
-        expect(config.showHighlight).toBe(defaults.showHighlight);
+      it('has default showTooltip', function() {
+        expect(config.showTooltip).toBe(defaults.showTooltip);
       });
 
     });
@@ -257,7 +257,7 @@ function(scatter, dc) {
         expect(testScatter.update).toHaveBeenCalled();
       });
 
-      it('does not call highlight if showHighlight is set to false',
+      it('does not call highlight if showTooltip is set to false',
         function() {
           expect(testScatter.highlight).not.toHaveBeenCalled();
       });
@@ -307,7 +307,7 @@ function(scatter, dc) {
         testScatter.on('update', handlerSpy);
         dataCollection.add(getTestData()[1]);
         testScatter.data(dataCollection);
-        testScatter.config('showHighlight', true);
+        testScatter.config('showTooltip', true);
         spyOn(testScatter, 'highlight');
         spyOn(testScatter, 'pubsubHighlightEvents');
         testScatter.update();
@@ -360,7 +360,7 @@ function(scatter, dc) {
         expect(circle).toHaveAttr('fill', 'blue');
       });
 
-      it('calls the highlight method when showHighlight is true', function() {
+      it('calls the highlight method when showTooltip is true', function() {
         expect(testScatter.highlight).toHaveBeenCalled();
       });
 
