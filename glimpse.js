@@ -9230,8 +9230,8 @@ define("d3", (function (global) {
 
 // Array utility functions
 
-define('core/array',[],
-function () {
+define(
+'core/array',[],function () {
   'use strict';
 
   var array;
@@ -9472,8 +9472,8 @@ function (array) {
  * @fileOverview
  * String utility functions.
  */
-define('core/string',[],
-function () {
+define(
+'core/string',[],function () {
   'use strict';
 
   return {
@@ -9555,8 +9555,8 @@ function (array) {
 
 });
 
-define('core/format',[],
-function() {
+define(
+'core/format',[],function() {
   'use strict';
 
   function getSuffix(optSuffix) {
@@ -14272,7 +14272,7 @@ define('data/domain',[
         domain = d3.extent(domain);
       }
       if (modifier.maxMultiplier) {
-        domain[1] = Math.round(domain[1] * modifier.maxMultiplier);
+        domain[1] = domain[1] * modifier.maxMultiplier;
       }
     }
     return domain;
@@ -16096,7 +16096,7 @@ function(obj, string, array, fn, format, selection, dimension, graph,
   'use strict';
 
   var core = {
-    version: '0.0.11',
+    version: '0.0.15',
     obj: obj,
     string: string,
     array: array,
@@ -16144,4 +16144,4 @@ function (d3, core) {
 
 }(this));
 
-//@ sourceMappingURL=glimpse.js.map
+//# sourceMappingURL=glimpse.js.map
