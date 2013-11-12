@@ -56,7 +56,7 @@
         ];
 
         // Create and render a line graph.
-        var lineGraph = glimpse.graphBuilder().create('line')
+        var lineGraph = glimpse.graphBuilder().create('line', { sources: ['latencyDfw', 'latencyDfwROC'] })
           .data(dataConfig)
           .render('#container');
 
