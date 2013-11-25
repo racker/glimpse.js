@@ -29,8 +29,8 @@
       yScale: null,
       inLegend: true,
       cssClass: null,
-      height: 141.12,
-      width: 698,
+      height: null,
+      width: null,
       barWidth: 20,
       scaleWidth: true,
       barPadding: 1,
@@ -100,6 +100,15 @@
     }
 
     function update(selection, dataLength) {
+
+      if (!_.config.width) {
+        _.config.width = _.config.xScale.range()[1];
+      }
+
+      if (!_.config.height) {
+        _.config.height = _.config.yScale.range()[0];
+      }
+
       selection.attr({
         'class': 'gl-data-bar',
         'fill': _.config.color,
