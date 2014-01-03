@@ -81,7 +81,7 @@ function(tooltip, dc, pubsub) {
 
       defaults = {
         opacity: 0.95,
-        message: '',
+        message: [],
         visible: false,
         x: 100,
         y: 100,
@@ -101,7 +101,7 @@ function(tooltip, dc, pubsub) {
       });
 
       it('has default message', function() {
-        expect(config.message).toBe(defaults.message);
+        expect(config.message).toBe('');
       });
 
       it('has default visible', function() {
@@ -224,7 +224,10 @@ function(tooltip, dc, pubsub) {
         testtooltip.config({
           color: 'red',
           opacity: 0.5,
-          'message': 'x: 5\ny: 10'
+          'message': [
+            {text: 'x: 5 y: 10', color: 'red'},
+            {text: 'x: 10 y: 20', color: 'blue'}
+          ]
         });
         spyOn(testtooltip, 'show').andCallThrough();
         spyOn(testtooltip, 'applyZIndex').andCallThrough();
@@ -255,8 +258,8 @@ function(tooltip, dc, pubsub) {
       });
 
       it('adds right message', function() {
-        expect(textMessages[0].textContent).toBe('x: 5');
-        expect(textMessages[1].textContent).toBe('y: 10');
+        expect(textMessages[0].textContent).toBe('x: 5 y: 10');
+        expect(textMessages[1].textContent).toBe('x: 10 y: 20');
       });
 
       it('sets the x co-ordinate of message to 0', function() {
@@ -311,7 +314,7 @@ function(tooltip, dc, pubsub) {
         g.append('circle');
         dataPoint = { x: 10, y: 10 };
         target = selection.select('circle');
-        message = 'x:foo\ny:bar';
+        message = [{text: 'x:foo\ny:bar', color: 'red'}];
         spyOn(testtooltip, 'show').andCallThrough();
         spyOn(testtooltip, 'update').andCallThrough();
         pubsubModule = pubsub.getSingleton();

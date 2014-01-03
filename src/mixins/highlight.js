@@ -80,6 +80,54 @@ define(['data/functions'], function (dataFns) {
     return 'gl-highlight-' + config.cid;
   }
 
+  function processComponentMousemove(target, component, dataCollection) {
+    var xPos, dataPoint, config, dataSource;
+      config = component.config();
+      dataSource = component.data();
+      xPos = d3.mouse(target)[0];
+      dataPoint = calculateNearestDataPoint(
+        component.config(),
+        component.data(),
+        xPos
+      );
+
+      if (xPos > 0) {
+        highlightNearestPoint(
+          component,
+          dataCollection,
+          d3.mouse(target)[0],
+          dataPoint
+        );
+      }
+
+      return {
+        data: {
+          'x': config.xScale(dataFns.dimension(dataSource, 'x')(dataPoint)),
+          'y': config.yScale(dataFns.dimension(dataSource, 'y')(dataPoint))
+         },
+        message: {
+          text: dataFns.dimension(component.data(), 'tooltip')(dataPoint),
+          color: config.color
+        }
+      };
+  }
+
+  function processComponentMouseOut(component) {
+    var selection, config;
+
+    config = component.config();
+    selection = component.root()
+      .select('.' + getClassName(config));
+
+    if (config.showHighlightTransition) {
+      showHighlightTransition(selection, config);
+    } else{
+      selection.attr('visibility', 'hidden');
+    }
+
+    return;
+  }
+
   return {
     /**
     * Sets the highlight and pub/sub events
@@ -160,39 +208,80 @@ define(['data/functions'], function (dataFns) {
      * @param  {Element} target
      * @param  {components.component} component
      * @param  {data.collection} dataCollection
+     * @param  {events.pubsub} pubSub
      * @return {components.component}
      */
     handleMouseMove: function(target, component, dataCollection, pubSub) {
-      var xPos, dataPoint, config, dataSource, data;
-      config = component.config();
-      dataSource = component.data();
-      xPos = d3.mouse(target)[0];
-      dataPoint = calculateNearestDataPoint(
-        component.config(),
-        component.data(),
-        xPos
-      );
+      var highlight;
 
-      if (xPos > 0) {
-        highlightNearestPoint(
-          component,
-          dataCollection,
-          d3.mouse(target)[0],
-          dataPoint
-        );
-      }
-
-      data = {
-        'x': config.xScale(dataFns.dimension(dataSource, 'x')(dataPoint)),
-        'y': config.yScale(dataFns.dimension(dataSource, 'y')(dataPoint))
-      };
+      highlight = processComponentMousemove(target, component, dataCollection);
 
       //Event to show the tooltip
       pubSub.pub(
         component.globalScope('tooltip-show'),
-        data,
+        highlight.data,
         target,
-        dataFns.dimension(component.data(), 'tooltip')(dataPoint));
+        [highlight.message]
+      );
+      return this;
+    },
+
+    /**
+     * Handler for mousemove event on graph
+     * @param  {Element} target
+     * @param  {componentManager} componentManager
+     * @param  {data.collection} dataCollection
+     * @param  {events.pubsub} pubSub
+     * @return {graphs.graph}
+     */
+    handleGraphMouseMove: function(target, componentManager,
+      dataCollection, pubSub) {
+      var components, highlight,
+        dataPoints = [],
+        messages = [],
+        closestComponents = [];
+
+      components = componentManager.get(componentManager.cids());
+
+      components.forEach(function(component) {
+        if (component.config().hasOwnProperty('showTooltip')) {
+          highlight = processComponentMousemove(
+            target,
+            component,
+            dataCollection
+          );
+          dataPoints.push(highlight.data);
+          messages.push(highlight.message);
+          closestComponents.push(component);
+        }
+      });
+
+      //Construct messages
+      //Event to show the tooltip
+      pubSub.pub(
+        closestComponents[0].globalScope('tooltip-show'),
+        dataPoints[0],
+        target,
+        messages);
+
+      return this;
+    },
+
+    /**
+     * Handler for mouseout event on graph
+     * @param  {graphs.graph} graph
+     * @param  {events.pubsub} pubSub
+     * @return {graphs.graph}
+     */
+    handleGraphMouseOut: function(graph, pubSub) {
+      var components, componentManager;
+      componentManager = graph.component();
+      components = componentManager.get(componentManager.cids());
+
+      components.forEach(function(component) {
+        processComponentMouseOut(component);
+      });
+      pubSub.pub(graph.globalScope('tooltip-hide'));
       return this;
     },
 
@@ -200,20 +289,11 @@ define(['data/functions'], function (dataFns) {
      * Handler for mouseout event on root of
      * the component
      * @param  {components.component} component
+     * @param  {events.pubsub} pubSub
      * @return {components.component}
      */
     handleMouseOut: function(component, pubSub) {
-      var selection, config;
-
-      config = component.config();
-      selection = component.root()
-        .select('.' + getClassName(config));
-
-      if (config.showHighlightTransition) {
-        showHighlightTransition(selection, config);
-      } else{
-        selection.attr('visibility', 'hidden');
-      }
+      processComponentMouseOut(component);
       pubSub.pub(component.globalScope('tooltip-hide'));
       return this;
     },

@@ -438,11 +438,50 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
     }
 
     /**
+     * Handles mousemove event on the gl-main
+     */
+    function mousemove() {
+      graph.handleGraphMouseMove(
+        d3.event.target,
+        graph.component(),
+        graph.data(),
+        _.globalPubsub);
+    }
+
+    /**
+     * Handles mouseout event on the gl-main
+     */
+    function mouseout() {
+      graph.handleGraphMouseOut(graph, _.globalPubsub);
+    }
+
+    /**
+     * Adds a rect to capture mousemove and mouseout on
+     * gl-main container
+     */
+    function configureTooltip() {
+      var container = getPrimaryContainer();
+      container.append('rect')
+        .attr(
+          {
+            'class': 'gl-graph-tooltip',
+            height: container.height(),
+            width: container.width(),
+            fill: 'transparent'
+          })
+        .on('mousemove', mousemove)
+        .on('mouseout', mouseout);
+    }
+
+    /**
      * Main function, sets defaults, scales and axes
      * @return {graphs.graph}
      */
     function graph() {
       obj.extend(_.config, _.defaults);
+
+      obj.extend(graph, mixins.highlight);
+
       if (!obj.isDefAndNotNull(_.config.id)) {
         _.config.id = string.random();
       }
@@ -583,6 +622,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.render = function(selector) {
       var selection = d3util.select(selector);
+
       assetLoader.loadAll();
       renderPanel(selection);
       //Add legend before applying shared objects.
@@ -601,6 +641,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
+      configureTooltip();
       graph.emit('render');
       return graph;
     };
