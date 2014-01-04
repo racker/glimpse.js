@@ -79,6 +79,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
       chartHeight = Math.round(chart.height()),
 
       _.config.message = message;
+
       tooltip.update();
 
       tooltipWidth =  Math.round(_.root.width());

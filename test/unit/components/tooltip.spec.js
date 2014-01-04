@@ -380,6 +380,40 @@ function(tooltip, dc, pubsub) {
           expect(transform.translate[1]).toBe(dataPoint.y + positionPadding);
       });
 
+      it('translates the tooltip to the middle of the chart for a longMessage',
+        function() {
+          var transform, longMessage, height, tptheight;
+          dataPoint = { x: 95, y: 55 };
+          longMessage = 'Lorem ipsum dolor sit amet,' +
+            ' consectetur adipisicing elit,' +
+            'sed do eiusmod tempor incididunt ut labore et' +
+            ' dolore magna aliqua.' +
+            ' Ut enim ad minim veniam, quis nostrud' +
+            'exercitation ullamco laboris' +
+            ' nisi ut aliquip ex ea commodo consequat.' +
+            ' Duis aute irure dolor in' +
+            'reprehenderit in voluptate velit esse' +
+            'cillum dolore eu fugiat nulla pariatur.' +
+            'Excepteur sint occaecat cupidatat non proident,' +
+            ' sunt in culpa qui officia' +
+            'deserunt mollit anim id est laborum';
+          pubsubModule.pub(
+            'foo:tooltip-show',
+            dataPoint,
+            target.node(),
+            [ { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              ]
+          );
+          transform = d3.transform(testtooltip.root().attr('transform'));
+          height = selection.select('#tooltipParent').height();
+          tptheight = Math.round(testtooltip.root().height());
+          expect(transform.translate[1])
+            .toBe(height - tptheight - positionPadding);
+      });
+
     });
 
     describe('tooltip-hide event', function() {

@@ -462,13 +462,12 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
     function configureTooltip() {
       var container = getPrimaryContainer();
       container.append('rect')
-        .attr(
-          {
-            'class': 'gl-graph-tooltip',
-            height: container.height(),
-            width: container.width(),
-            fill: 'transparent'
-          })
+        .attr({
+          'class': 'gl-graph-tooltip',
+          height: container.height(),
+          width: container.width(),
+          fill: 'transparent'
+        })
         .on('mousemove', mousemove)
         .on('mouseout', mouseout);
     }
@@ -641,7 +640,9 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
-      configureTooltip();
+      if (_.config.showTooltip) {
+        configureTooltip();
+      }
       graph.emit('render');
       return graph;
     };
