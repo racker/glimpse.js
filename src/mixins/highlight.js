@@ -86,8 +86,8 @@ define(['data/functions'], function (dataFns) {
       dataSource = component.data();
       xPos = d3.mouse(target)[0];
       dataPoint = calculateNearestDataPoint(
-        component.config(),
-        component.data(),
+        config,
+        dataSource,
         xPos
       );
 
@@ -95,7 +95,7 @@ define(['data/functions'], function (dataFns) {
         highlightNearestPoint(
           component,
           dataCollection,
-          d3.mouse(target)[0],
+          xPos,
           dataPoint
         );
       }
@@ -124,8 +124,6 @@ define(['data/functions'], function (dataFns) {
     } else{
       selection.attr('visibility', 'hidden');
     }
-
-    return;
   }
 
   return {
