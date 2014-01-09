@@ -70,7 +70,7 @@ define(['data/functions'], function (dataFns) {
   }
 
   function getVisibility(component, dataCollection) {
-    if (dataCollection.hasTags(component.config().id, 'inactive')) {
+    if (dataCollection.hasTags(component.config().dataId, 'inactive')) {
       return 'hidden';
     }
     return 'visible';
@@ -242,7 +242,8 @@ define(['data/functions'], function (dataFns) {
       components = componentManager.get(componentManager.cids());
 
       components.forEach(function(component) {
-        if (component.config().hasOwnProperty('showTooltip')) {
+        if (component.config().hasOwnProperty('showTooltip') &&
+          getVisibility(component, dataCollection) === 'visible') {
           highlight = processComponentMousemove(
             target,
             component,
