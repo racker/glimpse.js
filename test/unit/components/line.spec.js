@@ -73,7 +73,8 @@ function(d3, object, line, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: false
+        showTooltip: false,
+        showHighlight: true
       };
 
       beforeEach(function(){
@@ -111,6 +112,10 @@ function(d3, object, line, dc) {
 
       it('has default showTooltip', function() {
         expect(config.showTooltip).toBe(defaults.showTooltip);
+      });
+
+      it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
       });
 
       it('has default showHighlightTransition', function() {
@@ -283,11 +288,12 @@ function(d3, object, line, dc) {
         selection = jasmine.svgFixture();
         setData();
         setScales();
+        testLine.config('showHighlight', false);
         testLine.render('#svg-fixture');
         testLine.on('update', handlerSpy);
-        testLine.config('showTooltip', true);
         spyOn(testLine, 'highlight');
         spyOn(testLine, 'pubsubHighlightEvents');
+        testLine.config('showHighlight', true);
         testLine.update();
         path = selection.select('path').node();
       });
@@ -326,11 +332,11 @@ function(d3, object, line, dc) {
         }
       );
 
-      it('calls the highlight method when showTooltip is true', function() {
+      it('calls the highlight method when showHighlight is true', function() {
         expect(testLine.highlight).toHaveBeenCalled();
       });
 
-      it('calls the highlight method when pubsubHightlightEvents is true',
+      it('calls the pubsubHightlightEvents method when showHighlight is true',
         function() {
           expect(testLine.pubsubHighlightEvents).toHaveBeenCalled();
       });
@@ -343,6 +349,7 @@ function(d3, object, line, dc) {
       beforeEach(function() {
         selection = jasmine.svgFixture();
         setData();
+        testLine.config('showHighlight', false);
         spyOn(testLine, 'update');
         spyOn(testLine, 'highlight');
         testLine.on('render', handlerSpy);
@@ -374,7 +381,7 @@ function(d3, object, line, dc) {
         expect(testLine.update).toHaveBeenCalled();
       });
 
-      it('does not call highlight if showTooltip is set to false',
+      it('does not call highlight if showHighlight is set to false',
         function() {
           expect(testLine.highlight).not.toHaveBeenCalled();
       });

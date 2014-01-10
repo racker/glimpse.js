@@ -548,11 +548,6 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
           .toHaveBeenCalledWith('rootId', componentManager.cids());
       });
 
-      it('updates showTooltip on components', function() {
-        expect(componentManager.applySharedObject)
-          .toHaveBeenCalledWith('showTooltip', componentManager.cids());
-      });
-
       it('calls render on x-axis component', function() {
         expect(xAxis.render).toHaveBeenCalled();
       });

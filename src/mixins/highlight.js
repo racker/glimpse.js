@@ -48,7 +48,6 @@ define(['data/functions'], function (dataFns) {
     xDim = dataFns.dimension(dataSource, 'x');
     yDim = dataFns.dimension(dataSource, 'y');
     selection = root.select('.' + getClassName(config));
-
     selection.attr({
       'r': config.highlightRadius,
       'visibility': getVisibility(component, dataCollection),
@@ -132,7 +131,7 @@ define(['data/functions'], function (dataFns) {
     */
     initHighlight: function() {
       var _ = this._;
-      if (_.config.showTooltip && !_.isHighlighted) {
+      if (_.config.showHighlight && !_.isHighlighted) {
         this.highlight();
         this.pubsubHighlightEvents(_.globalPubsub, _.dataCollection);
         _.isHighlighted = true;

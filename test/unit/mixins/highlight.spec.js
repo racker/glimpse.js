@@ -118,7 +118,7 @@ function(obj, mixins, pubsubModule, dc, graph) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: true
+        showHighlight: true
       };
 
       component = {

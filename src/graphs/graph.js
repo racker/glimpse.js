@@ -461,7 +461,10 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     function configureTooltip() {
       var container = getPrimaryContainer();
-      container.append('rect')
+
+      if (graph.config('showTooltip') &&
+        container.select('.gl-graph-tooltip').empty()) {
+        container.append('rect')
         .attr({
           'class': 'gl-graph-tooltip',
           height: container.height(),
@@ -470,6 +473,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         })
         .on('mousemove', mousemove)
         .on('mouseout', mouseout);
+      }
     }
 
     /**
@@ -600,15 +604,12 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.update = function() {
       componentManager_.applySharedObject('data');
-      componentManager_.applySharedObject(
-        'showTooltip',
-        componentManager_.cids()
-      );
       updateScales();
       updateComponents();
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
+      configureTooltip();
       graph.emit('update');
       return graph;
     };
@@ -628,11 +629,6 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       addLegend();
       componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
-      componentManager_.registerSharedObject(
-        'showTooltip',
-        _.config.showTooltip,
-        true
-      );
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.
@@ -640,9 +636,6 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
       // Force state update.
       updateComponentVisibility();
       isRendered = true;
-      if (_.config.showTooltip) {
-        configureTooltip();
-      }
       graph.emit('render');
       return graph;
     };

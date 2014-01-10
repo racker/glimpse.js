@@ -97,7 +97,8 @@ function(scatter, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: false
+        showTooltip: false,
+        showHighlight: true
       };
 
       beforeEach(function(){
@@ -175,6 +176,10 @@ function(scatter, dc) {
         expect(config.showTooltip).toBe(defaults.showTooltip);
       });
 
+      it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
+      });
+
     });
 
     describe('data()', function() {
@@ -234,7 +239,7 @@ function(scatter, dc) {
         setData();
         spyOn(testScatter, 'update').andCallThrough();
         testScatter.on('render', handlerSpy);
-        testScatter.config('color', 'green');
+        testScatter.config({'color': 'green', 'showHighlight': false});
         spyOn(testScatter, 'highlight');
         testScatter.render(selection);
       });
@@ -257,7 +262,7 @@ function(scatter, dc) {
         expect(testScatter.update).toHaveBeenCalled();
       });
 
-      it('does not call highlight if showTooltip is set to false',
+      it('does not call highlight if showHighlight is set to false',
         function() {
           expect(testScatter.highlight).not.toHaveBeenCalled();
       });
@@ -298,16 +303,17 @@ function(scatter, dc) {
 
       beforeEach(function(){
         setData();
+        testScatter.config('showHighlight', false);
         testScatter.render(selection);
         testScatter.config({
           cssClass: 'foo',
           color: 'red',
-          opacity: 0.5
+          opacity: 0.5,
+          showHighlight: true
         });
         testScatter.on('update', handlerSpy);
         dataCollection.add(getTestData()[1]);
         testScatter.data(dataCollection);
-        testScatter.config('showTooltip', true);
         spyOn(testScatter, 'highlight');
         spyOn(testScatter, 'pubsubHighlightEvents');
         testScatter.update();
@@ -360,11 +366,11 @@ function(scatter, dc) {
         expect(circle).toHaveAttr('fill', 'blue');
       });
 
-      it('calls the highlight method when showTooltip is true', function() {
+      it('calls the highlight method when showHighlight is true', function() {
         expect(testScatter.highlight).toHaveBeenCalled();
       });
 
-      it('calls the highlight method when pubsubHightlightEvents is true',
+      it('calls the pubsubHighlightEvents method when showHighlight is true',
         function() {
           expect(testScatter.pubsubHighlightEvents).toHaveBeenCalled();
       });

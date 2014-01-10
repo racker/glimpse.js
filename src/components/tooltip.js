@@ -148,7 +148,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
           root = _.root,
           content,
           size,
-          message = _.config.message || '';
+          message = _.config.message || [];
 
       if (!_.root) {
         return tooltip;
@@ -158,6 +158,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
       }
       root.select('.gl-tooltip-content').remove();
       content = root.append('g').attr('class', 'gl-tooltip-content');
+
       message.forEach(function(line) {
         content.append('text')
           .attr({'xml:space': 'preserve', 'pointer-events': 'none'})
