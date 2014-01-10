@@ -97,7 +97,7 @@ function(scatter, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: false,
+        showTooltip: true,
         showHighlight: true
       };
 

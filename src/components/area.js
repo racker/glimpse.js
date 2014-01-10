@@ -41,7 +41,7 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightRadius: 4,
       highlightFill: '#fff',
       highlightStrokeWidth: 2,
-      showTooltip: false,
+      showTooltip: true,
       showHighlight: true
     };
 

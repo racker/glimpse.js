@@ -174,28 +174,33 @@ define(['data/functions'], function (dataFns) {
      * @return {components.component}
      */
     pubsubHighlightEvents: function(pubSub, dataCollection) {
-      var root, mouseout, mousemove, component;
+      var root, mouseout, mousemove, component, config;
 
-      root = this.root();
-      mousemove = this.scope('mousemove');
-      mouseout = this.scope('mouseout');
-      component = this;
-      if (root) {
-        root.on('mousemove', function() {
-          pubSub.pub(
-            mousemove,
-            d3.event.target,
-            component,
-            dataCollection,
-            pubSub
-          );
-          }, true);
-        root.on('mouseout', function() {
-            pubSub.pub(mouseout, component, pubSub);
-          }, true);
-        pubSub.sub(mouseout, component.handleMouseOut);
-        pubSub.sub(mousemove, component.handleMouseMove);
+      config = this.config();
+
+      if (config.showTooltip) {
+        root = this.root();
+        mousemove = this.scope('mousemove');
+        mouseout = this.scope('mouseout');
+        component = this;
+        if (root) {
+          root.on('mousemove', function() {
+            pubSub.pub(
+              mousemove,
+              d3.event.target,
+              component,
+              dataCollection,
+              pubSub
+            );
+            }, true);
+          root.on('mouseout', function() {
+              pubSub.pub(mouseout, component, pubSub);
+            }, true);
+          pubSub.sub(mouseout, component.handleMouseOut);
+          pubSub.sub(mousemove, component.handleMouseMove);
+        }
       }
+
       return this;
     },
 

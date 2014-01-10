@@ -259,6 +259,7 @@ function(obj, mixins, pubsubModule, dc, graph) {
         component.init();
         spyOn(component._.globalPubsub, 'sub');
         spyOn(component._.globalPubsub, 'pub');
+        component.config('showTooltip', true);
         component.pubsubHighlightEvents(component._.globalPubsub, {});
       });
 
