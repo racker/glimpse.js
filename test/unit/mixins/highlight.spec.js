@@ -2,10 +2,67 @@ define([
   'core/object',
   'mixins/mixins',
   'events/pubsub',
-  'data/collection'
+  'data/collection',
+  'graphs/graph'
 ],
-function(obj, mixins, pubsubModule, dc) {
+function(obj, mixins, pubsubModule, dc, graph) {
   'use strict';
+  var testGraph, selection, epochBaseMs, oneDayMs, fakeData;
+
+  epochBaseMs = 0;
+  oneDayMs = 1000 * 60 * 60 * 24;
+
+  fakeData = [{
+    id:'fakeData',
+    data: [
+      { x: epochBaseMs + 0 * oneDayMs, y: 106},
+      { x: epochBaseMs + 1 * oneDayMs, y: 56},
+      { x: epochBaseMs + 2 * oneDayMs, y: 100},
+      { x: epochBaseMs + 3 * oneDayMs, y: 103},
+      { x: epochBaseMs + 4 * oneDayMs, y: 90},
+      { x: epochBaseMs + 5 * oneDayMs, y: 200},
+      { x: epochBaseMs + 6 * oneDayMs, y: 130}
+    ]
+  }];
+
+  function setGraph() {
+    testGraph
+      .config({
+        colorPalette: ['maroon' , 'yellow', 'purple'],
+        yAxisUnit: 'ms'
+      })
+      .data([
+        {
+          id: 'fakeData',
+          title: 'DFW',
+          data: fakeData[0].data,
+          dimensions: {
+            x: function(d) { return d.x; },
+            y: function(d) { return d.y; },
+            tooltip: function(d) { return 'x: ' + d.x; }
+          }
+        },
+        {
+          id: 'fakeData2',
+          title: 'ORD',
+          data: fakeData[0].data,
+          dimensions: {
+            x: function(d) { return d.x; },
+            y: function(d) { return d.y; },
+            tooltip: function(d) { return 'x: ' + d.x; }
+          }
+        }
+      ])
+      .component([
+        { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
+        { cid: 'testComponent2', type: 'line', dataId: 'fakeData2' },
+        { cid: 'testComponentWithColor', type: 'line',
+          dataId: 'fakeData', color: 'red' }
+      ]);
+
+    selection = jasmine.htmlFixture();
+    testGraph.render(selection.node());
+  }
 
   describe('mixins.highlight', function() {
     var component, selection, root, config, pubsub,
@@ -61,7 +118,7 @@ function(obj, mixins, pubsubModule, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: true
+        showHighlight: true
       };
 
       component = {
@@ -85,6 +142,7 @@ function(obj, mixins, pubsubModule, dc) {
       component = createComponent();
       obj.extend(component, mixins.highlight);
       pubsub = pubsubModule.getSingleton();
+      testGraph = graph();
     });
 
     it('applies highlight methods to the component', function() {
@@ -201,6 +259,7 @@ function(obj, mixins, pubsubModule, dc) {
         component.init();
         spyOn(component._.globalPubsub, 'sub');
         spyOn(component._.globalPubsub, 'pub');
+        component.config('showTooltip', true);
         component.pubsubHighlightEvents(component._.globalPubsub, {});
       });
 
@@ -263,7 +322,61 @@ function(obj, mixins, pubsubModule, dc) {
 
     });
 
-     describe('highlightOnHover', function() {
+    describe('handleGraphMouseMove', function() {
+
+      beforeEach(function(){
+        setGraph();
+        spyOn(d3, 'mouse').andReturn([1, 20]);
+        spyOn(pubsub, 'pub').andCallThrough();
+        testGraph.handleGraphMouseMove(
+          selection.select('gl-graph-tooltip').node(),
+          testGraph.component(),
+          dataCollection,
+          pubsub
+        );
+      });
+
+      it('publishes the tooltip-show with message and first closest point',
+        function() {
+        expect(pubsub.pub)
+          .toHaveBeenCalledWith(
+            testGraph.config('id') + ':tooltip-show',
+            { x : 0, y : 103 },
+            selection.select('gl-graph-tooltip').node(),
+            [ { text : 'x: 0', color : 'maroon' },
+              { text : 'x: 0', color : 'yellow' },
+              { text : 'x: 0', color : 'red' } ]
+        );
+      });
+
+    });
+
+    describe('handleGraphMouseOut', function() {
+
+      beforeEach(function() {
+        setGraph();
+        spyOn(d3, 'mouse').andReturn([1, 20]);
+        spyOn(pubsub, 'pub').andCallThrough();
+        testGraph.handleGraphMouseMove(
+          selection.select('gl-graph-tooltip').node(),
+          testGraph.component(),
+          dataCollection,
+          pubsub
+        );
+        testGraph.handleGraphMouseOut(
+          testGraph,
+          pubsub
+        );
+      });
+
+      it('publishes the tooltip-show event', function() {
+        expect(pubsub.pub)
+          .toHaveBeenCalledWith(testGraph.config('id') + ':tooltip-hide');
+      });
+
+    });
+
+    describe('highlightOnHover', function() {
       var circle;
 
       beforeEach(function(){

@@ -59,7 +59,10 @@ define([
      * @return {String} The scoped (prefixed) event name.
      */
     globalScope: function(eventName) {
-      return pubsub.scope(this._.config.rootId)(eventName);
+      if (this._.config.type !== 'graph') {
+        return pubsub.scope(this._.config.rootId)(eventName);
+      }
+      return  pubsub.scope(this._.config.id)(eventName);
     },
 
     /**

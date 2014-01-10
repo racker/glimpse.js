@@ -111,6 +111,14 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
       spyOn(yScale, 'domain').andCallThrough();
     }
 
+    function fireMouseEvent(elem, mouseEvent) {
+      var evt = document.createEvent('MouseEvents');
+      evt.initMouseEvent(mouseEvent,
+       true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      elem.dispatchEvent(evt);
+    }
+
+
     beforeEach(function(){
       dataCollection = dc.create();
       testGraph = graph();
@@ -540,11 +548,6 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
           .toHaveBeenCalledWith('rootId', componentManager.cids());
       });
 
-      it('updates showTooltip on components', function() {
-        expect(componentManager.applySharedObject)
-          .toHaveBeenCalledWith('showTooltip', componentManager.cids());
-      });
-
       it('calls render on x-axis component', function() {
         expect(xAxis.render).toHaveBeenCalled();
       });
@@ -834,6 +837,38 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
     });
 
     //TODO: Add tests to check if the 'showLegend' config works
+
+    describe('tooltip', function() {
+      var selection, tooltipSelection;
+
+      beforeEach(function() {
+        setGraph();
+        selection = jasmine.htmlFixture();
+        testGraph.config('showTooltip', true);
+        spyOn(testGraph, 'handleGraphMouseMove');
+        spyOn(testGraph, 'handleGraphMouseOut');
+        testGraph.render(selection.node());
+        tooltipSelection = selection.select('.gl-graph-tooltip');
+      });
+
+      it('adds rect for tooltip', function() {
+        expect(tooltipSelection.empty())
+          .toBe(false);
+      });
+
+      it('calls handleGraphMouseMove on mousemove', function() {
+        fireMouseEvent(tooltipSelection.node(), 'mousemove');
+        expect(testGraph.handleGraphMouseMove)
+          .toHaveBeenCalled();
+      });
+
+      it('calls handleGraphMouseOut on mouseout', function() {
+        fireMouseEvent(tooltipSelection.node(), 'mouseout');
+        expect(testGraph.handleGraphMouseOut)
+          .toHaveBeenCalled();
+      });
+
+    });
 
   });
 

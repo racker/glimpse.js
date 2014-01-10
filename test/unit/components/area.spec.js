@@ -78,7 +78,8 @@ function(area, dc) {
         highlightRadius: 4,
         highlightFill: '#fff',
         highlightStrokeWidth: 2,
-        showTooltip: false
+        showTooltip: true,
+        showHighlight: true
       };
 
       beforeEach(function(){
@@ -128,6 +129,10 @@ function(area, dc) {
 
       it('has default showTooltip', function() {
         expect(config.showTooltip).toBe(defaults.showTooltip);
+      });
+
+       it('has default showHighlight', function() {
+        expect(config.showHighlight).toBe(defaults.showHighlight);
       });
 
     });
@@ -252,7 +257,7 @@ function(area, dc) {
         spyOn(testArea, 'update').andCallThrough();
         spyOn(testArea, 'highlight');
         testArea.on('render', handlerSpy);
-        testArea.config('color', 'green');
+        testArea.config({'color': 'green', 'showHighlight': false});
         testArea.render(selection);
       });
 
@@ -296,7 +301,7 @@ function(area, dc) {
         expect(testArea.update).toHaveBeenCalled();
       });
 
-      it('does not call highlight if showTooltip is set to false',
+      it('does not call highlight if showHighlight is set to false',
         function() {
           expect(testArea.highlight).not.toHaveBeenCalled();
       });
@@ -366,6 +371,7 @@ function(area, dc) {
 
       beforeEach(function(){
         setData();
+        testArea.config('showHighlight', false);
         testArea.render(selection);
         testArea.config({
           cssClass: 'foo',
@@ -377,7 +383,7 @@ function(area, dc) {
         testData[0].dimensions.y0 = null;
         setData();
         testArea.on('update', handlerSpy);
-        testArea.config('showTooltip', true);
+        testArea.config('showHighlight', true);
         spyOn(testArea, 'highlight');
         spyOn(testArea, 'pubsubHighlightEvents');
         testArea.update();
@@ -409,11 +415,11 @@ function(area, dc) {
         expect(path).toHaveAttr('opacity', '0.5');
       });
 
-      it('calls the highlight method when showTooltip is true', function() {
+      it('calls the highlight method when showHighlight is true', function() {
         expect(testArea.highlight).toHaveBeenCalled();
       });
 
-      it('calls the highlight method when pubsubHightlightEvents is true',
+      it('calls the pubsubHightlightEvents method when showHighlight is true',
         function() {
           expect(testArea.pubsubHighlightEvents).toHaveBeenCalled();
       });

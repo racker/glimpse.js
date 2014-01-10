@@ -79,6 +79,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
       chartHeight = Math.round(chart.height()),
 
       _.config.message = message;
+
       tooltip.update();
 
       tooltipWidth =  Math.round(_.root.width());
@@ -91,6 +92,11 @@ function(array, config, obj, fn, string, d3util, mixins) {
       //vertically
       if (chartHeight <= (y + positionPadding + tooltipHeight)) {
         translateY = y - positionPadding - tooltipHeight;
+      }
+
+      //Handle case where tooltip displays multiple messages
+      if (translateY < 0) {
+        translateY = chartHeight - tooltipHeight - positionPadding;
       }
 
       //Check if bottom-right corner is outside the chart
@@ -142,7 +148,7 @@ function(array, config, obj, fn, string, d3util, mixins) {
           root = _.root,
           content,
           size,
-          message = _.config.message || '';
+          message = _.config.message || [];
 
       if (!_.root) {
         return tooltip;
@@ -152,13 +158,16 @@ function(array, config, obj, fn, string, d3util, mixins) {
       }
       root.select('.gl-tooltip-content').remove();
       content = root.append('g').attr('class', 'gl-tooltip-content');
-      message.split('\n').forEach(function(line) {
+
+      message.forEach(function(line) {
         content.append('text')
+          .attr({'xml:space': 'preserve', 'pointer-events': 'none'})
           .style({
             'font-family': 'sans-serif',
-            'font-size': '10px'
+            'font-size': '10px',
+            'fill': line.color,
           })
-          .text(line);
+          .text(line.text);
       });
       content.layout({ type: 'vertical' });
       // TODO: Modify layout command to take position and remove logic below.

@@ -377,7 +377,6 @@ function(graphBuilder, graph, d3interaction) {
       });
 
       describe('create("stacked-area")', function() {
-
         beforeEach(function() {
           testGraph = graphBuilder.create('stacked-area');
           testGraph.config({
@@ -445,7 +444,7 @@ function(graphBuilder, graph, d3interaction) {
           addCpuUserData();
           expect(testGraph.data().get('cpu-user-stack'))
             .toBe('gl-error-not-computed');
-         expect(testGraph.data().get('cpu-sys-stack'))
+          expect(testGraph.data().get('cpu-sys-stack'))
             .toBe(null);
         });
 
@@ -559,6 +558,7 @@ function(graphBuilder, graph, d3interaction) {
               cm, sysRender, userRender;
           testGraph = graphBuilder.create('stacked-area');
           cm = testGraph.component();
+          cm.remove('gl-tooltip');
           testGraph.render(renderTarget);
           addCpuSysData();
           addCpuUserData();

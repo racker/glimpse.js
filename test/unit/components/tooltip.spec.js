@@ -81,7 +81,7 @@ function(tooltip, dc, pubsub) {
 
       defaults = {
         opacity: 0.95,
-        message: '',
+        message: [],
         visible: false,
         x: 100,
         y: 100,
@@ -101,7 +101,7 @@ function(tooltip, dc, pubsub) {
       });
 
       it('has default message', function() {
-        expect(config.message).toBe(defaults.message);
+        expect(config.message).toBe('');
       });
 
       it('has default visible', function() {
@@ -224,7 +224,10 @@ function(tooltip, dc, pubsub) {
         testtooltip.config({
           color: 'red',
           opacity: 0.5,
-          'message': 'x: 5\ny: 10'
+          'message': [
+            {text: 'x: 5 y: 10', color: 'red'},
+            {text: 'x: 10 y: 20', color: 'blue'}
+          ]
         });
         spyOn(testtooltip, 'show').andCallThrough();
         spyOn(testtooltip, 'applyZIndex').andCallThrough();
@@ -255,8 +258,8 @@ function(tooltip, dc, pubsub) {
       });
 
       it('adds right message', function() {
-        expect(textMessages[0].textContent).toBe('x: 5');
-        expect(textMessages[1].textContent).toBe('y: 10');
+        expect(textMessages[0].textContent).toBe('x: 5 y: 10');
+        expect(textMessages[1].textContent).toBe('x: 10 y: 20');
       });
 
       it('sets the x co-ordinate of message to 0', function() {
@@ -311,7 +314,7 @@ function(tooltip, dc, pubsub) {
         g.append('circle');
         dataPoint = { x: 10, y: 10 };
         target = selection.select('circle');
-        message = 'x:foo\ny:bar';
+        message = [{text: 'x:foo\ny:bar', color: 'red'}];
         spyOn(testtooltip, 'show').andCallThrough();
         spyOn(testtooltip, 'update').andCallThrough();
         pubsubModule = pubsub.getSingleton();
@@ -375,6 +378,40 @@ function(tooltip, dc, pubsub) {
           expect(transform.translate[0])
             .toBe(dataPoint.x - positionPadding - tooltipWidth);
           expect(transform.translate[1]).toBe(dataPoint.y + positionPadding);
+      });
+
+      it('translates the tooltip to the middle of the chart for a longMessage',
+        function() {
+          var transform, longMessage, height, tptheight;
+          dataPoint = { x: 95, y: 55 };
+          longMessage = 'Lorem ipsum dolor sit amet,' +
+            ' consectetur adipisicing elit,' +
+            'sed do eiusmod tempor incididunt ut labore et' +
+            ' dolore magna aliqua.' +
+            ' Ut enim ad minim veniam, quis nostrud' +
+            'exercitation ullamco laboris' +
+            ' nisi ut aliquip ex ea commodo consequat.' +
+            ' Duis aute irure dolor in' +
+            'reprehenderit in voluptate velit esse' +
+            'cillum dolore eu fugiat nulla pariatur.' +
+            'Excepteur sint occaecat cupidatat non proident,' +
+            ' sunt in culpa qui officia' +
+            'deserunt mollit anim id est laborum';
+          pubsubModule.pub(
+            'foo:tooltip-show',
+            dataPoint,
+            target.node(),
+            [ { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              { text: longMessage, color: 'red'},
+              ]
+          );
+          transform = d3.transform(testtooltip.root().attr('transform'));
+          height = selection.select('#tooltipParent').height();
+          tptheight = Math.round(testtooltip.root().height());
+          expect(transform.translate[1])
+            .toBe(height - tptheight - positionPadding);
       });
 
     });

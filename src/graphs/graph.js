@@ -438,11 +438,53 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
     }
 
     /**
+     * Handles mousemove event on the gl-main
+     */
+    function mousemove() {
+      graph.handleGraphMouseMove(
+        d3.event.target,
+        graph.component(),
+        graph.data(),
+        _.globalPubsub);
+    }
+
+    /**
+     * Handles mouseout event on the gl-main
+     */
+    function mouseout() {
+      graph.handleGraphMouseOut(graph, _.globalPubsub);
+    }
+
+    /**
+     * Adds a rect to capture mousemove and mouseout on
+     * gl-main container
+     */
+    function configureTooltip() {
+      var container = getPrimaryContainer();
+
+      if (graph.config('showTooltip') &&
+        container.select('.gl-graph-tooltip').empty()) {
+        container.append('rect')
+        .attr({
+          'class': 'gl-graph-tooltip',
+          height: container.height(),
+          width: container.width(),
+          fill: 'transparent'
+        })
+        .on('mousemove', mousemove)
+        .on('mouseout', mouseout);
+      }
+    }
+
+    /**
      * Main function, sets defaults, scales and axes
      * @return {graphs.graph}
      */
     function graph() {
       obj.extend(_.config, _.defaults);
+
+      obj.extend(graph, mixins.highlight);
+
       if (!obj.isDefAndNotNull(_.config.id)) {
         _.config.id = string.random();
       }
@@ -562,15 +604,12 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.update = function() {
       componentManager_.applySharedObject('data');
-      componentManager_.applySharedObject(
-        'showTooltip',
-        componentManager_.cids()
-      );
       updateScales();
       updateComponents();
       if (graph.isRendered()) {
         updateComponentVisibility();
       }
+      configureTooltip();
       graph.emit('update');
       return graph;
     };
@@ -583,17 +622,13 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     graph.render = function(selector) {
       var selection = d3util.select(selector);
+
       assetLoader.loadAll();
       renderPanel(selection);
       //Add legend before applying shared objects.
       addLegend();
       componentManager_.registerSharedObject('rootId', _.config.id, true);
       componentManager_.applySharedObject('rootId', componentManager_.cids());
-      componentManager_.registerSharedObject(
-        'showTooltip',
-        _.config.showTooltip,
-        true
-      );
       graph.update();
       componentManager_.render(graph.root());
       // Update y-axis once more to ensure ticks are above everything else.

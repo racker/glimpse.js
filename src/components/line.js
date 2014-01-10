@@ -47,7 +47,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
       highlightStrokeWidth: 2,
       highlightTransDuration: 500,
       highlightTransDelay: 1000,
-      showTooltip: false
+      showTooltip: false,
+      showHighlight: true
     };
 
     /**
@@ -128,7 +129,8 @@ function(array, config, obj, fn, string, d3util, mixins, dataFns) {
         'yScale',
         'lineGenerator',
         'color',
-        'showTooltip'
+        'showTooltip',
+        'showHighlight'
       ),
       mixins.component,
       mixins.highlight);
