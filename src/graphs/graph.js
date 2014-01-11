@@ -291,9 +291,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
         if (graph.isRendered()) {
           //Calls render on component if, it hasn't been called already
           componentsToRender = componentManager_.filter(function(c) {
-            if (!c.isRendered()) {
-              return c;
-            }
+            return !c.isRendered();
           });
           if (componentsToRender.length > 0) {
             componentManager_.render(
