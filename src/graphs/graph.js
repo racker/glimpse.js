@@ -268,7 +268,7 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      */
     function updateComponents() {
       var yaxisComponent,
-        xaxisComponent;
+        xaxisComponent, componentsToRender;
         xaxisComponent = componentManager_.first('gl-xaxis');
         if (xaxisComponent) {
           xaxisComponent.config({
@@ -287,6 +287,22 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
           });
         }
         componentManager_.update();
+
+        if (graph.isRendered()) {
+          //Calls render on component if, it hasn't been called already
+          componentsToRender = componentManager_.filter(function(c) {
+            return !c.isRendered();
+          });
+          if (componentsToRender.length > 0) {
+            componentManager_.render(
+              graph.root(),
+              componentsToRender.map(function(c) {
+                return c.cid();
+              })
+            );
+          }
+        }
+
         updateLegend();
     }
 

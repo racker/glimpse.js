@@ -414,6 +414,17 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         expect(testComponent.update).toHaveBeenCalled();
       });
 
+      it('calls render on a newly added component', function() {
+        var newComponent;
+        testGraph.component({
+          cid: 'testComponent2',
+          type: 'line',
+          dataId: 'fakeData2' });
+        testGraph.update();
+        newComponent = testGraph.component('testComponent2');
+        expect(newComponent.isRendered()).toBe(true);
+      });
+
       describe('components initial state after update/add', function() {
         var lineComponent, lineComponent1;
 
