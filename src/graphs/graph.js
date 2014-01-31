@@ -619,6 +619,11 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      * @return {graphs.graph}
      */
     graph.update = function() {
+      componentManager_
+        .registerSharedObject('xScale', _.config.xScale, true)
+        .registerSharedObject('yScale', _.config.yScale, true);
+      componentManager_.applySharedObject('xScale');
+      componentManager_.applySharedObject('yScale');
       componentManager_.applySharedObject('data');
       updateScales();
       updateComponents();
