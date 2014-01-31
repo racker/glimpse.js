@@ -22,7 +22,7 @@ function(obj, string, array, fn, format, selection, dimension, graph,
   'use strict';
 
   var core = {
-    version: '0.0.11',
+    version: '0.0.12',
     obj: obj,
     string: string,
     array: array,
