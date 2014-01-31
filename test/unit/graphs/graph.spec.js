@@ -341,6 +341,25 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         expect(end).toBe(fakeData[0].data[6].x);
       });
 
+       it('updates scales on components', function () {
+        var line, xScale, lineScale;
+        testGraph.component({
+          cid: 'testComponent',
+          type: 'line',
+          dataId: 'fakeData'
+        });
+        line = testGraph.component('testComponent');
+        // setting the new scale
+        xScale = d3.time.scale().domain([0, 0]);
+        testGraph.config({
+          xScale: xScale
+        });
+        testGraph.update();
+        //gets the xScale from the component after update
+        lineScale = line.config().xScale;
+        expect(lineScale).toBe(xScale);
+      });
+
       it('updates domain for xScale based on domain interval period(days)',
         function() {
           var start, end;
