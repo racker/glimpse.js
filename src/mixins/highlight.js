@@ -23,9 +23,13 @@ define(['data/functions'], function (dataFns) {
     bisectData = d3.bisector(function(d) { return xDim(d); }).left;
     clampedDataIndex = bisectData(data, startX, 1);
 
-    d0 = data[clampedDataIndex - 1],
-    d1 = data[clampedDataIndex],
-    clampedData = startX -  xDim(d0) >  xDim(d1) - startX ? d1 : d0;
+    d0 = data[clampedDataIndex - 1];
+    d1 = data[clampedDataIndex];
+    if (d1) {
+      clampedData = startX -  xDim(d0) >  xDim(d1) - startX ? d1 : d0;
+    } else {
+      clampedData = d0;
+    }
 
     return clampedData;
   }

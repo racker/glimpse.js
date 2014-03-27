@@ -52,6 +52,7 @@ function(obj, mixins, pubsubModule, dc, graph) {
             tooltip: function(d) { return 'x: ' + d.x; }
           }
         }
+
       ])
       .component([
         { cid: 'testComponent', type: 'line', dataId: 'fakeData' },
@@ -95,7 +96,17 @@ function(obj, mixins, pubsubModule, dc, graph) {
       dimensions: {
         r: function(d) { return d.x*5; }
       }
-    }];
+    },
+    {
+      id: 'fooOneData',
+      title: 'LON',
+      data: [{ x: epochBaseMs + 0 * oneDayMs, y: 106}],
+      dimensions: {
+        x: function(d) { return d.x; },
+        y: function(d) { return d.y; },
+        tooltip: function(d) { return 'x: ' + d.x; }
+      }
+  }];
 
     dataCollection = dc.create();
     dataCollection.add(dataConfig);
@@ -407,6 +418,19 @@ function(obj, mixins, pubsubModule, dc, graph) {
           );
           expect(circle.node()).toHaveAttr('transform', 'translate(5,50)');
       });
+
+
+      it('calculates nearest data point for data with single value',
+        function() {
+          component.data = function() { return dataConfig[2]; };
+          component.highlightOnHover(
+            component,
+            dataCollection,
+            6
+          );
+          expect(circle.node()).toHaveAttr('transform', 'translate(0,106)');
+      });
+
 
       it('translates the circle to the nearest data point', function() {
         expect(circle.node()).toHaveAttr('transform', 'translate(1,50)');
