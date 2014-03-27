@@ -16,7 +16,7 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "karma": "~0.10",
+    "karma": "0.10.0",
     "karma-jasmine": "~0.1",
     "karma-chrome-launcher": "~0.1",
     "karma-firefox-launcher": "~0.1",
