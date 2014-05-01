@@ -1,3 +1,20 @@
+## 0.0.12 (Mar 31 2014)
+
+- Mixins for components
+- Refactor to use mixins
+- Graph builder refactor
+- Event management overhaul
+- Exposes layouts
+- Adds component for scatter plot
+- Adds component for tooltip. Related bug fixes
+- Fixes following bugs:
+ -- First color bug
+ -- Re-register scales and apply on components
+ -- ROC example
+ -- Stop rounding of domain
+ -- Selectively add components
+
+
 ## 0.0.11 (July 3 2013)
 
 - Fix ticks bug - ticks are always visible.
