@@ -546,9 +546,32 @@ function(graph, assetLoader, dc, compUtil, lineComponent, domain) {
         expect(panel.node().nodeName.toLowerCase()).toBe('svg');
       });
 
+      it('renders svg node with xmlns', function() {
+        var expectedXmlns;
+        expectedXmlns = 'http://www.w3.org/2000/svg';
+        expect(panel.node().getAttribute('xmlns')).toBe(expectedXmlns);
+      });
+
+      it('renders svg node with xmlns:xs', function() {
+        var expectedXlink;
+        expectedXlink = 'http://www.w3.org/1999/xlink';
+        expect(panel.node().getAttribute('xmlns:xlink')).toBe(expectedXlink);
+      });
+
+      it('renders svg node with version', function() {
+        expect(panel.node().getAttribute('version')).toBe('1.1');
+      });
+
       it('renders defs node', function() {
         var defs = panel.select('defs');
         expect(defs.node().nodeName.toLowerCase()).toBe('defs');
+      });
+
+      it('renders defs node with xmlns', function() {
+        var defs, expectedXmlns;
+        defs = panel.select('defs');
+        expectedXmlns = 'http://www.w3.org/1999/xhtml';
+        expect(defs.node().getAttribute('xmlns')).toBe(expectedXmlns);
       });
 
       it('renders the primary container', function() {
