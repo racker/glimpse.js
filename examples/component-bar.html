@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+  </head>
+  <body>
+    <h1>Bar Component Examples</h1>
+    <h3>This example shows Bar component with different configurations</h3>
+    <h5> 1. Basic bar with x and y scale provided</h5>
+    <svg id="container"></svg>
+
+    <script src="../components/requirejs/require.js"></script>
+    <script src="../requirejs.conf.js"></script>
+    <script>
+      require(['glimpse'], function (glimpse) {
+        'use strict';
+
+        // Actual raw sample data.
+        var oneHr = 1000 * 60 * 60,
+            latencyData = [
+              { "time": 0,  "latency": 100 },
+              { "time": oneHr, "latency": 50 },
+              { "time": oneHr*2, "latency": 25 },
+              { "time": oneHr*3, "latency": 25 }
+            ],
+            dataConfig = [
+            {
+              id: 'latencyDfw',
+              title: 'Time to Connect (DFW)',
+              data: latencyData,
+              dimensions: {
+                x: 'time',
+                y: 'latency'
+              }
+            }
+            ];
+
+        // 1. Bar componenet with basic config.
+        var timeScale =  d3.time.scale(),
+            linearScale = d3.scale.linear(),
+            dataCollection = glimpse.dataCollection.create(),
+            barComponent = glimpse.components.bar(),
+            x,
+            y;
+
+        // needs x and y scale because there is no graph
+        x = timeScale.domain([0, oneHr*3]).range([0, 200]),
+        y = linearScale.domain([0, 100]).range([100, 0]);
+
+        //bind data using dataCollection
+        dataCollection.add(dataConfig);
+
+        //specify the height and width
+        barComponent.data(dataCollection).config({
+            'dataId' : 'latencyDfw',
+            'xScale' : x,
+            'yScale' : y,
+            'color': '#000',
+            'height': 100,
+            'width': 50
+          });
+
+        barComponent.render('#container');
+
+        // for debugging
+        window.component = barComponent;
+        window.gl = glimpse;
+      });
+    </script>
+  </body>
+</html>
