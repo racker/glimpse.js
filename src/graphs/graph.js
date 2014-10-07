@@ -127,7 +127,9 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      * @param  {d3.selection} selection
      */
     function renderDefs(selection) {
-      return selection.append('defs');
+      return selection.append('defs').attr({
+        'xmlns': 'http://www.w3.org/1999/xhtml'
+      });
     }
 
     /**
@@ -136,8 +138,12 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
      * @param  {d3.selection} selection
      */
     function renderSvg(selection) {
+      var svgElement;
+
       _.root = selection.append('svg')
         .attr({
+          'version': '1.1',
+          'xmlns': 'http://www.w3.org/2000/svg',
           'width': _.config.width,
           'height': _.config.height,
           'viewBox': [
@@ -147,6 +153,10 @@ function(obj, config, array, fn, assetLoader, componentManager, string,
             _.config.viewBoxHeight].toString(),
           'preserveAspectRatio': _.config.preserveAspectRatio
         });
+
+      // https://github.com/mbostock/d3/issues/1935
+      svgElement = selection.select('svg')[0][0];
+      svgElement.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
       return _.root;
     }
 
