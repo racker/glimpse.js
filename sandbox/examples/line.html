@@ -1,0 +1,79 @@
+<html>
+<head>
+  <title>Exercise</title>
+   <style type="text/css">
+      body {
+        color: #333;
+        font-family: 'Open Sans',Verdana,Helvetica,sans-serif;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 1.6rem;
+        text-align: left;
+      }
+      .x-axis line {
+        stroke: #CDCDCD;
+        stroke-width: 0.5;
+        fill: none;
+      }
+      .line-ord {
+        stroke: steelblue;
+        stroke-width: 2;
+        fill: none;
+        stroke-dasharray: 0;
+      }
+      .line-dfw {
+        stroke: red;
+        stroke-width: 2;
+        fill: none;
+        stroke-dasharray: 0;
+      }
+      path {
+        stroke: #eee;
+        stroke-width: 2;
+        stroke-dasharray: 0;
+        fill: none;
+      }
+  </style>
+  <script type="text/javascript" src="../src/lib/d3.v3.min.js"></script>
+  <script type="text/javascript" src="../src/core/glimpse.js"></script>
+</head>
+<body>
+  <h1>Line graph</h1>
+  <div id="chart"></div>
+  <script>
+    function formatData(data) {
+      var avg = [], min = [], max = [], all = [];
+      values = data.values;
+      for (var i in values) {
+        avg.push({ 'x' : new Date(parseInt(values[i].timestamp)),'y' : values[i].average});
+        min.push({ 'x' : new Date(parseInt(values[i].timestamp)),'y' : values[i].min});
+        max.push({ 'x' : new Date(parseInt(values[i].timestamp)),'y' : values[i].max});
+      }
+      all.push(avg);
+      all.push(min);
+      all.push(max);
+      return all;
+    }
+
+    d3.json("http://127.0.0.1:1337/data/httpcheck-week.json", function(dataSet) {
+      var data = formatData(dataSet);
+
+      var graph = glimpse.graph()
+                      .config({'width': 900, 'title': 'mygraph'})
+                      .data({
+                        'series1': data[0],
+                        'series2': data[1],
+                        'series3': data[2]
+                      })
+                      .component(
+                          glimpse.component.line()
+                            .dataId('series1')
+                            .config({'cssClass': 'line-ord'})
+                            .component(glimpse.component.legend()
+                                        .text('ord'))
+                      );
+      graph.render('#chart');
+    });
+  </script>
+</body>
+</html>
