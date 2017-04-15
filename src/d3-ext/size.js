@@ -44,7 +44,7 @@ define(['d3'], function(d3) {
    * @return {Number|d3.selection}
    */
   d3.selection.prototype.width = function(w) {
-    var width, nonGnode;
+    var width, nonGnode, textNode;
 
     // Getting.
     if (!arguments.length) {
@@ -56,7 +56,12 @@ define(['d3'], function(d3) {
       if (this.attr('display') === 'none') {
         return 0;
       }
-      return this.node().getBBox().width;
+      if (this.classed('gl-label')) {
+        textNode = this.select('text');
+        return (parseFloat(textNode.attr('font-size')) *
+          textNode.text().length) / 2;
+      }
+      return 0;
     }
     // Setting.
     if (isGnode(this)) {
@@ -83,7 +88,7 @@ define(['d3'], function(d3) {
    * @return {Number|d3.selection}
    */
   d3.selection.prototype.height = function(h) {
-    var height, nonGnode;
+    var height, nonGnode, textNode;
 
     // Getting.
     if (!arguments.length) {
@@ -95,7 +100,13 @@ define(['d3'], function(d3) {
       if (this.attr('display') === 'none') {
         return 0;
       }
-      return this.node().getBBox().height;
+      if (this.classed('gl-label')) {
+        textNode = this.select('text');
+        height = parseFloat(window.getComputedStyle(textNode.node()).height ||
+          textNode.attr('font-size'));
+        return height;
+      }
+      return 0;
     }
     // Setting.
     if (isGnode(this)) {
