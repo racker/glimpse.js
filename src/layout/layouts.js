@@ -54,6 +54,67 @@ define(function () {
         ]
     },
 
+    'rax-layout': {
+      type: 'vgroup',
+      'class': 'random-class another-class',
+      containers: [
+        {
+          padding: [1, 1, 1, 2],
+          'class': 'gl-info',
+          height: '15%',
+          componenents: [
+            {
+              type: 'legend',
+              visibleState: 'normal'
+            }
+          ]
+        },
+        {
+          height: '60%',
+          'class': 'gl-frame'
+        },
+        {
+          height: '10%',
+          'class': 'gl-xaxis',
+          padding: [10, 1, 1, 1],
+          components: [
+            {
+              type: 'axis',
+              visibleState: ['normal', 'empty'],
+              config: {
+                type: 'x',
+                ticks: 7,
+                orient: 'bottom',
+              }
+            }
+          ]
+        },
+        {
+          height: '15%',
+          'class': 'gl-footer',
+          padding: 1,
+          components: [
+            {
+              type: 'label',
+              config: {
+                cid: 'statsLabel',
+                position: 'center-left'
+              }
+            },
+            {
+              type: 'label',
+              // how to set data here???
+              config: {
+                cid: 'xDomainLabel',
+                formatter: 'core.format.timeDomain',
+                position: 'center-right'
+              }
+            }
+          ]
+        }
+      ]
+    },
+
    'threepane': {
       name: 'gl-vgroup',
       split: [15, 70, 15],
